@@ -74,7 +74,7 @@ export default function RevenueChart({ data, loading }: RevenueChartProps) {
               color: '#f8fafc'
             }}
             itemStyle={{ color: '#3b82f6' }}
-            formatter={(value: number) => [new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value), 'Doanh thu']}
+            formatter={(value: unknown) => [new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value) || 0), 'Doanh thu']}
           />
           <Area
             type="monotone"

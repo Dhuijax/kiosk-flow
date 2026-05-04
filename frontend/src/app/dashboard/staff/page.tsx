@@ -44,6 +44,7 @@ export default function StaffPage() {
   }, [token, tenantId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (token) fetchStaff();
   }, [token, fetchStaff]);
 

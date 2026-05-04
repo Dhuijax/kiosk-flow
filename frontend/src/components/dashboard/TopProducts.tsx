@@ -14,9 +14,9 @@ interface TopProductsProps {
 export default function TopProducts({ products, loading }: TopProductsProps) {
   if (loading) {
     return (
-      <div className="space-y-4 animate-pulse">
+      <div className="space-y-6 animate-pulse">
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="h-12 bg-slate-800/50 rounded-xl" />
+          <div key={i} className="h-14 bg-foreground/5 rounded-2xl" />
         ))}
       </div>
     );
@@ -24,7 +24,7 @@ export default function TopProducts({ products, loading }: TopProductsProps) {
 
   if (products.length === 0) {
     return (
-      <div className="py-8 text-center text-slate-500 text-sm">
+      <div className="py-12 text-center text-foreground/20 font-black uppercase italic tracking-tighter">
         Chưa có dữ liệu sản phẩm
       </div>
     );
@@ -33,25 +33,25 @@ export default function TopProducts({ products, loading }: TopProductsProps) {
   const maxQuantity = Math.max(...products.map(p => p.quantity));
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {products.map((product, index) => (
         <div key={index} className="group">
-          <div className="flex justify-between items-end mb-2">
-            <div>
-              <p className="text-sm font-bold text-slate-200 group-hover:text-blue-soft transition-colors line-clamp-1">
+          <div className="flex justify-between items-end mb-3">
+            <div className="flex-1 pr-4">
+              <p className="text-sm font-black text-foreground uppercase italic tracking-tighter group-hover:text-interaction transition-colors line-clamp-1">
                 {product.name}
               </p>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider font-medium">
-                {product.quantity} sản phẩm đã bán
+              <p className="text-[10px] text-foreground/40 uppercase tracking-widest font-black italic mt-1">
+                {product.quantity} món đã bán
               </p>
             </div>
-            <p className="text-sm font-bold text-slate-100">
-              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.revenue)}
+            <p className="text-sm font-black text-primary tracking-tighter">
+              {new Intl.NumberFormat('vi-VN').format(product.revenue)} ₫
             </p>
           </div>
-          <div className="h-1.5 w-full bg-slate-800/50 rounded-full overflow-hidden">
+          <div className="h-3 w-full bg-foreground/5 border-2 border-foreground/5 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-blue-600 to-blue-electric rounded-full transition-all duration-1000 ease-out"
+              className="h-full bg-interaction rounded-full transition-all duration-1000 ease-out border-r-2 border-foreground/20"
               style={{ width: `${(product.quantity / maxQuantity) * 100}%` }}
             />
           </div>

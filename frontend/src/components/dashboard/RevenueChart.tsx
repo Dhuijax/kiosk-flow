@@ -24,16 +24,16 @@ interface RevenueChartProps {
 export default function RevenueChart({ data, loading }: RevenueChartProps) {
   if (loading) {
     return (
-      <div className="h-[300px] w-full flex items-center justify-center bg-slate-800/10 rounded-3xl animate-pulse">
-        <span className="text-slate-500 font-medium">Đang tải biểu đồ...</span>
+      <div className="h-[300px] w-full flex items-center justify-center bg-foreground/5 rounded-[2rem] animate-pulse">
+        <span className="text-foreground/20 font-black uppercase italic tracking-tighter">Đang phân tích dữ liệu...</span>
       </div>
     );
   }
 
   if (data.length === 0) {
     return (
-      <div className="h-[300px] w-full flex items-center justify-center bg-slate-800/10 rounded-3xl">
-        <span className="text-slate-500 font-medium">Không có dữ liệu trong khoảng thời gian này</span>
+      <div className="h-[300px] w-full flex items-center justify-center bg-foreground/5 rounded-[2rem]">
+        <span className="text-foreground/20 font-black uppercase italic tracking-tighter">Chưa có dữ liệu giao dịch</span>
       </div>
     );
   }
@@ -47,40 +47,41 @@ export default function RevenueChart({ data, loading }: RevenueChartProps) {
         >
           <defs>
             <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+              <stop offset="5%" stopColor="var(--color-interaction)" stopOpacity={0.4} />
+              <stop offset="95%" stopColor="var(--color-interaction)" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-foreground)" opacity={0.05} />
           <XAxis 
             dataKey="label" 
             axisLine={false} 
             tickLine={false} 
-            tick={{ fill: '#64748b', fontSize: 10 }}
+            tick={{ fill: 'var(--color-foreground)', fontSize: 10, fontWeight: 900 }}
             dy={10}
           />
           <YAxis 
             axisLine={false} 
             tickLine={false} 
-            tick={{ fill: '#64748b', fontSize: 10 }}
+            tick={{ fill: 'var(--color-foreground)', fontSize: 10, fontWeight: 900 }}
             tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
           />
           <Tooltip 
             contentStyle={{ 
-              backgroundColor: '#0f172a', 
-              border: '1px solid #1e293b', 
-              borderRadius: '12px',
+              backgroundColor: 'var(--color-surface)', 
+              border: '4px solid var(--color-foreground)', 
+              borderRadius: '24px',
               fontSize: '12px',
-              color: '#f8fafc'
+              color: 'var(--color-foreground)',
+              boxShadow: '4px 4px 0px 0px var(--color-foreground)'
             }}
-            itemStyle={{ color: '#3b82f6' }}
-            formatter={(value: unknown) => [new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value) || 0), 'Doanh thu']}
+            itemStyle={{ color: 'var(--color-interaction)', fontWeight: 900 }}
+            formatter={(value: unknown) => [new Intl.NumberFormat('vi-VN').format(Number(value) || 0) + ' ₫', 'Doanh thu']}
           />
           <Area
             type="monotone"
             dataKey="revenue"
-            stroke="#3B82F6"
-            strokeWidth={3}
+            stroke="var(--color-interaction)"
+            strokeWidth={4}
             fillOpacity={1}
             fill="url(#colorRevenue)"
             animationDuration={1500}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Bluetooth, Radio, Hash, Save, X, Printer, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Bluetooth, Radio, Save, X, Printer, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { printerService, PrinterSettings as IPrinterSettings, PrinterConnectionType } from '@/lib/printer/PrinterService';
 

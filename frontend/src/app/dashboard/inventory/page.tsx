@@ -5,12 +5,12 @@ import {
   Search, 
   RefreshCw, 
   Filter, 
-  Settings2, 
-  History, 
-  ChevronRight,
   Download,
   AlertTriangle,
-  Package
+  Settings2,
+  History,
+  Package,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useInventory } from '@/hooks/useInventory';
@@ -32,7 +32,6 @@ export default function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [lowStockOnly, setLowStockOnly] = useState(false);
   
-  // Modals state
   const [adjustmentProduct, setAdjustmentProduct] = useState<{ id: string, name: string, currentQuantity: number, branchId: string } | null>(null);
   const [historyProduct, setHistoryProduct] = useState<{ id: string, name: string, branchId: string } | null>(null);
 
@@ -61,11 +60,15 @@ export default function InventoryPage() {
     } finally {
       setLoading(false);
     }
-  }, [token, tenantId, listStock]);
+  }, [token, tenantId, branchId, listStock]);
 
   useEffect(() => {
-    fetchData();
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchData]);
+
 
   const filteredData = useMemo(() => {
     return stockItems.filter(item => {
@@ -82,106 +85,121 @@ export default function InventoryPage() {
     });
   }, [stockItems, products, searchQuery, lowStockOnly]);
 
-  const stats = useMemo(() => {
+  const statsData = useMemo(() => {
     const low = stockItems.filter(i => i.quantity <= i.minQuantity && i.quantity > 0).length;
     const out = stockItems.filter(i => i.quantity <= 0).length;
     return {
       total: stockItems.length,
       low,
       out,
-      recent: 12 // Mock or fetch from history
+      recent: 12 
     };
   }, [stockItems]);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Quản lý tồn kho</h1>
-          <p className="text-slate-400 text-sm mt-1">Theo dõi biến động và điều chỉnh số lượng hàng hóa</p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 text-primary font-black uppercase text-xs tracking-widest">
+            <Package className="w-5 h-5" />
+            <span>Kho hàng & Tài sản</span>
+          </div>
+          <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground">
+            Quản lý <span className="text-interaction">Tồn kho</span>
+          </h1>
+          <p className="text-foreground/40 font-bold italic">Theo dõi biến động và tối ưu hóa lượng hàng dự trữ.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-4">
           <button 
             onClick={fetchData}
-            className="p-3 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-slate-300 transition-all"
+            className="w-14 h-14 bg-surface border-4 border-foreground rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-[4px_4px_0px_0px_rgba(62,39,35,1)]"
           >
-            <RefreshCw className={`w-5 h-5 ${loadingStock ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-6 h-6 stroke-[3] ${loadingStock ? 'animate-spin' : ''}`} />
           </button>
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-slate-300 transition-all font-semibold">
-            <Download className="w-4 h-4" />
-            <span>Xuất báo cáo</span>
+          <button className="btn-dynamic px-8 py-3 text-sm">
+            <Download className="w-5 h-5" />
+            <span>XUẤT BÁO CÁO</span>
           </button>
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Overview */}
       <InventoryStats 
-        totalItems={stats.total}
-        lowStockItems={stats.low}
-        outOfStockItems={stats.out}
-        recentActivityCount={stats.recent}
+        totalItems={statsData.total}
+        lowStockItems={statsData.low}
+        outOfStockItems={statsData.out}
+        recentActivityCount={statsData.recent}
       />
 
-      {/* Filter Bar */}
-      <div className="glass p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1 group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-blue-soft transition-colors" />
+      {/* Filter & Search Bar */}
+      <div className="ai-card bg-surface flex flex-col md:flex-row gap-8 items-center">
+        <div className="relative flex-1 group w-full">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-foreground/20 group-focus-within:text-interaction transition-colors" />
           <input 
             type="text" 
-            placeholder="Tìm theo tên sản phẩm hoặc định mã SKU..." 
+            placeholder="TÌM THEO TÊN HOẶC MÃ SKU..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-900/50 border border-slate-700/50 rounded-xl outline-none focus:border-blue-electric/50 transition-all text-sm"
+            className="w-full pl-16 pr-6 py-4 bg-background border-4 border-foreground rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic tracking-tighter"
           />
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex items-center gap-4 w-full md:w-auto">
           <button 
             onClick={() => setLowStockOnly(!lowStockOnly)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all text-sm font-medium ${
+            className={`flex items-center gap-3 px-8 py-4 rounded-2xl border-4 transition-all font-black uppercase italic tracking-tighter text-sm shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] ${
               lowStockOnly 
-                ? 'bg-amber-500/10 border-amber-500/50 text-amber-400' 
-                : 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:text-slate-200'
+                ? 'bg-accent text-foreground border-foreground' 
+                : 'bg-background text-foreground/40 border-foreground/10 hover:border-foreground/40'
             }`}
           >
-            <AlertTriangle className="w-4 h-4" />
-            <span>Chỉ xem hàng sắp hết</span>
+            <AlertTriangle className="w-5 h-5 stroke-[3]" />
+            <span>SẮP HẾT</span>
           </button>
-          <button className="p-2.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-slate-400 hover:text-slate-200">
-            <Filter className="w-5 h-5" />
+          <button className="w-14 h-14 bg-surface border-4 border-foreground rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-[4px_4px_0px_0px_rgba(62,39,35,1)]">
+            <Filter className="w-6 h-6 stroke-[3]" />
           </button>
         </div>
       </div>
 
-      {/* Main Table */}
-      <div className="glass rounded-3xl border border-slate-800/50 overflow-hidden shadow-2xl">
+      {/* Inventory Table */}
+      <div className="ai-card p-0 overflow-hidden">
+        <div className="p-8 bg-foreground text-background flex items-center justify-between">
+          <h3 className="text-2xl font-black uppercase italic tracking-tighter flex items-center gap-3">
+            <Package className="w-6 h-6 stroke-[3]" />
+            Danh sách vật tư
+          </h3>
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-accent animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Dự báo tồn kho AI hoạt động</span>
+          </div>
+        </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-800/20 text-slate-500 text-[10px] uppercase tracking-widest">
-                <th className="px-8 py-5 font-bold">Sản phẩm</th>
-                <th className="px-8 py-5 font-bold">Chi nhánh</th>
-                <th className="px-8 py-5 font-bold text-center">Tồn thực tế</th>
-                <th className="px-8 py-5 font-bold text-center">Định mức</th>
-                <th className="px-8 py-5 font-bold">Trạng thái</th>
-                <th className="px-8 py-5 font-bold text-right">Thao tác</th>
+              <tr className="bg-foreground/5 text-foreground/40 text-[10px] font-black uppercase tracking-[0.2em]">
+                <th className="px-8 py-6">Mặt hàng</th>
+                <th className="px-8 py-6 text-center">Tồn thực tế</th>
+                <th className="px-8 py-6 text-center">Định mức</th>
+                <th className="px-8 py-6">Tình trạng</th>
+                <th className="px-8 py-6 text-right">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/30">
+            <tbody className="divide-y-4 divide-foreground/5">
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan={6} className="px-8 py-6">
-                      <div className="h-8 bg-slate-800/50 rounded-lg w-full"></div>
+                    <td colSpan={5} className="px-8 py-10">
+                      <div className="h-10 bg-foreground/5 rounded-2xl w-full"></div>
                     </td>
                   </tr>
                 ))
               ) : filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center">
-                    <div className="flex flex-col items-center gap-4 opacity-40">
-                      <Package className="w-16 h-16 text-slate-600" />
-                      <p className="text-slate-400 font-medium">Không tìm thấy sản phẩm nào trong kho</p>
+                  <td colSpan={5} className="px-8 py-32 text-center">
+                    <div className="flex flex-col items-center gap-6 opacity-20">
+                      <Package className="w-20 h-20" />
+                      <p className="text-xl font-black uppercase italic tracking-tighter">Kho hàng trống rỗng</p>
                     </div>
                   </td>
                 </tr>
@@ -192,44 +210,43 @@ export default function InventoryPage() {
                   const isOut = item.quantity <= 0;
 
                   return (
-                    <tr key={item.id} className="group hover:bg-slate-800/20 transition-all">
-                      <td className="px-8 py-5">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-blue-soft border border-slate-700/50">
-                            <Package className="w-5 h-5" />
+                    <tr key={item.id} className="group hover:bg-foreground/5 transition-all cursor-pointer">
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-6">
+                          <div className="w-14 h-14 rounded-2xl bg-background border-4 border-foreground/10 flex items-center justify-center text-primary group-hover:border-interaction transition-all">
+                            <Package className="w-7 h-7 stroke-[2.5]" />
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-slate-100 group-hover:text-blue-soft transition-colors">{product?.name || 'Unknown'}</p>
-                            <p className="text-[10px] text-slate-500 font-mono tracking-tighter">SKU: {product?.sku || 'N/A'}</p>
+                            <p className="text-lg font-black text-foreground uppercase italic tracking-tighter group-hover:text-interaction transition-all leading-none">{product?.name || 'Unknown'}</p>
+                            <p className="text-[10px] text-foreground/40 font-black uppercase tracking-widest mt-1">SKU: {product?.sku || 'N/A'}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-8 py-5">
-                        <span className="text-xs text-slate-400 font-medium italic">Chi nhánh mặc định</span>
-                      </td>
-                      <td className="px-8 py-5 text-center">
-                        <span className={`text-sm font-bold font-mono ${isOut ? 'text-red-400' : isLow ? 'text-amber-400' : 'text-emerald-400'}`}>
+                      <td className="px-8 py-6 text-center">
+                        <span className={`text-2xl font-black italic tracking-tighter ${isOut ? 'text-red-500' : isLow ? 'text-accent' : 'text-interaction'}`}>
                           {item.quantity}
                         </span>
-                        <span className="text-[10px] text-slate-500 ml-1 italic">{product?.unit || 'đv'}</span>
+                        <span className="text-[10px] text-foreground/40 font-black uppercase tracking-widest ml-2 italic">{product?.unit || 'MÓN'}</span>
                       </td>
-                      <td className="px-8 py-5 text-center">
-                        <span className="text-xs text-slate-500 font-mono">{item.minQuantity}</span>
+                      <td className="px-8 py-6 text-center">
+                        <span className="text-sm font-black text-foreground/30 italic tracking-tighter">{item.minQuantity}</span>
                       </td>
-                      <td className="px-8 py-5">
-                        {isOut ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-500/10 text-red-500 border border-red-500/20">Hết hàng</span>
-                        ) : isLow ? (
-                          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                            Sắp hết
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">An toàn</span>
-                        )}
+                      <td className="px-8 py-6">
+                        <div className="flex items-center">
+                          {isOut ? (
+                            <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-red-500 text-white border-2 border-foreground uppercase italic tracking-tighter shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">Hết hàng</span>
+                          ) : isLow ? (
+                            <span className="flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black bg-accent text-foreground border-2 border-foreground uppercase italic tracking-tighter shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                              <span className="w-2 h-2 rounded-full bg-foreground animate-pulse"></span>
+                              Sắp hết
+                            </span>
+                          ) : (
+                            <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-interaction text-white border-2 border-foreground uppercase italic tracking-tighter shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">An toàn</span>
+                          )}
+                        </div>
                       </td>
-                      <td className="px-8 py-5 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                      <td className="px-8 py-6 text-right">
+                        <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
                           <button 
                             onClick={() => setAdjustmentProduct({
                               id: item.productId,
@@ -237,10 +254,10 @@ export default function InventoryPage() {
                               currentQuantity: item.quantity,
                               branchId: item.branchId
                             })}
-                            className="p-2 text-slate-400 hover:text-blue-soft hover:bg-blue-500/10 rounded-lg transition-all"
+                            className="w-12 h-12 bg-surface border-2 border-foreground rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
                             title="Điều chỉnh"
                           >
-                            <Settings2 className="w-4 h-4" />
+                            <Settings2 className="w-5 h-5 stroke-[3]" />
                           </button>
                           <button 
                             onClick={() => setHistoryProduct({
@@ -248,13 +265,10 @@ export default function InventoryPage() {
                               name: product?.name || 'Unknown',
                               branchId: item.branchId
                             })}
-                            className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all"
+                            className="w-12 h-12 bg-surface border-2 border-foreground rounded-xl flex items-center justify-center hover:bg-accent shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
                             title="Lịch sử"
                           >
-                            <History className="w-4 h-4" />
-                          </button>
-                          <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-all">
-                            <ChevronRight className="w-4 h-4" />
+                            <History className="w-5 h-5 stroke-[3]" />
                           </button>
                         </div>
                       </td>

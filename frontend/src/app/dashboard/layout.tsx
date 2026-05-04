@@ -11,12 +11,18 @@ import {
   LogOut,
   Bell,
   Search,
-  Store
+  Store,
+  Sparkles,
+  ChevronRight,
+  Heart,
+  TrendingUp
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Tổng quan', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Bán hàng', href: '/pos/order', icon: Store },
+  { name: 'Khách hàng', href: '/dashboard/customers', icon: Heart },
+  { name: 'Báo cáo', href: '/dashboard/reports', icon: TrendingUp },
   { name: 'Nhân viên', href: '/dashboard/staff', icon: Users },
   { name: 'Sản phẩm', href: '/dashboard/products', icon: Package },
   { name: 'Cấu hình', href: '/dashboard/settings', icon: Settings },
@@ -32,21 +38,21 @@ export default function DashboardLayout({
   const { logout } = useAuth();
 
   return (
-    <div className="flex min-h-screen bg-navy-900 text-slate-100 font-sans">
+    <div className="flex min-h-screen bg-background text-foreground font-sans selection:bg-accent selection:text-accent-foreground">
       {/* Sidebar */}
-      <aside className="w-64 glass border-r border-slate-800/50 flex flex-col sticky top-0 h-screen">
-        <div className="p-6">
-          <Link href="/dashboard" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-blue-electric rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
-              <span className="font-bold text-white">K</span>
+      <aside className="w-80 bg-surface border-r-4 border-foreground flex flex-col sticky top-0 h-screen z-[100]">
+        <div className="p-8">
+          <Link href="/dashboard" className="flex items-center gap-3 group">
+            <div className="w-12 h-12 bg-primary border-2 border-foreground rounded-xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
+              <Sparkles className="text-white w-7 h-7" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+            <span className="text-2xl font-black uppercase italic tracking-tighter">
               KioskFlow
             </span>
           </Link>
         </div>
 
-        <nav className="flex-1 px-4 py-4 space-y-1">
+        <nav className="flex-1 px-6 py-8 space-y-4">
           {navigation.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -54,62 +60,65 @@ export default function DashboardLayout({
                 key={item.name}
                 href={item.href}
                 className={`
-                  flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
+                  flex items-center justify-between px-6 py-4 rounded-2xl transition-all duration-300 group border-4
                   ${isActive 
-                    ? 'bg-blue-electric text-white shadow-lg shadow-blue-500/20' 
-                    : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                    ? 'bg-interaction text-white border-foreground shadow-[6px_6px_0px_0px_rgba(62,39,35,1)] translate-x-[-2px] translate-y-[-2px]' 
+                    : 'text-foreground/40 border-transparent hover:bg-foreground/5 hover:text-foreground'
                   }
                 `}
               >
-                <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'group-hover:text-blue-soft'}`} />
-                <span className="font-medium">{item.name}</span>
+                <div className="flex items-center gap-4">
+                  <item.icon className={`w-6 h-6 stroke-[3] ${isActive ? 'text-white' : ''}`} />
+                  <span className="font-black uppercase italic tracking-tighter text-sm">{item.name}</span>
+                </div>
+                {isActive && <ChevronRight className="w-5 h-5 text-white/50" />}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 mt-auto">
+        <div className="p-6 mt-auto border-t-4 border-foreground/5">
           <button 
             onClick={() => {
               logout();
               router.push('/auth/login');
             }}
-            className="flex items-center gap-3 w-full px-4 py-3 text-slate-400 hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-all group"
+            className="flex items-center gap-4 w-full px-6 py-4 text-foreground/40 hover:bg-red-500/10 hover:text-red-500 rounded-2xl transition-all group font-black uppercase italic tracking-tighter text-sm"
           >
-            <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            <span className="font-medium">Đăng xuất</span>
+            <LogOut className="w-6 h-6 group-hover:-translate-x-1 transition-transform stroke-[3]" />
+            <span>Đăng xuất</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col min-w-0">
         {/* Top Navbar */}
-        <header className="h-16 border-b border-slate-800/50 flex items-center justify-between px-8 bg-navy-900/50 backdrop-blur-md sticky top-0 z-10">
-          <div className="flex items-center gap-4 bg-slate-800/30 px-4 py-2 rounded-full border border-slate-700/50 w-96 max-w-full group focus-within:border-blue-electric/50 transition-all">
-            <Search className="w-4 h-4 text-slate-500" />
+        <header className="h-24 border-b-4 border-foreground flex items-center justify-between px-12 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
+          <div className="flex items-center gap-4 bg-surface px-6 py-3 rounded-2xl border-4 border-foreground w-[480px] max-w-full group focus-within:shadow-[6px_6px_0px_0px_rgba(43,168,162,1)] transition-all">
+            <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction" />
             <input 
               type="text" 
-              placeholder="Tìm kiếm nhanh..." 
-              className="bg-transparent border-none outline-none text-sm w-full placeholder:text-slate-500"
+              placeholder="TÌM KIẾM HÀNH ĐỘNG..." 
+              className="bg-transparent border-none outline-none text-sm font-black uppercase italic tracking-tighter w-full placeholder:text-foreground/20"
               aria-label="Tìm kiếm nhanh"
             />
           </div>
 
-          <div className="flex items-center gap-4">
-            <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-all relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-amber-accent rounded-full border-2 border-navy-900"></span>
+          <div className="flex items-center gap-8">
+            <button className="w-12 h-12 bg-surface border-4 border-foreground rounded-xl flex items-center justify-center hover:bg-accent transition-all shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] relative">
+              <Bell className="w-6 h-6" />
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary border-2 border-foreground rounded-full"></span>
             </button>
-            <div className="h-8 w-px bg-slate-800 shadow-xl"></div>
-            <div className="flex items-center gap-3 pl-2">
+            
+            <div className="flex items-center gap-4 pl-4 border-l-4 border-foreground/10">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-semibold text-slate-200 leading-tight">Admin User</p>
-                <p className="text-xs text-slate-500">Store Owner</p>
+                <p className="text-sm font-black text-foreground uppercase italic tracking-tighter">Admin Master</p>
+                <p className="text-[10px] font-black text-interaction uppercase tracking-widest">Store Owner</p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-electric to-cyan-500 p-0.5 shadow-lg">
-                <div className="w-full h-full rounded-full bg-navy-900 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-blue-soft" />
+              <div className="w-14 h-14 rounded-2xl bg-surface border-4 border-foreground flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] overflow-hidden">
+                <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                  <Users className="w-7 h-7 text-primary" />
                 </div>
               </div>
             </div>
@@ -117,8 +126,11 @@ export default function DashboardLayout({
         </header>
 
         {/* Content Area */}
-        <div className="p-8 flex-1 overflow-auto">
-          {children}
+        <div className="p-12 flex-1 overflow-auto relative">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--color-primary)_0%,_transparent_1px)] bg-[size:40px_40px] opacity-[0.03] pointer-events-none"></div>
+          <div className="relative z-10">
+            {children}
+          </div>
         </div>
       </main>
     </div>

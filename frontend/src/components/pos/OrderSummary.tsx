@@ -1,50 +1,61 @@
 'use client';
 
 import React from 'react';
-import { ShoppingCart, Trash2, Plus, Minus, CreditCard } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Sparkles, Mic } from 'lucide-react';
 import { useOrderCart } from '@/lib/order/OrderCartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { formatVND } from '@/lib/utils/format';
 
 export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }) {
   const { items, removeItem, updateQuantity, subtotal, total, tax } = useOrderCart();
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+    return formatVND(value);
   };
 
   return (
-    <div aria-label="Tóm tắt đơn hàng" className="w-[380px] border-l border-slate-800/50 bg-navy-900/50 flex flex-col hidden lg:flex h-full">
-      {/* Header */}
-      <div className="p-6 flex items-center justify-between border-b border-slate-800/50 bg-navy-800/30">
-        <h2 className="text-lg font-bold text-slate-200 flex items-center gap-2">
-          <ShoppingCart className="w-5 h-5 text-blue-soft" />
-          Đơn hàng
-        </h2>
-        <span className="px-2.5 py-1 bg-slate-800 rounded-full text-xs font-bold text-slate-400 border border-slate-700/50">
-          {items.reduce((acc, item) => acc + item.quantity, 0)} món
-        </span>
+    <div aria-label="Tóm tắt đơn hàng" className="w-[480px] bg-surface flex flex-col hidden lg:flex h-full border-l-4 border-foreground relative">
+      {/* AI Assistance Header */}
+      <div className="p-8 flex items-center justify-between border-b-4 border-foreground bg-accent/10">
+        <div className="flex flex-col">
+          <h2 className="text-2xl font-black text-foreground flex items-center gap-3 italic uppercase tracking-tighter">
+            <ShoppingCart className="w-8 h-8 text-primary stroke-[3]" />
+            Đơn hàng
+          </h2>
+          <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1">Hệ thống AI đang hỗ trợ...</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="w-10 h-10 bg-interaction rounded-full flex items-center justify-center text-white shadow-[2px_2px_0px_0px_rgba(62,39,35,1)]">
+            <Mic size={18} />
+          </button>
+          <span className="px-4 py-1.5 bg-foreground text-background rounded-xl text-sm font-black uppercase tracking-tighter">
+            {items.reduce((acc, item) => acc + item.quantity, 0)} MÓN
+          </span>
+        </div>
       </div>
       
       {/* Items List */}
-      <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-6">
         <AnimatePresence initial={false}>
           {items.length === 0 ? (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="h-full flex flex-col items-center justify-center text-center p-6 gap-4 opacity-30"
+              className="h-full flex flex-col items-center justify-center text-center p-6 gap-6"
             >
-              <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center">
-                <ShoppingCart className="w-8 h-8" />
+              <div className="w-32 h-32 bg-background border-4 border-foreground rounded-[2rem] flex items-center justify-center relative">
+                <ShoppingCart className="w-16 h-16 text-foreground/20" />
+                <Sparkles className="absolute -top-4 -right-4 w-12 h-12 text-accent animate-float" />
               </div>
-              <div>
-                <p className="font-bold text-slate-300 text-sm">Giỏ hàng trống</p>
-                <p className="text-xs text-slate-500">Chạm vào sản phẩm để thêm</p>
+              <div className="space-y-2">
+                <p className="font-black text-foreground text-2xl uppercase tracking-tighter italic">Giỏ hàng đang trống</p>
+                <p className="text-sm font-bold opacity-40">Nói &quot;Gợi ý cho tôi món trà ngon&quot; <br /> để bắt đầu trải nghiệm AI</p>
+
               </div>
             </motion.div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-6">
               {items.map((item) => (
                 <motion.div
                   key={item.id}
@@ -52,38 +63,47 @@ export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="bg-navy-800/40 p-4 rounded-2xl border border-slate-800/50 group"
+                  className="bg-background p-6 rounded-[2rem] border-4 border-foreground shadow-[6px_6px_0px_0px_rgba(62,39,35,1)] group relative"
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex-1 min-w-0 pr-2">
-                      <h3 className="font-bold text-slate-200 text-sm truncate">{item.name}</h3>
-                      <p className="text-blue-soft text-xs font-mono font-bold">{formatCurrency(item.price)}</p>
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="flex-1 min-w-0 pr-4">
+                      <h3 className="font-black text-foreground text-xl uppercase italic tracking-tighter leading-tight">{item.name}</h3>
+                      {item.selectedToppings.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {item.selectedToppings.map((t) => (
+                            <span key={t.id} className="text-[10px] font-black uppercase italic tracking-tighter bg-interaction/10 text-interaction px-2 py-0.5 rounded-lg border-2 border-interaction/20">
+                              + {t.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-primary text-lg font-black tracking-tighter mt-1">{formatCurrency(item.price)}</p>
                     </div>
                     <button 
                       onClick={() => removeItem(item.id)}
-                      className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                      className="p-2 text-foreground/40 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all border-2 border-transparent hover:border-red-500/50"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={20} className="stroke-[3]" />
                     </button>
                   </div>
                   
-                  <div className="flex items-center justify-between mt-3">
-                    <div className="flex items-center bg-slate-900/50 rounded-xl border border-slate-800/50 p-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center bg-white rounded-2xl border-4 border-foreground p-1 gap-6">
                       <button 
                         onClick={() => updateQuantity(item.id, -1)}
-                        className="p-1 text-slate-400 hover:text-white"
+                        className="p-3 text-foreground hover:bg-interaction hover:text-white rounded-xl transition-all"
                       >
-                        <Minus size={14} />
+                        <Minus size={20} className="stroke-[4]" />
                       </button>
-                      <span className="w-8 text-center text-xs font-bold text-slate-200">{item.quantity}</span>
+                      <span className="w-12 text-center text-2xl font-black text-foreground">{item.quantity}</span>
                       <button 
                         onClick={() => updateQuantity(item.id, 1)}
-                        className="p-1 text-slate-400 hover:text-white"
+                        className="p-3 text-foreground hover:bg-interaction hover:text-white rounded-xl transition-all"
                       >
-                        <Plus size={14} />
+                        <Plus size={20} className="stroke-[4]" />
                       </button>
                     </div>
-                    <p className="font-mono font-black text-slate-200 text-sm">
+                    <p className="font-black text-foreground text-2xl tracking-tighter">
                       {formatCurrency(item.price * item.quantity)}
                     </p>
                   </div>
@@ -95,19 +115,19 @@ export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }
       </div>
 
       {/* Footer / Summary */}
-      <div className="p-6 border-t border-slate-800/50 bg-navy-900/80">
-        <div className="space-y-2 mb-6">
-          <div className="flex justify-between text-slate-500 text-xs">
+      <div className="p-8 border-t-4 border-foreground bg-background">
+        <div className="space-y-4 mb-8">
+          <div className="flex justify-between text-foreground/60 font-black uppercase text-sm tracking-tighter">
             <span>Tạm tính</span>
-            <span className="font-mono">{formatCurrency(subtotal)}</span>
+            <span className="">{formatCurrency(subtotal)}</span>
           </div>
-          <div className="flex justify-between text-slate-500 text-xs">
+          <div className="flex justify-between text-foreground/60 font-black uppercase text-sm tracking-tighter">
             <span>Thuế (10%)</span>
-            <span className="font-mono">{formatCurrency(tax)}</span>
+            <span className="">{formatCurrency(tax)}</span>
           </div>
-          <div className="flex justify-between text-white font-bold text-lg pt-3 mt-1 border-t border-slate-800/50">
-            <span>Tổng cộng</span>
-            <span className="text-blue-soft font-mono font-black">{formatCurrency(total)}</span>
+          <div className="flex justify-between text-foreground font-black text-4xl pt-6 mt-2 border-t-4 border-foreground uppercase italic tracking-tighter">
+            <span>TỔNG</span>
+            <span className="text-interaction">{formatCurrency(total)}</span>
           </div>
         </div>
         
@@ -115,14 +135,14 @@ export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }
           onClick={onCheckout}
           disabled={items.length === 0}
           className={cn(
-            "w-full py-4 flex items-center justify-center gap-3 rounded-2xl font-black text-sm uppercase tracking-widest transition-all",
+            "w-full py-8 flex items-center justify-center gap-4 rounded-[2rem] font-black text-2xl uppercase italic tracking-tighter transition-all border-4",
             items.length > 0 
-              ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20 active:scale-[0.98]" 
-              : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/50"
+              ? "bg-primary text-white border-foreground shadow-[8px_8px_0px_0px_rgba(62,39,35,1)] hover:shadow-[12px_12px_0px_0px_rgba(62,39,35,1)] hover:-translate-x-1 hover:-translate-y-1 active:translate-x-0 active:translate-y-0 active:shadow-none" 
+              : "bg-muted text-foreground/20 border-foreground/10 cursor-not-allowed"
           )}
         >
-          <CreditCard size={18} />
-          Thanh toán
+          <CreditCard size={28} className="stroke-[3]" />
+          XÁC NHẬN ĐƠN HÀNG
         </button>
       </div>
     </div>

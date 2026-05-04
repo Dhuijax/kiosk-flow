@@ -2,183 +2,210 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  Plus, 
   Search, 
-  MoreVertical, 
   UserPlus, 
   Users,
   Mail, 
   Shield, 
   RefreshCw,
   Trash2,
-  Edit
+  Edit,
+  AlertCircle,
+  CheckCircle,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { AuthService } from '@/gen/auth_connect';
 import { User } from '@/gen/auth_pb';
 import AddStaffModal from '@/components/staff/AddStaffModal';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function StaffPage() {
   const { token, tenantId } = useAuth();
   const [staff, setStaff] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [status, setStatus] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const fetchStaff = useCallback(async () => {
+  const fetchStaff = useCallback(async (showLoading = true) => {
     if (!token || !tenantId) return;
     
-    setLoading(true);
+    if (showLoading) setLoading(true);
     try {
       const client = getAuthenticatedClient(AuthService, tenantId, token);
       const response = await client.listStaff({});
       setStaff(response.staff);
-      setError('');
     } catch (err: unknown) {
       console.error('Failed to fetch staff:', err);
-      setError('Không thể tải danh sách nhân viên. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
   }, [token, tenantId]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (token) fetchStaff();
+    if (token) queueMicrotask(() => fetchStaff(false));
   }, [token, fetchStaff]);
 
+  const handleDeleteStaff = async (id: string) => {
+    if (!token || !tenantId || !confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) return;
+
+    try {
+      const client = getAuthenticatedClient(AuthService, tenantId, token);
+      await client.deleteStaff({ id });
+      setStatus({ message: 'Xóa nhân viên thành công!', type: 'success' });
+      fetchStaff();
+      setTimeout(() => setStatus(null), 3000);
+    } catch (err: unknown) {
+      console.error('Failed to delete staff:', err);
+      setStatus({ message: 'Lỗi khi xóa nhân viên!', type: 'error' });
+      setTimeout(() => setStatus(null), 3000);
+    }
+  };
+
+  const filteredStaff = staff.filter(member => 
+    member.fullName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    member.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-12 pb-20 relative">
+      {/* Toast Status */}
+      <AnimatePresence>
+        {status && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-8 left-1/2 -translate-x-1/2 z-[100]"
+          >
+            <div className={`px-8 py-4 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-4 flex items-center gap-4 ${
+              status.type === 'success' ? 'bg-interaction border-foreground text-white' : 'bg-red-400 border-foreground text-white'
+            }`}>
+              {status.type === 'success' ? <CheckCircle size={24} /> : <AlertCircle size={24} />}
+              <span className="font-black uppercase tracking-tighter italic">{status.message}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header Actions */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Quản lý nhân viên</h1>
-          <p className="text-slate-400 text-sm">Quản lý quyền truy cập và thông tin nhân sự của cửa hàng</p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <div className="space-y-2">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-primary border-4 border-foreground rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-5xl font-black text-foreground uppercase italic tracking-tighter">Nhân sự</h1>
+          </div>
+          <p className="text-foreground/40 font-bold uppercase text-[10px] tracking-widest ml-16">Quản lý đội ngũ vận hành hệ thống</p>
         </div>
+        
         <button 
-          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-electric hover:bg-blue-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/20 transition-all transform active:scale-95"
           onClick={() => setIsModalOpen(true)}
+          className="btn-dynamic px-8 py-4 group"
         >
-          <UserPlus className="w-4 h-4" />
-          <span>Thêm nhân viên</span>
+          <UserPlus className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+          <span>THÊM NHÂN VIÊN</span>
         </button>
       </div>
 
-      {/* Filter Bar */}
-      <div className="glass p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1 group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-blue-soft transition-colors" />
+      {/* Filter & Stats Bar */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex-1 relative group">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-foreground/20 group-focus-within:text-interaction transition-colors" />
           <input 
             type="text" 
-            placeholder="Tìm theo tên hoặc email..." 
-            className="w-full pl-10 pr-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-lg outline-none focus:border-blue-electric/50 transition-all text-sm"
+            placeholder="TÌM KIẾM NHÂN VIÊN..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-16 pr-6 py-5 bg-surface border-4 border-foreground rounded-[2rem] outline-none focus:bg-white transition-all shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] font-black text-lg uppercase italic tracking-tighter"
           />
         </div>
-        <div className="flex gap-2">
+        
+        <div className="flex gap-4">
+          <div className="bg-background border-4 border-foreground rounded-2xl px-8 py-4 flex flex-col justify-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] min-w-[160px]">
+            <span className="text-[10px] font-black uppercase opacity-40">Tổng số</span>
+            <span className="text-3xl font-black italic tracking-tighter">{staff.length}</span>
+          </div>
           <button 
-            onClick={fetchStaff}
-            className="p-2 text-slate-400 hover:text-blue-soft hover:bg-slate-800 rounded-lg transition-all"
-            title="Làm mới"
+            onClick={() => fetchStaff()}
+            className="w-20 bg-accent border-4 border-foreground rounded-2xl flex items-center justify-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
           >
-            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-8 h-8 text-foreground ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
-      {/* Staff Table */}
-      <div className="glass rounded-2xl overflow-hidden border border-slate-800/50 shadow-2xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-800/30 text-slate-400 text-xs uppercase tracking-wider">
-                <th className="px-6 py-4 font-semibold">Nhân viên</th>
-                <th className="px-6 py-4 font-semibold">Vai trò</th>
-                <th className="px-6 py-4 font-semibold">Trạng thái</th>
-                <th className="px-6 py-4 font-semibold text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/50">
-              {loading && staff.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-8 h-8 border-4 border-blue-electric border-t-transparent rounded-full animate-spin"></div>
-                      <p className="text-slate-500 text-sm">Đang tải dữ liệu...</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : staff.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center gap-3 opacity-50">
-                      <Users className="w-12 h-12 text-slate-600" />
-                      <p className="text-slate-500">Chưa có nhân viên nào</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                staff.map((member) => (
-                  <tr key={member.id} className="hover:bg-slate-800/20 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-blue-electric font-bold">
-                          {member.fullName.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-200">{member.fullName}</p>
-                          <p className="text-xs text-slate-500 flex items-center gap-1">
-                            <Mail className="w-3 h-3" />
-                            {member.email}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-slate-300 bg-slate-800/50 px-2.5 py-1 rounded-full w-fit border border-slate-700/50">
-                        <Shield className="w-3 h-3 text-blue-soft" />
-                        {member.roles.join(', ')}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                        Đang hoạt động
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-2 text-slate-400 hover:text-blue-soft hover:bg-slate-800 rounded-lg transition-all">
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        
-        {/* Pagination placeholder */}
-        <div className="px-6 py-4 bg-slate-800/10 border-t border-slate-800/50 flex items-center justify-between text-xs text-slate-500">
-          <span>Hiển thị {staff.length} nhân viên</span>
-          <div className="flex gap-2">
-            <button className="px-3 py-1 bg-slate-800 rounded hover:bg-slate-700 disabled:opacity-50 transition-colors" disabled>Trước</button>
-            <button className="px-3 py-1 bg-slate-800 rounded hover:bg-slate-700 disabled:opacity-50 transition-colors" disabled>Sau</button>
+      {/* Staff Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        {loading && staff.length === 0 ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-64 bg-foreground/5 animate-pulse rounded-[3rem] border-4 border-foreground/5" />
+          ))
+        ) : filteredStaff.length === 0 ? (
+          <div className="col-span-full py-32 flex flex-col items-center justify-center gap-6 bg-surface border-4 border-foreground border-dashed rounded-[3rem] opacity-40">
+            <Users size={80} />
+            <p className="text-2xl font-black uppercase italic tracking-tighter">Không tìm thấy nhân viên nào</p>
           </div>
-        </div>
-      </div>
+        ) : (
+          filteredStaff.map((member) => (
+            <motion.div
+              layout
+              key={member.id}
+              className="bg-surface border-4 border-foreground rounded-[3rem] p-8 shadow-[12px_12px_0px_0px_rgba(62,39,35,1)] hover:shadow-[16px_16px_0px_0px_rgba(43,168,162,1)] hover:-translate-x-1 hover:-translate-y-1 transition-all group relative overflow-hidden"
+            >
+              <div className="flex items-start justify-between mb-8">
+                <div className="w-20 h-20 bg-background border-4 border-foreground rounded-3xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] group-hover:bg-interaction transition-colors overflow-hidden relative">
+                  <span className="text-3xl font-black uppercase italic tracking-tighter group-hover:text-white">
+                    {member.fullName.charAt(0)}
+                  </span>
+                  <Sparkles className="absolute -top-1 -right-1 w-6 h-6 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                
+                <div className="flex gap-2">
+                  <button className="w-10 h-10 bg-background border-2 border-foreground rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all">
+                    <Edit size={18} />
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteStaff(member.id)}
+                    className="w-10 h-10 bg-background border-2 border-foreground rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
 
-      {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-3">
-          <Trash2 className="w-4 h-4" />
-          {error}
-        </div>
-      )}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground leading-tight">
+                    {member.fullName}
+                  </h3>
+                  <div className="flex items-center gap-2 text-foreground/40 mt-1">
+                    <Mail size={14} />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">{member.email}</span>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t-2 border-foreground/5 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Shield size={16} className="text-interaction" />
+                    <span className="text-xs font-black uppercase italic tracking-tighter bg-interaction/10 text-interaction px-3 py-1 rounded-lg">
+                      {member.roles[0] || 'Staff'}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Active</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))
+        )}
+      </div>
 
       <AddStaffModal 
         isOpen={isModalOpen} 

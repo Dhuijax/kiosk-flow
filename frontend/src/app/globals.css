@@ -1,47 +1,83 @@
 @import "tailwindcss";
 
+@source "../../src";
+
 @theme {
-  /* Core Palette */
-  --color-navy-900: #0F172A;
-  --color-navy-800: #1E293B;
-  --color-blue-electric: #3B82F6;
-  --color-blue-soft: #60A5FA;
-  --color-amber-accent: #F59E0B;
-  
-  /* Semantic Tokens */
-  --color-primary: var(--color-blue-electric);
-  --color-secondary: var(--color-navy-800);
-  --color-accent: var(--color-amber-accent);
-  --color-surface: var(--color-navy-900);
-  
-  /* Design Tokens */
-  --radius-xl: 16px;
-  --radius-lg: 12px;
-  --radius-md: 8px;
-  
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  
-  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --color-primary: #8b5e3c;
+  --color-interaction: #2ba8a2;
+  --color-accent: #ffd23f;
+  --color-background: #f7f5f2;
+  --color-foreground: #3e2723;
+  --color-surface: #ffffff;
+  --color-muted: #e0dcd0;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui;
+  --font-mono: "Roboto Mono", monospace;
+
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 2.5rem;
 }
 
-:root {
-  --background: #0F172A;
-  --foreground: #F8FAFC;
+@layer base {
+  body {
+    @apply bg-background text-foreground min-h-screen font-sans antialiased;
+  }
+
+  svg {
+    @apply transition-colors duration-200;
+  }
 }
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-}
+@layer components {
+  .ai-card {
+    @apply bg-surface border-4 border-foreground rounded-2xl p-6 transition-all duration-300 relative overflow-hidden;
+    box-shadow: 8px 8px 0px 0px var(--color-foreground);
+  }
 
-/* Glassmorphism Utility */
-.glass {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: var(--shadow-glass);
+  .ai-card:hover {
+    @apply translate-x-[-4px] translate-y-[-4px];
+    box-shadow: 12px 12px 0px 0px var(--color-interaction);
+  }
+
+  .btn-dynamic {
+    @apply flex items-center justify-center gap-3 px-8 py-4 bg-primary text-white border-4 border-foreground rounded-2xl font-black uppercase italic transition-all duration-200 cursor-pointer;
+    box-shadow: 4px 4px 0px 0px var(--color-foreground);
+  }
+
+  .btn-dynamic:hover {
+    @apply translate-x-[-2px] translate-y-[-2px] bg-interaction;
+    box-shadow: 6px 6px 0px 0px var(--color-foreground);
+  }
+
+  .mic-button {
+    @apply w-24 h-24 bg-accent border-4 border-foreground rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer;
+    box-shadow: 8px 8px 0px 0px var(--color-foreground);
+  }
+
+  .mic-button:hover {
+    @apply scale-105 translate-x-[-4px] translate-y-[-4px] bg-interaction;
+    box-shadow: 12px 12px 0px 0px var(--color-foreground);
+  }
+
+  .nav-blur {
+    @apply sticky top-0 z-50 bg-background/80 backdrop-blur-3xl border-b-4 border-foreground px-8 py-4;
+  }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-foreground/10 rounded-full border-4 border-background;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-foreground/20;
+  }
 }

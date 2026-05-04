@@ -19,50 +19,46 @@ export default function InventoryStats({
       label: 'Tổng mặt hàng',
       value: totalItems,
       icon: Package,
-      color: 'text-blue-400',
-      bg: 'bg-blue-500/10',
-      border: 'border-blue-500/20'
+      color: 'text-primary',
+      bg: 'bg-primary/10',
     },
     {
       label: 'Sắp hết hàng',
       value: lowStockItems,
       icon: AlertTriangle,
-      color: 'text-amber-400',
-      bg: 'bg-amber-500/10',
-      border: 'border-amber-500/20',
+      color: 'text-accent',
+      bg: 'bg-accent/10',
       pulse: lowStockItems > 0
     },
     {
       label: 'Đã hết hàng',
       value: outOfStockItems,
       icon: XCircle,
-      color: 'text-red-400',
+      color: 'text-red-600',
       bg: 'bg-red-500/10',
-      border: 'border-red-500/20'
     },
     {
-      label: 'Giao dịch gần đây',
+      label: 'Nhập xuất kho',
       value: recentActivityCount,
       icon: Activity,
-      color: 'text-emerald-400',
-      bg: 'bg-emerald-500/10',
-      border: 'border-emerald-500/20'
+      color: 'text-interaction',
+      bg: 'bg-interaction/10',
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
       {stats.map((stat, index) => (
         <div 
           key={index} 
-          className={`glass p-5 rounded-2xl border ${stat.border} flex items-center gap-4 transition-all hover:scale-[1.02]`}
+          className="ai-card group flex items-center gap-6"
         >
-          <div className={`p-3 rounded-xl ${stat.bg} ${stat.color}`}>
-            <stat.icon className={`w-6 h-6 ${stat.pulse ? 'animate-pulse' : ''}`} />
+          <div className={`w-16 h-16 rounded-2xl border-2 border-foreground flex items-center justify-center ${stat.bg} ${stat.color} shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all`}>
+            <stat.icon className={`w-8 h-8 stroke-[3] ${stat.pulse ? 'animate-pulse' : ''}`} />
           </div>
           <div>
-            <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">{stat.label}</p>
-            <p className="text-2xl font-bold text-white font-mono">{stat.value}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 leading-none mb-1">{stat.label}</p>
+            <p className="text-3xl font-black text-foreground italic tracking-tighter">{stat.value}</p>
           </div>
         </div>
       ))}

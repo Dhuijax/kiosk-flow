@@ -1,0 +1,276 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { 
+  X, 
+  Banknote, 
+  QrCode, 
+  CreditCard, 
+  CheckCircle, 
+  ArrowRight,
+  Calculator,
+  Wallet,
+  Sparkles
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { formatVND } from '@/lib/utils/format';
+import { PaymentMethod } from '@/gen/payment_pb';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
+
+interface PaymentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  total: number;
+  onConfirm: (method: PaymentMethod, receivedAmount?: number) => Promise<void>;
+  isSubmitting: boolean;
+}
+
+export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubmitting }: PaymentModalProps) {
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
+  const [receivedAmount, setReceivedAmount] = useState<number>(total);
+  const [prevTotal, setPrevTotal] = useState<number>(total);
+
+  // Adjust state when total changes
+  if (total !== prevTotal) {
+    setPrevTotal(total);
+    setReceivedAmount(total);
+  }
+
+  const [timestamp, setTimestamp] = useState<number>(0);
+  const change = Math.max(0, receivedAmount - total);
+
+  useEffect(() => {
+    // Set timestamp asynchronously to avoid cascading render warning and purity check
+    Promise.resolve().then(() => {
+      setTimestamp(Date.now());
+    });
+  }, []);
+
+  const handleMethodSelect = (method: PaymentMethod) => {
+    setSelectedMethod(method);
+  };
+
+  const methods = [
+    { id: PaymentMethod.CASH, name: 'TIỀN MẶT', icon: Banknote, color: 'bg-primary' },
+    { id: PaymentMethod.TRANSFER, name: 'QUÉT MÃ QR', icon: QrCode, color: 'bg-interaction' },
+    { id: PaymentMethod.CARD, name: 'QUẸT THẺ', icon: CreditCard, color: 'bg-foreground' },
+  ];
+
+  const quickAmounts = [
+    total,
+    Math.ceil(total / 50000) * 50000,
+    Math.ceil(total / 100000) * 100000,
+    Math.ceil(total / 200000) * 200000,
+    500000,
+  ].filter((v, i, a) => a.indexOf(v) === i && v >= total);
+
+  const handleConfirm = () => {
+    onConfirm(selectedMethod, selectedMethod === PaymentMethod.CASH ? receivedAmount : total);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[300] flex items-center justify-center p-8">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-background/80 backdrop-blur-xl" 
+        />
+        
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          className="bg-surface border-4 border-foreground rounded-[4rem] w-full max-w-5xl overflow-hidden shadow-[24px_24px_0px_0px_rgba(62,39,35,1)] relative z-10 flex flex-col md:flex-row"
+        >
+          {/* Left Side: Method Selection */}
+          <div className="flex-1 p-12 border-r-4 border-foreground space-y-10">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h2 className="text-4xl font-black uppercase italic tracking-tighter text-foreground leading-none">Thanh Toán</h2>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-40 italic">Chọn phương thức bạn muốn sử dụng</p>
+              </div>
+              <button 
+                onClick={onClose}
+                className="w-12 h-12 bg-background border-4 border-foreground rounded-2xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6">
+              {methods.map((method) => (
+                <button
+                  key={method.id}
+                  onClick={() => handleMethodSelect(method.id)}
+                  className={cn(
+                    "flex items-center justify-between p-8 rounded-[2rem] border-4 transition-all group relative overflow-hidden",
+                    selectedMethod === method.id 
+                      ? `${method.color} text-white border-foreground shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] -translate-x-1 -translate-y-1` 
+                      : "bg-background text-foreground/40 border-foreground/5 hover:border-foreground/20 hover:text-foreground"
+                  )}
+                >
+                  <div className="flex items-center gap-6 relative z-10">
+                    <div className={cn(
+                      "w-16 h-16 rounded-2xl border-4 border-foreground flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]",
+                      selectedMethod === method.id ? "bg-white/20" : "bg-foreground/5"
+                    )}>
+                      <method.icon size={32} className="stroke-[3]" />
+                    </div>
+                    <span className="text-2xl font-black uppercase italic tracking-tighter">{method.name}</span>
+                  </div>
+                  <div className={cn(
+                    "w-10 h-10 rounded-full border-4 border-foreground flex items-center justify-center relative z-10",
+                    selectedMethod === method.id ? "bg-white text-foreground" : "bg-background"
+                  )}>
+                    {selectedMethod === method.id && <CheckCircle size={20} className="stroke-[3]" />}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="p-8 bg-background rounded-[3rem] border-4 border-foreground flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-accent border-2 border-foreground rounded-xl flex items-center justify-center text-foreground">
+                  <Wallet size={24} />
+                </div>
+                <span className="text-sm font-black uppercase tracking-widest opacity-40">Tổng thanh toán</span>
+              </div>
+              <span className="text-4xl font-black italic tracking-tighter text-foreground">{formatVND(total)}</span>
+            </div>
+          </div>
+
+          {/* Right Side: Action Area */}
+          <div className="flex-1 p-12 bg-background flex flex-col">
+            <div className="flex-1">
+              <AnimatePresence mode="wait">
+                {selectedMethod === PaymentMethod.CASH && (
+                  <motion.div 
+                    key="cash"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-8"
+                  >
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Tiền khách đưa</label>
+                      <div className="relative">
+                        <Banknote className="absolute left-6 top-1/2 -translate-y-1/2 w-8 h-8 text-foreground opacity-20" />
+                        <input 
+                          type="number"
+                          value={receivedAmount}
+                          onChange={(e) => setReceivedAmount(Number(e.target.value))}
+                          className="w-full pl-20 pr-8 py-6 bg-surface border-4 border-foreground rounded-[2rem] text-4xl font-black italic tracking-tighter text-foreground outline-none focus:bg-white transition-all shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      {quickAmounts.map((amt) => (
+                        <button
+                          key={amt}
+                          onClick={() => setReceivedAmount(amt)}
+                          className="py-4 bg-surface border-4 border-foreground rounded-2xl font-black text-sm hover:bg-accent transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] active:shadow-none active:translate-x-1 active:translate-y-1"
+                        >
+                          {formatVND(amt)}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="p-8 bg-foreground text-background rounded-[3rem] border-4 border-foreground shadow-[12px_12px_0px_0px_rgba(43,168,162,1)] flex items-center justify-between">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Tiền thừa trả khách</p>
+                        <p className="text-4xl font-black italic tracking-tighter text-accent">{formatVND(change)}</p>
+                      </div>
+                      <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center text-foreground shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+                        <Calculator size={32} />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {selectedMethod === PaymentMethod.TRANSFER && (
+                  <motion.div 
+                    key="transfer"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="flex flex-col items-center justify-center space-y-8"
+                  >
+                    <div className="bg-white p-8 rounded-[3rem] border-8 border-foreground shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative group">
+                      <div className="w-64 h-64 bg-background border-2 border-foreground/5 flex items-center justify-center overflow-hidden">
+                        <Image 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=vietqr://payment?amount=${total}&note=ORDER_${timestamp}`}
+                          alt="VietQR"
+                          width={256}
+                          height={256}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <div className="absolute -top-4 -right-4 w-12 h-12 bg-primary border-4 border-foreground rounded-2xl flex items-center justify-center text-white rotate-12 group-hover:rotate-0 transition-transform">
+                        <QrCode size={24} />
+                      </div>
+                    </div>
+                    <div className="text-center space-y-2">
+                      <p className="text-2xl font-black uppercase italic tracking-tighter text-foreground">QUÉT ĐỂ THANH TOÁN</p>
+                      <p className="text-sm font-bold opacity-40 uppercase tracking-widest">Hỗ trợ tất cả ứng dụng ngân hàng & ví điện tử</p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {selectedMethod === PaymentMethod.CARD && (
+                  <motion.div 
+                    key="card"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="flex flex-col items-center justify-center h-full space-y-12"
+                  >
+                    <div className="relative">
+                      <div className="w-64 h-64 bg-surface border-4 border-foreground rounded-full flex items-center justify-center shadow-[16px_16px_0px_0px_rgba(62,39,35,1)]">
+                        <CreditCard size={120} className="text-foreground animate-pulse" />
+                      </div>
+                      <Sparkles className="absolute -top-4 -right-4 w-16 h-16 text-accent animate-float" />
+                    </div>
+                    <div className="text-center space-y-4">
+                      <h3 className="text-3xl font-black uppercase italic tracking-tighter text-foreground leading-none">VUI LÒNG QUẸT THẺ</h3>
+                      <p className="text-sm font-bold opacity-40 uppercase tracking-widest leading-relaxed">Kết nối với thiết bị đầu cuối POS...</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <button
+              onClick={handleConfirm}
+              disabled={isSubmitting || (selectedMethod === PaymentMethod.CASH && receivedAmount < total)}
+              className={cn(
+                "w-full py-8 mt-12 rounded-[2.5rem] font-black text-3xl uppercase italic tracking-tighter flex items-center justify-center gap-6 border-4 transition-all",
+                isSubmitting 
+                  ? "bg-muted text-foreground/20 border-foreground/10 cursor-not-allowed" 
+                  : "bg-interaction text-white border-foreground shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 active:translate-x-0 active:translate-y-0 active:shadow-none"
+              )}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+                  <span>ĐANG XỬ LÝ...</span>
+                </>
+              ) : (
+                <>
+                  <span>HOÀN TẤT THANH TOÁN</span>
+                  <ArrowRight size={32} className="stroke-[4]" />
+                </>
+              )}
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+}

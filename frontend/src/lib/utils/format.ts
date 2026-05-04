@@ -15,8 +15,8 @@ export function moneyToNumber(money: Money | undefined): number {
  */
 export function formatVND(value: Money | number | undefined): string {
   const amount = typeof value === 'number' ? value : moneyToNumber(value);
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-  }).format(amount);
+  // Manual formatting to ensure hydration stability across different environments
+  const formatted = Math.floor(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return `${formatted} ₫`;
 }
+

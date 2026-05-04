@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
-import { Product } from '@/gen/product_pb';
+import { Product, Topping } from '@/gen/product_pb';
 import { moneyToNumber } from '@/lib/utils/format';
 
 export interface CartItem {
@@ -19,7 +19,7 @@ interface OrderCartContextType {
   items: CartItem[];
   tableId: string | null;
   setTableId: (id: string | null) => void;
-  addItem: (product: Product, quantity?: number) => void;
+  addItem: (product: Product, selectedToppings?: Topping[], quantity?: number) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, delta: number) => void;
   clearCart: () => void;
@@ -34,10 +34,15 @@ export function OrderCartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [tableId, setTableId] = useState<string | null>(null);
 
-  const addItem = useCallback((product: Product, quantity = 1) => {
+  const addItem = useCallback((product: Product, selectedToppings: Topping[] = [], quantity = 1) => {
     setItems(prev => {
-      // Check if item already exists with exact same productId (for now, ignoring toppings diff)
-      const existingItemIndex = prev.findIndex(item => item.productId === product.id);
+      // Check if item already exists with exact same productId AND same toppings
+      const selectedToppingIds = [...selectedToppings].map(t => t.id).sort().join(',');
+      
+      const existingItemIndex = prev.findIndex(item => {
+        const itemToppingIds = item.selectedToppings.map(t => t.id).sort().join(',');
+        return item.productId === product.id && itemToppingIds === selectedToppingIds;
+      });
       
       if (existingItemIndex > -1) {
         const newItems = [...prev];
@@ -56,7 +61,11 @@ export function OrderCartProvider({ children }: { children: React.ReactNode }) {
         quantity,
         note: '',
         image_url: product.imageUrl,
-        selectedToppings: []
+        selectedToppings: selectedToppings.map(t => ({
+          id: t.id,
+          name: t.name,
+          price: moneyToNumber(t.price)
+        }))
       };
       
       return [...prev, newItem];

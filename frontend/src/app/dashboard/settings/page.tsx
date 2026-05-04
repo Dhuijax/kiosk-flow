@@ -1,105 +1,122 @@
 'use client';
 
-import React from 'react';
-import { Settings, Save, Bell, Shield, Palette, Store, Smartphone } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  Save, 
+  Bell, 
+  Shield, 
+  Palette, 
+  Store, 
+  Smartphone, 
+  Loader2,
+  Sparkles
+} from 'lucide-react';
+import StoreSettings from '@/components/dashboard/settings/StoreSettings';
+import AppearanceSettings from '@/components/dashboard/settings/AppearanceSettings';
+import NotificationSettings from '@/components/dashboard/settings/NotificationSettings';
+import SecuritySettings from '@/components/dashboard/settings/SecuritySettings';
+import KioskSettings from '@/components/dashboard/settings/KioskSettings';
+
+type SettingsTab = 'store' | 'appearance' | 'notifications' | 'security' | 'kiosk';
 
 export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState<SettingsTab>('store');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = () => {
+    setSaving(true);
+    setTimeout(() => setSaving(false), 1500);
+  };
+
+  const navItems = [
+    { id: 'store', name: 'Cửa hàng', icon: Store },
+    { id: 'appearance', name: 'Giao diện', icon: Palette },
+    { id: 'notifications', name: 'Thông báo', icon: Bell },
+    { id: 'security', name: 'Bảo mật', icon: Shield },
+    { id: 'kiosk', name: 'Thiết bị Kiosk', icon: Smartphone },
+  ] as const;
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'store': return <StoreSettings />;
+      case 'appearance': return <AppearanceSettings />;
+      case 'notifications': return <NotificationSettings />;
+      case 'security': return <SecuritySettings />;
+      case 'kiosk': return <KioskSettings />;
+      default: return <StoreSettings />;
+    }
+  };
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Cấu hình hệ thống</h1>
-          <p className="text-slate-400 mt-1">Quản lý các thiết lập cửa hàng và tài khoản của bạn</p>
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 text-interaction font-black uppercase text-xs tracking-widest">
+            <Sparkles className="w-5 h-5" />
+            <span>Cấu hình toàn hệ thống</span>
+          </div>
+          <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground">
+            Thiết <span className="text-primary">Lập</span>
+          </h1>
+          <p className="text-foreground/40 font-bold flex items-center gap-2 italic">
+            Quản lý vận hành và bảo mật cửa hàng của bạn
+          </p>
         </div>
-        <button className="flex items-center gap-2 px-6 py-3 bg-blue-electric hover:bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-500/20 transition-all transform active:scale-95">
-          <Save className="w-4 h-4" />
-          Lưu thay đổi
+        
+        <button 
+          onClick={handleSave}
+          disabled={saving}
+          className="btn-dynamic py-5 px-10 text-lg min-w-[240px] flex items-center justify-center"
+        >
+          {saving ? (
+            <Loader2 className="w-6 h-6 animate-spin" />
+          ) : (
+            <>
+              <Save className="w-6 h-6" />
+              <span>LƯU THAY ĐỔI</span>
+            </>
+          )}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Navigation Sidebar for Settings */}
-        <div className="lg:col-span-1 space-y-2">
-          {[
-            { name: 'Cửa hàng', icon: Store, active: true },
-            { name: 'Giao diện', icon: Palette, active: false },
-            { name: 'Thông báo', icon: Bell, active: false },
-            { name: 'Bảo mật', icon: Shield, active: false },
-            { name: 'Thiết bị Kiosk', icon: Smartphone, active: false },
-          ].map((item) => (
-            <button
-              key={item.name}
-              className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all font-bold text-sm ${
-                item.active 
-                ? 'bg-slate-800 text-blue-soft border border-blue-electric/20' 
-                : 'text-slate-400 hover:bg-slate-800/50 hover:text-white border border-transparent'
-              }`}
-            >
-              <item.icon className={`w-5 h-5 ${item.active ? 'text-blue-soft' : 'text-slate-500'}`} />
-              {item.name}
-            </button>
-          ))}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+        {/* Navigation Sidebar */}
+        <div className="lg:col-span-1 space-y-4">
+          <div className="ai-card p-4 space-y-2 bg-surface/50">
+            {navItems.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`
+                    w-full flex items-center gap-4 px-6 py-5 rounded-2xl transition-all duration-300 border-4 font-black uppercase italic tracking-tighter text-sm
+                    ${isActive 
+                      ? 'bg-interaction text-white border-foreground shadow-[6px_6px_0px_0px_rgba(62,39,35,1)] translate-x-[-2px] translate-y-[-2px]' 
+                      : 'text-foreground/40 border-transparent hover:bg-foreground/5 hover:text-foreground'
+                    }
+                  `}
+                >
+                  <item.icon className={`w-6 h-6 stroke-[3] ${isActive ? 'text-white' : ''}`} />
+                  {item.name}
+                </button>
+              );
+            })}
+          </div>
+          
+          <div className="p-6 bg-accent/10 border-4 border-dashed border-accent/30 rounded-[2rem] text-center">
+            <p className="text-[10px] font-black uppercase tracking-widest text-accent mb-2">Hỗ trợ kỹ thuật</p>
+            <p className="text-xs font-bold text-foreground opacity-60">Bạn cần giúp đỡ với cấu hình? <br /> Liên hệ AI Assistant.</p>
+          </div>
         </div>
 
-        {/* Settings Content */}
-        <div className="lg:col-span-2 space-y-8">
-          <div className="glass p-8 rounded-[32px] border border-white/5 space-y-6">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <Store className="w-5 h-5 text-blue-soft" />
-              Thông tin cửa hàng
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase ml-1">Tên cửa hàng</label>
-                <input 
-                  type="text" 
-                  defaultValue="KioskFlow Demo Store"
-                  className="w-full px-5 py-3.5 bg-slate-900/50 border border-slate-700/50 rounded-2xl outline-none focus:border-blue-electric/50 text-white font-medium"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase ml-1">Số điện thoại</label>
-                <input 
-                  type="text" 
-                  defaultValue="0987 654 321"
-                  className="w-full px-5 py-3.5 bg-slate-900/50 border border-slate-700/50 rounded-2xl outline-none focus:border-blue-electric/50 text-white font-medium"
-                />
-              </div>
-              <div className="md:col-span-2 space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase ml-1">Địa chỉ</label>
-                <input 
-                  type="text" 
-                  defaultValue="Thành phố Hồ Chí Minh, Việt Nam"
-                  className="w-full px-5 py-3.5 bg-slate-900/50 border border-slate-700/50 rounded-2xl outline-none focus:border-blue-electric/50 text-white font-medium"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="glass p-8 rounded-[32px] border border-white/5 space-y-6">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <Palette className="w-5 h-5 text-blue-soft" />
-              Giao diện Dashboard
-            </h3>
-            <div className="flex items-center gap-6">
-              <div className="w-24 h-24 rounded-2xl bg-blue-electric/20 border border-blue-electric/40 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
-                <div className="w-12 h-12 rounded-full bg-blue-electric shadow-lg shadow-blue-500/50"></div>
-              </div>
-              <div className="flex-1">
-                <p className="text-white font-bold">Chế độ hiển thị</p>
-                <p className="text-slate-400 text-sm">Chọn tông màu chủ đạo cho hệ thống quản lý của bạn</p>
-                <div className="flex gap-3 mt-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-electric border-2 border-white cursor-pointer"></div>
-                  <div className="w-6 h-6 rounded-full bg-cyan-500 border-2 border-transparent cursor-pointer hover:border-white/50"></div>
-                  <div className="w-6 h-6 rounded-full bg-amber-500 border-2 border-transparent cursor-pointer hover:border-white/50"></div>
-                  <div className="w-6 h-6 rounded-full bg-emerald-500 border-2 border-transparent cursor-pointer hover:border-white/50"></div>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Content Area */}
+        <div className="lg:col-span-3">
+          {renderContent()}
         </div>
       </div>
     </div>
   );
 }
+

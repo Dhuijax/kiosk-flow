@@ -7,7 +7,6 @@ import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { TableMapCanvas } from './TableMapCanvas';
 import { Map as MapIcon, Edit3, Save, X, RefreshCw } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -37,7 +36,7 @@ export default function FloorPlanManager() {
       }
     };
     run();
-  }, [tenantId, token, selectedPlanId]);
+  }, [tenantId, token, branchId, selectedPlanId]);
 
   const fetchTables = useCallback(async () => {
     if (!tenantId || !selectedPlanId) return;
@@ -100,27 +99,27 @@ export default function FloorPlanManager() {
   return (
     <div className="flex flex-col h-full gap-6">
       {/* Header with Area Selector and Actions */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-slate-900/40 border border-white/5 rounded-3xl backdrop-blur-xl shadow-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-surface border-4 border-foreground rounded-[2rem] shadow-[8px_8px_0px_0px_var(--color-foreground)]">
         <div className="flex items-center gap-4 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-          <div className="p-2.5 bg-blue-500/10 border border-blue-500/20 rounded-2xl text-blue-400">
+          <div className="p-2.5 bg-primary/10 border-2 border-primary/20 rounded-xl text-primary">
             <MapIcon size={20} />
           </div>
           <div className="whitespace-nowrap mr-2">
-            <h2 className="text-lg font-bold text-white tracking-tight">Khu vực</h2>
-            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest leading-none">Sơ đồ bàn</p>
+            <h2 className="text-lg font-black text-foreground uppercase italic tracking-tighter">Khu vực</h2>
+            <p className="text-[10px] text-foreground/40 uppercase font-black tracking-widest leading-none">Sơ đồ bàn</p>
           </div>
           
-          <div className="h-10 w-px bg-white/5 mx-2" />
+          <div className="h-10 w-px bg-foreground/10 mx-2" />
           
           {floorPlans.map((plan) => (
             <button
               key={plan.id}
               onClick={() => setSelectedPlanId(plan.id)}
               className={cn(
-                "px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-300 border",
+                "px-5 py-2 rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all duration-300 border-4",
                 selectedPlanId === plan.id
-                  ? "bg-blue-600 text-white border-blue-400 shadow-[0_0_20px_-5px_rgba(59,130,246,0.5)]"
-                  : "bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:text-slate-200"
+                  ? "bg-interaction text-white border-foreground shadow-[4px_4px_0px_0px_var(--color-foreground)] -translate-y-0.5"
+                  : "bg-background text-foreground/40 border-transparent hover:bg-foreground/5 hover:text-foreground"
               )}
             >
               {plan.name}
@@ -133,13 +132,13 @@ export default function FloorPlanManager() {
             <>
               <button
                 onClick={() => setIsEditMode(false)}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold transition-all border border-white/5"
+                className="flex items-center gap-2 px-4 py-2 bg-background hover:bg-foreground/5 text-foreground/40 rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all border-4 border-transparent"
               >
                 <X size={16} /> Hủy
               </button>
               <button
                 onClick={saveLayout}
-                className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-900/20 border border-emerald-400/30"
+                className="flex items-center gap-2 px-5 py-2 bg-primary hover:bg-interaction text-white rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all shadow-[4px_4px_0px_0px_var(--color-foreground)] border-4 border-foreground"
               >
                 <Save size={16} /> Lưu sơ đồ
               </button>
@@ -148,13 +147,13 @@ export default function FloorPlanManager() {
             <>
               <button 
                 onClick={fetchTables}
-                className="p-2.5 bg-white/5 hover:bg-white/10 text-slate-400 rounded-xl transition-all border border-white/5"
+                className="w-12 h-12 bg-background hover:bg-foreground/5 text-foreground/40 rounded-xl transition-all border-4 border-foreground/10 flex items-center justify-center"
               >
                 <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
               </button>
               <button
                 onClick={() => setIsEditMode(true)}
-                className="flex items-center gap-2 px-5 py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-xl text-sm font-bold transition-all border border-blue-500/20 shadow-xl"
+                className="flex items-center gap-2 px-5 py-2 bg-foreground text-background rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all border-4 border-foreground shadow-[4px_4px_0px_0px_var(--color-foreground)] hover:bg-interaction hover:text-white"
               >
                 <Edit3 size={16} /> Chỉnh sửa
               </button>

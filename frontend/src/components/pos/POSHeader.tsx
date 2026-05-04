@@ -16,60 +16,44 @@ export default function POSHeader() {
   const { logout } = useAuth();
 
   return (
-    <header className="h-14 bg-navy-800/80 backdrop-blur-md border-b border-slate-800/50 flex items-center justify-between px-4 sticky top-0 z-50">
-      <div className="flex items-center gap-6">
-        <Link href="/dashboard" className="flex items-center gap-2 group text-slate-400 hover:text-white transition-colors">
-          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="text-sm font-medium">Dashboard</span>
+    <header className="h-24 bg-background/80 backdrop-blur-xl border-b-4 border-foreground flex items-center justify-between px-8 sticky top-0 z-50">
+      <div className="flex items-center gap-10">
+        <Link href="/dashboard" className="flex items-center gap-3 group text-foreground/40 hover:text-interaction transition-all">
+          <div className="w-10 h-10 border-2 border-foreground rounded-lg flex items-center justify-center bg-surface shadow-[2px_2px_0px_0px_rgba(62,39,35,1)] group-hover:bg-interaction group-hover:text-white transition-all">
+            <ChevronLeft className="w-6 h-6 stroke-[3]" />
+          </div>
+          <span className="text-sm font-black uppercase italic tracking-tighter">Dashboard</span>
         </Link>
         
-        <div className="h-6 w-px bg-slate-700/50"></div>
-        
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-electric/20 rounded-lg flex items-center justify-center border border-blue-electric/30">
-            <Store className="w-4 h-4 text-blue-soft" />
+        <div className="flex items-center gap-4 p-3 bg-surface border-2 border-foreground rounded-2xl shadow-[4px_4px_0px_0px_rgba(62,39,35,1)]">
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
+            <Store className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-bold leading-tight uppercase tracking-wider text-slate-400">Chi nhánh</p>
-            <p className="text-sm font-semibold text-slate-200 leading-tight">Cửa hàng chính</p>
+            <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Chi nhánh</p>
+            <p className="text-sm font-black text-foreground uppercase italic tracking-tighter">Cửa hàng chính</p>
           </div>
         </div>
-
-        <div className="h-6 w-px bg-slate-700/50"></div>
-        
-        <nav className="flex items-center gap-1">
-          <Link 
-            href="/pos/order" 
-            className="px-4 py-2 rounded-xl text-sm font-bold transition-all hover:bg-white/5 text-slate-400 hover:text-white"
-          >
-            Thực đơn
-          </Link>
-          <Link 
-            href="/pos/tables" 
-            className="px-4 py-2 rounded-xl text-sm font-bold transition-all bg-white/5 text-slate-200"
-          >
-            Sơ đồ bàn
-          </Link>
-        </nav>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-full border border-slate-700/50">
-          <Clock className="w-4 h-4 text-amber-accent" />
-          <span className="text-sm font-mono font-bold text-slate-300">
+      <div className="flex items-center gap-8">
+        <div className="flex items-center gap-3 px-6 py-3 bg-accent/10 border-2 border-foreground rounded-2xl">
+          <Clock className="w-5 h-5 text-primary stroke-[3]" />
+          <span className="text-lg font-black text-foreground italic tracking-tighter">
             {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
 
-        <div className="h-8 w-px bg-slate-700/50"></div>
-
-        <div className="flex items-center gap-3 pl-2">
+        <div className="flex items-center gap-4">
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-semibold text-slate-200 leading-tight leading-none mb-0.5">Cashier</p>
-            <p className="text-[10px] text-green-400 font-medium uppercase tracking-tighter">● Trực tuyến</p>
+            <p className="text-sm font-black text-foreground uppercase italic tracking-tighter">Cashier Mode</p>
+            <div className="flex items-center justify-end gap-1">
+              <span className="w-2 h-2 bg-interaction rounded-full animate-pulse"></span>
+              <span className="text-[10px] text-interaction font-black uppercase tracking-tighter italic">Online</span>
+            </div>
           </div>
-          <div className="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center">
-            <UserIcon className="w-5 h-5 text-slate-400" />
+          <div className="w-14 h-14 rounded-2xl bg-surface border-4 border-foreground flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(62,39,35,1)]">
+            <UserIcon className="w-7 h-7 text-foreground" />
           </div>
         </div>
 
@@ -78,10 +62,10 @@ export default function POSHeader() {
             logout();
             router.push('/auth/login');
           }}
-          className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+          className="w-12 h-12 bg-red-500 text-white border-2 border-foreground rounded-xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
           title="Đăng xuất"
         >
-          <LogOut className="w-5 h-5" />
+          <LogOut className="w-6 h-6 stroke-[3]" />
         </button>
       </div>
     </header>

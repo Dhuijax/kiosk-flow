@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronRight, ChevronDown, Folder, Plus, Edit, Layers } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, Plus, Edit, Layers, Sparkles } from 'lucide-react';
 import { Category } from '@/gen/category_pb';
 import { CategoryService } from '@/gen/category_connect';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
@@ -33,8 +33,10 @@ export default function CategoryTree({ onSelect, selectedId }: CategoryTreeProps
   }, [token, tenantId]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect, @typescript-eslint/no-floating-promises
-    fetchCategories();
+    const timer = setTimeout(() => {
+      fetchCategories();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchCategories]);
 
   const toggleExpand = (id: string) => {
@@ -47,7 +49,7 @@ export default function CategoryTree({ onSelect, selectedId }: CategoryTreeProps
     if (filtered.length === 0 && level > 0) return null;
 
     return (
-      <ul className={`${level > 0 ? 'ml-4' : ''} space-y-1`}>
+      <ul className={`${level > 0 ? 'ml-6 mt-2' : ''} space-y-3`}>
         {filtered.map(category => {
           const isExpanded = expanded[category.id];
           const isSelected = selectedId === category.id;
@@ -57,27 +59,29 @@ export default function CategoryTree({ onSelect, selectedId }: CategoryTreeProps
             <li key={category.id}>
               <div 
                 className={`
-                  flex items-center justify-between group px-3 py-2 rounded-lg cursor-pointer transition-all
-                  ${isSelected ? 'bg-blue-electric/20 text-blue-soft border border-blue-electric/30' : 'hover:bg-slate-800/50 text-slate-400 hover:text-slate-200'}
+                  flex items-center justify-between group px-4 py-3 rounded-xl cursor-pointer transition-all border-2
+                  ${isSelected 
+                    ? 'bg-interaction text-white border-foreground shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]' 
+                    : 'bg-surface border-foreground/10 text-foreground/40 hover:border-foreground/40 hover:text-foreground'}
                 `}
                 onClick={() => onSelect(isSelected ? null : category.id)}
               >
-                <div className="flex items-center gap-2 overflow-hidden">
+                <div className="flex items-center gap-3 overflow-hidden">
                   {hasChildren ? (
                     <button 
                       onClick={(e) => { e.stopPropagation(); toggleExpand(category.id); }}
-                      className="p-0.5 hover:bg-slate-700 rounded text-slate-500"
+                      className={`p-1 rounded-lg transition-colors ${isSelected ? 'bg-white/20' : 'hover:bg-foreground/5'}`}
                     >
-                      {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                      {isExpanded ? <ChevronDown className="w-4 h-4 stroke-[3]" /> : <ChevronRight className="w-4 h-4 stroke-[3]" />}
                     </button>
-                  ) : <div className="w-4.5" />}
-                  <Folder className={`w-4 h-4 shrink-0 ${isSelected ? 'text-blue-soft' : 'text-slate-500'}`} />
-                  <span className="text-sm font-medium truncate">{category.name}</span>
+                  ) : <div className="w-6" />}
+                  <Folder className={`w-5 h-5 shrink-0 ${isSelected ? 'text-white' : 'text-foreground/20'}`} />
+                  <span className="text-xs font-black uppercase italic tracking-tighter truncate">{category.name}</span>
                 </div>
                 
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="p-1 hover:bg-slate-700 rounded text-slate-500 hover:text-blue-soft">
-                    <Edit className="w-3 h-3" />
+                  <button className="p-1.5 hover:bg-foreground/5 rounded-lg text-foreground/20 hover:text-interaction">
+                    <Edit className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -91,41 +95,43 @@ export default function CategoryTree({ onSelect, selectedId }: CategoryTreeProps
   };
 
   return (
-    <div className="w-64 glass rounded-2xl p-4 flex flex-col h-full border border-slate-800/50">
-      <div className="flex items-center justify-between mb-4 px-2">
-        <h2 className="text-sm font-bold text-slate-100 uppercase tracking-wider flex items-center gap-2">
-          <Layers className="w-4 h-4 text-blue-soft" />
-          Danh mục
+    <div className="ai-card h-full flex flex-col p-6 overflow-hidden">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-sm font-black text-foreground uppercase italic tracking-tighter flex items-center gap-3">
+          <Layers className="w-5 h-5 text-interaction stroke-[3]" />
+          Phân loại
         </h2>
-        <button className="p-1.5 hover:bg-blue-electric/20 text-blue-soft rounded-lg transition-all border border-transparent hover:border-blue-electric/30">
-          <Plus className="w-4 h-4" />
+        <button className="w-10 h-10 bg-primary text-white border-2 border-foreground rounded-lg flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all">
+          <Plus className="w-6 h-6 stroke-[3]" />
         </button>
       </div>
 
-      <div className="flex-1 overflow-auto custom-scrollbar">
+      <div className="flex-1 overflow-auto custom-scrollbar pr-2">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-10 gap-2 opacity-50">
-            <div className="w-4 h-4 border-2 border-blue-electric border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-xs text-slate-500">Đang tải...</span>
+          <div className="flex flex-col items-center justify-center py-20 gap-4 opacity-20">
+            <Sparkles className="w-10 h-10 animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-widest italic">Đang tải...</span>
           </div>
         ) : categories.length === 0 ? (
-          <div className="text-center py-10 px-4">
-            <p className="text-xs text-slate-500">Chưa có danh mục nào. Hãy thêm mới!</p>
+          <div className="text-center py-20 opacity-20">
+            <p className="text-[10px] font-black uppercase tracking-widest">Trống rỗng</p>
           </div>
         ) : (
-          <>
+          <div className="space-y-3">
             <div 
               className={`
-                flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer mb-2 transition-all
-                ${selectedId === null ? 'bg-blue-electric/20 text-blue-soft border border-blue-electric/30' : 'hover:bg-slate-800/50 text-slate-400 hover:text-slate-200'}
+                flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all border-2
+                ${selectedId === null 
+                  ? 'bg-interaction text-white border-foreground shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]' 
+                  : 'bg-surface border-foreground/10 text-foreground/40 hover:border-foreground/40 hover:text-foreground'}
               `}
               onClick={() => onSelect(null)}
             >
-              <Layers className="w-4 h-4" />
-              <span className="text-sm font-medium">Tất cả sản phẩm</span>
+              <Layers className={`w-5 h-5 ${selectedId === null ? 'text-white' : 'text-foreground/20'}`} />
+              <span className="text-xs font-black uppercase italic tracking-tighter">Tất cả món</span>
             </div>
             {renderCategories()}
-          </>
+          </div>
         )}
       </div>
     </div>

@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Package } from 'lucide-react';
-import { Product } from '@/gen/product_pb';
+import { Package, Sparkles } from 'lucide-react';
+import { Product, Topping } from '@/gen/product_pb';
 import { ProductService } from '@/gen/product_connect';
+import { InventoryService } from '@/gen/inventory_connect';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useOrderCart } from '@/lib/order/OrderCartContext';
 import ProductCard from './ProductCard';
+import ToppingModal from './ToppingModal';
 
 interface MenuGridProps {
   selectedCategoryId: string | null;
@@ -15,36 +17,67 @@ interface MenuGridProps {
 }
 
 export default function MenuGrid({ selectedCategoryId, searchQuery }: MenuGridProps) {
-  const { token, tenantId } = useAuth();
+  const { token, tenantId, branchId } = useAuth();
   const { addItem } = useOrderCart();
   const [products, setProducts] = useState<Product[]>([]);
+  const [stockMap, setStockMap] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [prevCategoryId, setPrevCategoryId] = useState(selectedCategoryId);
+  const [isToppingModalOpen, setIsToppingModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  const fetchProducts = useCallback(async () => {
+  // Adjust loading state when category changes
+  if (selectedCategoryId !== prevCategoryId) {
+    setPrevCategoryId(selectedCategoryId);
+    setLoading(true);
+  }
+
+  const fetchStock = useCallback(async () => {
+    if (!token || !tenantId || !branchId) return;
+    try {
+      const client = getAuthenticatedClient(InventoryService, tenantId, token);
+      const response = await client.listStock({
+        branchId,
+        pagination: { page: 1, pageSize: 200 }
+      });
+      const mapping = response.items.reduce((acc, item) => {
+        acc[item.productId] = item.quantity;
+        return acc;
+      }, {} as Record<string, number>);
+      setStockMap(mapping);
+    } catch (err) {
+      console.error('Failed to fetch stock:', err);
+    }
+  }, [token, tenantId, branchId]);
+
+  const fetchProducts = useCallback(async (showLoading = true) => {
     if (!token || !tenantId) return;
     
-    setLoading(true);
+    if (showLoading) setLoading(true);
     try {
       const client = getAuthenticatedClient(ProductService, tenantId, token);
       const response = await client.listProducts({
         pagination: {
           page: 1,
-          pageSize: 100, // Load many for POS experience
+          pageSize: 100, 
         },
         categoryId: selectedCategoryId || undefined,
       });
       setProducts(response.products);
+      await fetchStock();
     } catch (err) {
       console.error('Failed to fetch products:', err);
     } finally {
       setLoading(false);
     }
-  }, [token, tenantId, selectedCategoryId]);
+  }, [token, tenantId, selectedCategoryId, fetchStock]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchProducts();
-  }, [fetchProducts]);
+    queueMicrotask(() => fetchProducts(false));
+    
+    const stockInterval = setInterval(fetchStock, 30000);
+    return () => clearInterval(stockInterval);
+  }, [fetchProducts, fetchStock]);
 
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -52,14 +85,25 @@ export default function MenuGrid({ selectedCategoryId, searchQuery }: MenuGridPr
   );
 
   const handleAddToCart = (product: Product) => {
-    addItem(product);
+    if (product.allowTopping && product.toppings.length > 0) {
+      setSelectedProduct(product);
+      setIsToppingModalOpen(true);
+    } else {
+      addItem(product);
+    }
+  };
+
+  const handleConfirmToppings = (toppings: Topping[], quantity: number) => {
+    if (selectedProduct) {
+      addItem(selectedProduct, toppings, quantity);
+    }
   };
 
   if (loading) {
     return (
-      <div className="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 p-6">
+      <div className="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-8 p-12">
         {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="aspect-[4/5] bg-slate-800/40 animate-pulse rounded-2xl border border-slate-700/50" />
+          <div key={i} className="aspect-[4/5] bg-foreground/5 animate-pulse rounded-[2rem] border-4 border-foreground/5" />
         ))}
       </div>
     );
@@ -67,13 +111,14 @@ export default function MenuGrid({ selectedCategoryId, searchQuery }: MenuGridPr
 
   if (filteredProducts.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-slate-500 gap-4">
-        <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center border border-slate-700/50">
-          <Package className="w-10 h-10 opacity-20" />
+      <div className="flex-1 flex flex-col items-center justify-center text-foreground gap-8">
+        <div className="w-32 h-32 bg-surface rounded-[2rem] border-4 border-foreground flex items-center justify-center relative shadow-[8px_8px_0px_0px_rgba(62,39,35,1)]">
+          <Package className="w-16 h-16 opacity-10" />
+          <Sparkles className="absolute -top-4 -right-4 w-12 h-12 text-accent animate-float" />
         </div>
-        <div className="text-center">
-          <p className="text-lg font-bold text-slate-400">Không tìm thấy sản phẩm</p>
-          <p className="text-sm">Thử thay đổi danh mục hoặc từ khóa tìm kiếm</p>
+        <div className="text-center space-y-2">
+          <p className="text-2xl font-black italic uppercase tracking-tighter">Không tìm thấy món ăn</p>
+          <p className="text-sm font-bold opacity-40">Thử tìm kiếm với từ khóa khác...</p>
         </div>
       </div>
     );
@@ -81,15 +126,25 @@ export default function MenuGrid({ selectedCategoryId, searchQuery }: MenuGridPr
 
   return (
     <div aria-label="Danh sách thực đơn sản phẩm" className="flex-1 overflow-auto custom-scrollbar">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 p-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-8 p-12">
         {filteredProducts.map(product => (
           <ProductCard 
             key={product.id} 
             product={product} 
             onAddToCart={handleAddToCart} 
+            stockQuantity={stockMap[product.id] || 0}
           />
         ))}
       </div>
+
+      {selectedProduct && (
+        <ToppingModal 
+          product={selectedProduct}
+          isOpen={isToppingModalOpen}
+          onClose={() => setIsToppingModalOpen(false)}
+          onConfirm={handleConfirmToppings}
+        />
+      )}
     </div>
   );
 }

@@ -28,40 +28,43 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="flex flex-col h-full gap-6">
+    <div className="flex flex-col h-full gap-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <LayoutGrid className="w-8 h-8 text-blue-soft" />
-            Quản lý sản phẩm
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 text-interaction font-black uppercase text-xs tracking-widest">
+            <LayoutGrid className="w-5 h-5" />
+            <span>Thực đơn & Danh mục</span>
+          </div>
+          <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground">
+            Quản lý <span className="text-primary">Sản phẩm</span>
           </h1>
-          <p className="text-slate-400 text-sm">Tổ chức thực đơn, giá bán và theo dõi tồn kho</p>
+          <p className="text-foreground/40 font-bold italic">Tổ chức thực đơn, thiết lập giá và quản lý toppings.</p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <div className="flex bg-slate-800/50 p-1 rounded-xl border border-slate-700/50">
-            <button className="p-2 bg-blue-electric text-white rounded-lg shadow-lg">
-              <List className="w-5 h-5" />
+        <div className="flex items-center gap-6 bg-surface p-4 border-4 border-foreground rounded-[2rem] shadow-[6px_6px_0px_0px_rgba(62,39,35,1)]">
+          <div className="flex bg-background p-2 rounded-2xl border-2 border-foreground/10">
+            <button className="w-12 h-12 bg-foreground text-background rounded-xl flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
+              <List className="w-6 h-6 stroke-[3]" />
             </button>
-            <button className="p-2 text-slate-500 hover:text-slate-300 transition-colors">
-              <LayoutGrid className="w-5 h-5" />
+            <button className="w-12 h-12 text-foreground/20 hover:text-foreground rounded-xl flex items-center justify-center transition-all">
+              <LayoutGrid className="w-6 h-6 stroke-[3]" />
             </button>
           </div>
           
           <button 
             onClick={handleAddProduct}
-            className="flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-electric hover:bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all transform active:scale-95"
+            className="btn-dynamic px-8 py-4 text-sm"
           >
             <PackagePlus className="w-5 h-5" />
-            <span>Thêm sản phẩm</span>
+            <span>THÊM SẢN PHẨM</span>
           </button>
         </div>
       </div>
 
-      <div className="flex flex-1 gap-6 overflow-hidden min-h-[600px]">
+      <div className="flex flex-1 gap-12 overflow-hidden min-h-[600px]">
         {/* Sidebar: Category Tree */}
-        <div className="hidden lg:block">
+        <div className="hidden lg:block w-80 flex-none">
           <CategoryTree 
             selectedId={selectedCategoryId} 
             onSelect={setSelectedCategoryId} 
@@ -69,11 +72,13 @@ export default function ProductsPage() {
         </div>
 
         {/* Main: Product List */}
-        <ProductList 
-          key={`${refreshTrigger}-${selectedCategoryId}`}
-          selectedCategoryId={selectedCategoryId} 
-          onEdit={handleEditProduct}
-        />
+        <div className="flex-1 min-w-0">
+          <ProductList 
+            key={`${refreshTrigger}-${selectedCategoryId}`}
+            selectedCategoryId={selectedCategoryId} 
+            onEdit={handleEditProduct}
+          />
+        </div>
       </div>
 
       {/* Modals */}

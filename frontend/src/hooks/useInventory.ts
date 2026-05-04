@@ -2,12 +2,12 @@ import { useState, useCallback } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { InventoryService } from '@/gen/inventory_connect';
-import { 
-  StockItem, 
-  StockHistoryEntry, 
-  ListStockRequest, 
-  UpdateStockRequest, 
-  GetStockHistoryRequest 
+import {
+  // StockItem, 
+  // StockHistoryEntry, 
+  ListStockRequest,
+  UpdateStockRequest,
+  GetStockHistoryRequest
 } from '@/gen/inventory_pb';
 
 export function useInventory() {

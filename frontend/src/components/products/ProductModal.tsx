@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { X, Save, Package, DollarSign, Tag, Info, Image as ImageIcon, Check, RefreshCw } from 'lucide-react';
 import { Product, Topping } from '@/gen/product_pb';
 import { Category } from '@/gen/category_pb';
@@ -239,9 +240,9 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                   placeholder="https://example.com/image.jpg"
                   className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl outline-none focus:border-blue-electric transition-all"
                 />
-                <div className="mt-4 w-full aspect-video rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center overflow-hidden border-dashed">
+                <div className="mt-4 w-full aspect-video rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center overflow-hidden border-dashed relative">
                   {formData.imageUrl ? (
-                    <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                    <Image src={formData.imageUrl} alt="Preview" fill className="object-cover" />
                   ) : (
                     <div className="text-center">
                       <ImageIcon className="w-8 h-8 text-slate-700 mx-auto mb-2" />

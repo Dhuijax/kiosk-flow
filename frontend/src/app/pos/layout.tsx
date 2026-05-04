@@ -11,19 +11,24 @@ export const metadata: Metadata = {
   }
 };
 
+import { OrderCartProvider } from '@/lib/order/OrderCartContext';
+
 export default function POSLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col min-h-screen bg-navy-900 text-slate-100 font-sans">
-      <POSHeader />
+    <OrderCartProvider>
+      <div className="flex flex-col min-h-screen bg-background text-foreground font-sans">
+        <POSHeader />
 
-      {/* Main POS Workspace */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {children}
-      </main>
-    </div>
+        {/* Main POS Workspace */}
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {children}
+        </main>
+      </div>
+    </OrderCartProvider>
   );
 }
+

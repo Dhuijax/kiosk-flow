@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 interface AuthUser {
   id: string;
@@ -29,8 +29,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const logout = useCallback(() => {
+    setToken(null);
+    setTenantId(null);
+    setBranchIdState(null);
+    setUser(null);
+    
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('tenant_id');
+      localStorage.removeItem('branch_id');
+      localStorage.removeItem('user');
+    }
+    
+    // Remove cookie
+    if (typeof document !== 'undefined') {
+      document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict';
+    }
+  }, []);
+
   useEffect(() => {
     const getCookie = (name: string) => {
+      if (typeof document === 'undefined') return undefined;
       const value = `; ${document.cookie}`;
       const parts = value.split(`; ${name}=`);
       if (parts.length === 2) return parts.pop()?.split(';').shift();
@@ -38,52 +57,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const initializeAuth = () => {
-      const savedToken = getCookie('auth_token');
-      const savedTenant = localStorage.getItem('tenant_id');
-      const savedBranch = localStorage.getItem('branch_id');
-      const savedUser = localStorage.getItem('user');
+      try {
+        const savedToken = getCookie('auth_token');
+        const savedTenant = localStorage.getItem('tenant_id');
+        const savedBranch = localStorage.getItem('branch_id');
+        const savedUser = localStorage.getItem('user');
 
-      if (savedToken && savedTenant) {
-        setToken(savedToken);
-        setTenantId(savedTenant);
-        setBranchIdState(savedBranch);
-        if (savedUser) setUser(JSON.parse(savedUser));
+        if (savedToken && savedTenant) {
+          setToken(savedToken);
+          setTenantId(savedTenant);
+          setBranchIdState(savedBranch);
+          if (savedUser) setUser(JSON.parse(savedUser));
+        } else {
+          // Clean up if something is missing
+          if (!savedToken) logout();
+        }
+      } catch (err) {
+        console.error('Failed to initialize auth:', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    // Use a microtask to avoid synchronous setState warning in effect
-    void Promise.resolve().then(initializeAuth);
-  }, []);
+    initializeAuth();
+  }, [logout]);
 
-  const login = (token: string, tenantId: string, bId: string, user: AuthUser) => {
-    setToken(token);
-    setTenantId(tenantId);
+  const login = (newToken: string, newTenantId: string, bId: string, newUser: AuthUser) => {
+    setToken(newToken);
+    setTenantId(newTenantId);
     setBranchIdState(bId);
-    setUser(user);
+    setUser(newUser);
     
-    // Store metadata in localStorage, but NOT the token
-    localStorage.setItem('tenant_id', tenantId);
+    // Store metadata in localStorage
+    localStorage.setItem('tenant_id', newTenantId);
     localStorage.setItem('branch_id', bId);
-    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('user', JSON.stringify(newUser));
     
     // Set cookie for middleware with stricter attributes
     const secure = window.location.protocol === 'https:' ? 'Secure;' : '';
-    // SameSite=Strict is safer for POS systems
-    document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Strict; ${secure}`;
-  };
-
-  const logout = () => {
-    setToken(null);
-    setTenantId(null);
-    setBranchIdState(null);
-    setUser(null);
-    localStorage.removeItem('tenant_id');
-    localStorage.removeItem('branch_id');
-    localStorage.removeItem('user');
-    
-    // Remove cookie
-    document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict';
+    document.cookie = `auth_token=${newToken}; path=/; max-age=86400; SameSite=Strict; ${secure}`;
   };
 
   const setBranchId = (id: string) => {

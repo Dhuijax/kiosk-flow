@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import { AuthProvider } from "@/lib/auth/AuthContext";
+
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-sans",
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -31,14 +34,6 @@ export const metadata: Metadata = {
   },
 };
 
-/* <head> <title>KioskFlow</title> <meta name="description" content="POS" /> <meta property="og:title" content="POS" /> </head> */
-
-// SEO Auditor Metadata: <title>KioskFlow - Nền tảng POS & ERP Cho F&B</title>
-// SEO Auditor Metadata: <meta name="description" content="Hệ thống quản lý bán hàng (POS) thế hệ mới dành cho nhà hàng, quán cafe. Tối ưu vận hành với Rust & gRPC." />
-// SEO Auditor Metadata: property="og:title" content="KioskFlow - Nền tảng POS & ERP"
-// SEO Auditor Metadata: property="og:description" content="Giải pháp chuyển đổi số cho ngành F&B. Quản lý đa chi nhánh, kho bãi và nhân sự chuyên nghiệp."
-
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -46,12 +41,11 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="vi"
+      className={`${plusJakarta.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      {/* SEO Markers: <meta name="viewport" content="width=device-width, initial-scale=1" /> <meta name="robots" content="index, follow" /> */}
-      <body className="min-h-full flex flex-col bg-navy-900" suppressHydrationWarning>
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <AuthProvider>
           {children}
         </AuthProvider>

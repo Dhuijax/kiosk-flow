@@ -1,65 +1,98 @@
 'use client';
 
-import { Package, Plus } from 'lucide-react';
+import { Package, Plus, Sparkles } from 'lucide-react';
+import Image from 'next/image';
 import { Product } from '@/gen/product_pb';
+import { formatVND } from '@/lib/utils/format';
+import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
   onAddToCart: (product: Product) => void;
+  stockQuantity?: number;
 }
 
-export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
-  const formatCurrency = (amount: bigint | undefined) => {
-    if (amount === undefined) return '0 ₫';
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount));
-  };
+export default function ProductCard({ product, onAddToCart, stockQuantity = 999 }: ProductCardProps) {
+  const isSoldOut = product.trackInventory && stockQuantity <= 0;
 
   return (
     <button
-      onClick={() => onAddToCart(product)}
+      onClick={() => !isSoldOut && onAddToCart(product)}
+      disabled={isSoldOut}
       aria-label={product.name}
-      className="group relative flex flex-col bg-slate-800/40 hover:bg-slate-800/60 border border-slate-700/50 hover:border-blue-electric/40 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/10 active:scale-95 text-left h-full"
+      className={cn(
+        "group relative flex flex-col bg-surface border-4 border-foreground rounded-[2rem] overflow-hidden transition-all duration-300 text-left h-full",
+        isSoldOut 
+          ? "opacity-60 grayscale cursor-not-allowed border-foreground/20 shadow-none" 
+          : "shadow-[8px_8px_0px_0px_rgba(62,39,35,1)] hover:shadow-[12px_12px_0px_0px_rgba(43,168,162,1)] hover:-translate-x-1 hover:-translate-y-1 active:translate-x-0 active:translate-y-0 active:shadow-none"
+      )}
     >
       {/* Image Container */}
-      <div className="aspect-square relative flex items-center justify-center bg-slate-900/50 overflow-hidden">
+      <div className="aspect-square relative flex items-center justify-center bg-background overflow-hidden border-b-4 border-foreground">
         {product.imageUrl ? (
-          <img 
+          <Image 
             src={product.imageUrl} 
             alt={product.name} 
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <Package className="w-12 h-12 text-slate-700 group-hover:text-slate-600 transition-colors" />
+          <Package className="w-16 h-16 text-foreground/10" />
         )}
         
-        {/* Quick Add Overlay */}
-        <div className="absolute inset-0 bg-blue-electric/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <div className="w-12 h-12 bg-blue-electric rounded-full flex items-center justify-center shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-            <Plus className="w-6 h-6 text-white" />
+        {/* Sold Out Overlay */}
+        {isSoldOut && (
+          <div className="absolute inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-10">
+            <div className="bg-red-500 border-4 border-foreground px-6 py-2 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -rotate-12">
+              <span className="text-white font-black uppercase italic tracking-tighter text-xl">HẾT HÀNG</span>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Intelligence Tag */}
+        {!isSoldOut && (
+          <div className="absolute top-4 left-4 px-3 py-1 bg-interaction text-white rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Sparkles className="w-3 h-3" />
+            <span>Thông minh</span>
+          </div>
+        )}
+
+        {/* Quick Add Badge */}
+        {!isSoldOut && (
+          <div className="absolute bottom-4 right-4 w-12 h-12 bg-accent border-2 border-foreground rounded-full flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] opacity-0 group-hover:opacity-100 transition-opacity">
+            <Plus className="w-6 h-6 text-foreground" />
+          </div>
+        )}
       </div>
 
       {/* Product Content */}
-      <div className="p-4 flex-1 flex flex-col justify-between">
-        <h3 className="font-bold text-slate-100 text-sm md:text-base line-clamp-2 leading-snug group-hover:text-blue-soft transition-colors mb-2">
+      <div className="p-6 flex-1 flex flex-col justify-between gap-4">
+        <h3 className="font-black text-foreground text-lg md:text-xl line-clamp-2 leading-[1.1] uppercase italic tracking-tighter">
           {product.name}
         </h3>
         
-        <div className="flex items-center justify-between">
-          <span className="text-blue-soft font-mono font-bold text-lg leading-none">
-            {formatCurrency(product.price?.units)}
-          </span>
-          {product.unit && (
-            <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold px-2 py-0.5 bg-slate-900/50 rounded-full border border-slate-700/30">
+        <div className="flex items-end justify-between">
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase font-black opacity-40 mb-1">Giá bán</span>
+            <span className="text-primary font-black text-2xl tracking-tighter leading-none">
+              {formatVND(product.price)}
+            </span>
+          </div>
+          {product.unit && !isSoldOut && (
+            <span className="text-[10px] uppercase font-black px-3 py-1 bg-foreground text-background rounded-lg italic">
               {product.unit}
+            </span>
+          )}
+          {product.trackInventory && !isSoldOut && (
+            <span className={cn(
+              "text-[8px] font-bold px-2 py-0.5 rounded border border-foreground/10",
+              stockQuantity < 10 ? "text-red-500 bg-red-50" : "text-foreground/40 bg-foreground/5"
+            )}>
+              Kho: {stockQuantity}
             </span>
           )}
         </div>
       </div>
-      
-      {/* Glow Effect */}
-      <div className="absolute -inset-px rounded-2xl border border-transparent group-hover:border-blue-electric/20 pointer-events-none transition-colors" />
     </button>
   );
 }

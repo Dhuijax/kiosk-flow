@@ -22,15 +22,15 @@ export const TableElement: React.FC<TableElementProps> = ({
   const getStatusColor = (status: TableStatus) => {
     switch (status) {
       case TableStatus.AVAILABLE:
-        return 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-emerald-500/20';
+        return 'bg-interaction text-white border-foreground shadow-[4px_4px_0px_0px_var(--color-foreground)]';
       case TableStatus.OCCUPIED:
-        return 'bg-blue-500/20 border-blue-500/50 text-blue-400 shadow-blue-500/20';
+        return 'bg-primary text-white border-foreground shadow-[4px_4px_0px_0px_var(--color-foreground)]';
       case TableStatus.RESERVED:
-        return 'bg-amber-500/20 border-amber-500/50 text-amber-400 shadow-amber-500/20';
+        return 'bg-accent text-foreground border-foreground shadow-[4px_4px_0px_0px_var(--color-foreground)]';
       case TableStatus.CLEANING:
-        return 'bg-teal-500/20 border-teal-500/50 text-teal-400 shadow-teal-500/20';
+        return 'bg-muted text-foreground/60 border-foreground shadow-[4px_4px_0px_0px_var(--color-foreground)]';
       default:
-        return 'bg-slate-500/20 border-slate-500/50 text-slate-400';
+        return 'bg-background text-foreground/40 border-foreground/20';
     }
   };
 
@@ -59,27 +59,27 @@ export const TableElement: React.FC<TableElementProps> = ({
       }}
       onClick={() => !isDraggingEnabled && onClick(table)}
       className={cn(
-        'absolute w-24 h-24 rounded-2xl border-2 flex flex-col items-center justify-center cursor-pointer transition-shadow hover:shadow-lg backdrop-blur-md',
+        'absolute w-24 h-24 rounded-2xl border-4 flex flex-col items-center justify-center cursor-pointer transition-all hover:-translate-y-1 active:translate-y-0 active:shadow-none',
         getStatusColor(table.status),
-        isDraggingEnabled && 'cursor-move ring-2 ring-blue-400 ring-offset-2 ring-offset-slate-900 border-white/50'
+        isDraggingEnabled && 'cursor-move ring-4 ring-interaction ring-offset-4 ring-offset-background border-foreground'
       )}
       style={{
         left: 0,
         top: 0,
       }}
     >
-      <div className="font-bold text-lg mb-1">{table.name}</div>
-      <div className="flex items-center text-[10px] opacity-80 uppercase tracking-wider font-semibold">
+      <div className="font-black text-xl italic tracking-tighter uppercase">{table.name}</div>
+      <div className="flex items-center text-[10px] opacity-60 uppercase font-black tracking-widest italic">
         <Users size={12} className="mr-1" />
         {table.capacity} chỗ
       </div>
       
-      <div className="mt-2 px-2 py-0.5 rounded-full text-[9px] font-bold bg-white/10 border border-white/10 lowercase">
+      <div className="mt-2 px-2 py-0.5 rounded-full text-[8px] font-black bg-foreground/10 uppercase tracking-tighter">
         {statusLabel(table.status)}
       </div>
 
       {isDraggingEnabled && (
-        <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-[10px]">
+        <div className="absolute -top-3 -right-3 w-8 h-8 bg-interaction border-4 border-foreground rounded-full flex items-center justify-center text-white text-xs shadow-[2px_2px_0px_0px_var(--color-foreground)]">
           ⇅
         </div>
       )}

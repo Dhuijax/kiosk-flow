@@ -24,8 +24,6 @@ export default function CategoryTabs({ onSelect, selectedId }: CategoryTabsProps
     try {
       const client = getAuthenticatedClient(CategoryService, tenantId, token);
       const response = await client.listCategories({});
-      // Only show top-level categories or all for POS tabs? 
-      // Usually POS shows all major categories as tabs.
       setCategories(response.categories);
     } catch (err) {
       console.error('Failed to fetch categories:', err);
@@ -33,10 +31,11 @@ export default function CategoryTabs({ onSelect, selectedId }: CategoryTabsProps
       setLoading(false);
     }
   }, [token, tenantId]);
-
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchCategories();
+    const timer = setTimeout(() => {
+      fetchCategories();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchCategories]);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -48,37 +47,37 @@ export default function CategoryTabs({ onSelect, selectedId }: CategoryTabsProps
   };
 
   return (
-    <div className="relative group w-full bg-navy-900/50 border-b border-slate-800/50">
+    <div className="relative group w-full bg-background border-b-4 border-foreground">
       <div className="flex items-center">
         {/* Scroll Left Button */}
         <button 
           onClick={() => scroll('left')}
-          className="h-full px-2 text-slate-500 hover:text-white hover:bg-slate-800/50 transition-colors z-10"
+          className="h-24 px-6 text-foreground/40 hover:text-interaction transition-colors z-10 border-r-4 border-foreground/5"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-8 h-8 stroke-[3]" />
         </button>
 
         {/* Tabs Container */}
         <div 
           ref={scrollRef}
-          className="flex-1 overflow-x-auto no-scrollbar flex items-center h-16 px-2 gap-2"
+          className="flex-1 overflow-x-auto no-scrollbar flex items-center h-24 px-8 gap-6"
         >
           <button
             onClick={() => onSelect(null)}
             className={`
-              flex-none px-6 h-11 rounded-xl flex items-center gap-2 font-bold text-sm transition-all duration-200
+              flex-none px-10 h-14 rounded-2xl flex items-center gap-3 font-black text-sm transition-all duration-300 border-4 italic uppercase tracking-tighter
               ${selectedId === null 
-                ? 'bg-blue-electric text-white shadow-lg shadow-blue-500/30 border border-blue-400/30' 
-                : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border border-slate-700/50'}
+                ? 'bg-interaction text-white border-foreground shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] translate-x-[-2px] translate-y-[-2px]' 
+                : 'bg-surface text-foreground/40 border-foreground/10 hover:border-foreground/40 hover:text-foreground'}
             `}
           >
-            <Layers className="w-4 h-4" />
-            Tất cả
+            <Layers className="w-5 h-5" />
+            TẤT CẢ
           </button>
 
           {loading ? (
             Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex-none w-32 h-11 bg-slate-800/50 animate-pulse rounded-xl" />
+              <div key={i} className="flex-none w-40 h-14 bg-foreground/5 animate-pulse rounded-2xl" />
             ))
           ) : (
             categories.map(category => (
@@ -86,10 +85,10 @@ export default function CategoryTabs({ onSelect, selectedId }: CategoryTabsProps
                 key={category.id}
                 onClick={() => onSelect(category.id)}
                 className={`
-                  flex-none px-6 h-11 rounded-xl flex items-center gap-2 font-bold text-sm transition-all duration-200 whitespace-nowrap
+                  flex-none px-10 h-14 rounded-2xl flex items-center gap-3 font-black text-sm transition-all duration-300 border-4 whitespace-nowrap italic uppercase tracking-tighter
                   ${selectedId === category.id 
-                    ? 'bg-blue-electric text-white shadow-lg shadow-blue-500/30 border border-blue-400/30' 
-                    : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border border-slate-700/50'}
+                    ? 'bg-interaction text-white border-foreground shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] translate-x-[-2px] translate-y-[-2px]' 
+                    : 'bg-surface text-foreground/40 border-foreground/10 hover:border-foreground/40 hover:text-foreground'}
                 `}
               >
                 {category.name}
@@ -101,12 +100,12 @@ export default function CategoryTabs({ onSelect, selectedId }: CategoryTabsProps
         {/* Scroll Right Button */}
         <button 
           onClick={() => scroll('right')}
-          className="h-full px-2 text-slate-500 hover:text-white hover:bg-slate-800/50 transition-colors z-10"
+          className="h-24 px-6 text-foreground/40 hover:text-interaction transition-colors z-10 border-l-4 border-foreground/5"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-8 h-8 stroke-[3]" />
         </button>
       </div>
-      
+
       <style jsx>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;

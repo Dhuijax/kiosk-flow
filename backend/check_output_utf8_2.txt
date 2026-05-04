@@ -1,0 +1,254 @@
+﻿cargo : warning: error finalizing incremental compilation 
+session directory `\\?\D:\myFlow\kiosk-flow\backend\target\d
+ebug\incremental\build_script_build-36gt8rsepts1p\s-hhzh2hly
+26-1yfps4q-working`: Access is denied. (os error 5)
+At line:1 char:1
++ cargo check --all-targets > check_output_2.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: error 
+    ...d. (os error 5):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+warning: `proto-gen` (build script) generated 1 warning
+    Checking infra v0.1.0 
+(D:\myFlow\kiosk-flow\backend\crates\infra)
+warning: unused import: `tonic::metadata::MetadataMap`
+  --> crates\infra\src\middleware.rs:57:9
+   |
+57 |     use tonic::metadata::MetadataMap;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of 
+`#[warn(unused)]`) on by default
+
+    Checking services v0.1.0 
+(D:\myFlow\kiosk-flow\backend\crates\services)
+error: unknown start of token: \
+   --> crates\services\src\auth.rs:169:58
+    |
+169 |             .map_err(|e| 
+Status::unauthenticated(format!(\"Invalid refresh token: 
+{}\", e)))?;
+    |                                                       
+   ^
+
+error: prefix `id` is unknown
+   --> crates\services\src\auth.rs:213:103
+    |
+213 |         let user_id = 
+Uuid::parse_str(&claims.sub).map_err(|_| 
+Status::invalid_argument("Invalid user id"))?;
+    |                                                       
+                                                ^^ unknown 
+prefix
+    |
+    = note: prefixed identifiers and literals are reserved 
+since Rust 2021
+help: consider inserting whitespace here
+    |
+213 |         let user_id = 
+Uuid::parse_str(&claims.sub).map_err(|_| 
+Status::invalid_argument("Invalid user id "))?;
+    |                                                       
+                                                  +
+
+error: prefix `id` is unknown
+   --> crates\services\src\auth.rs:214:113
+    |
+214 |         let tenant_id = 
+Uuid::parse_str(&claims.tenant_id).map_err(|_| 
+Status::invalid_argument("Invalid tenant id"))?;
+    |                                                       
+                                                          
+^^ unknown prefix
+    |
+    = note: prefixed identifiers and literals are reserved 
+since Rust 2021
+help: consider inserting whitespace here
+    |
+214 |         let tenant_id = 
+Uuid::parse_str(&claims.tenant_id).map_err(|_| 
+Status::invalid_argument("Invalid tenant id "))?;
+    |                                                       
+                                                            
++
+
+error: prefix `found` is unknown
+   --> crates\services\src\auth.rs:219:56
+    |
+219 |             .ok_or_else(|| Status::not_found("User 
+not found"))?;
+    |                                                       
+ ^^^^^ unknown prefix
+    |
+    = note: prefixed identifiers and literals are reserved 
+since Rust 2021
+help: consider inserting whitespace here
+    |
+219 |             .ok_or_else(|| Status::not_found("User 
+not found "))?;
+    |                                                       
+      +
+
+error: prefix `id` is unknown
+   --> crates\services\src\auth.rs:231:113
+    |
+231 |         let tenant_id = 
+Uuid::parse_str(&claims.tenant_id).map_err(|_| 
+Status::invalid_argument("Invalid tenant id"))?;
+    |                                                       
+                                                          
+^^ unknown prefix
+    |
+    = note: prefixed identifiers and literals are reserved 
+since Rust 2021
+help: consider inserting whitespace here
+    |
+231 |         let tenant_id = 
+Uuid::parse_str(&claims.tenant_id).map_err(|_| 
+Status::invalid_argument("Invalid tenant id "))?;
+    |                                                       
+                                                            
++
+
+error: prefix `id` is unknown
+   --> crates\services\src\auth.rs:262:113
+    |
+262 |         let tenant_id = 
+Uuid::parse_str(&claims.tenant_id).map_err(|_| 
+Status::invalid_argument("Invalid tenant id"))?;
+    |                                                       
+                                                          
+^^ unknown prefix
+    |
+    = note: prefixed identifiers and literals are reserved 
+since Rust 2021
+help: consider inserting whitespace here
+    |
+262 |         let tenant_id = 
+Uuid::parse_str(&claims.tenant_id).map_err(|_| 
+Status::invalid_argument("Invalid tenant id "))?;
+    |                                                       
+                                                            
++
+
+error: prefix `id` is unknown
+   --> crates\services\src\auth.rs:280:113
+    |
+280 |         let tenant_id = 
+Uuid::parse_str(&claims.tenant_id).map_err(|_| 
+Status::invalid_argument("Invalid tenant id"))?;
+    |                                                       
+                                                          
+^^ unknown prefix
+    |
+    = note: prefixed identifiers and literals are reserved 
+since Rust 2021
+help: consider inserting whitespace here
+    |
+280 |         let tenant_id = 
+Uuid::parse_str(&claims.tenant_id).map_err(|_| 
+Status::invalid_argument("Invalid tenant id "))?;
+    |                                                       
+                                                            
++
+
+error: prefix `id` is unknown
+   --> crates\services\src\auth.rs:283:99
+    |
+283 |         let user_id = 
+Uuid::parse_str(&req.id).map_err(|_| 
+Status::invalid_argument("Invalid user id"))?;
+    |                                                       
+                                            ^^ unknown 
+prefix
+    |
+    = note: prefixed identifiers and literals are reserved 
+since Rust 2021
+help: consider inserting whitespace here
+    |
+283 |         let user_id = 
+Uuid::parse_str(&req.id).map_err(|_| 
+Status::invalid_argument("Invalid user id "))?;
+    |                                                       
+                                              +
+
+error: prefix `id` is unknown
+   --> crates\services\src\auth.rs:303:113
+    |
+303 |         let tenant_id = 
+Uuid::parse_str(&claims.tenant_id).map_err(|_| 
+Status::invalid_argument("Invalid tenant id"))?;
+    |                                                       
+                                                          
+^^ unknown prefix
+    |
+    = note: prefixed identifiers and literals are reserved 
+since Rust 2021
+help: consider inserting whitespace here
+    |
+303 |         let tenant_id = 
+Uuid::parse_str(&claims.tenant_id).map_err(|_| 
+Status::invalid_argument("Invalid tenant id "))?;
+    |                                                       
+                                                            
++
+
+error: prefix `id` is unknown
+   --> crates\services\src\auth.rs:305:116
+    |
+305 |         let user_id = 
+Uuid::parse_str(&request.into_inner().id).map_err(|_| 
+Status::invalid_argument("Invalid user id"))?;
+    |                                                       
+                                                            
+ ^^ unknown prefix
+    |
+    = note: prefixed identifiers and literals are reserved 
+since Rust 2021
+help: consider inserting whitespace here
+    |
+305 |         let user_id = 
+Uuid::parse_str(&request.into_inner().id).map_err(|_| 
+Status::invalid_argument("Invalid user id "))?;
+    |                                                       
+                                                            
+   +
+
+error: prefix `successfully` is unknown
+   --> crates\services\src\auth.rs:313:37
+    |
+313 |             message: "Staff deleted 
+successfully".to_string(),
+    |                                     ^^^^^^^^^^^^ 
+unknown prefix
+    |
+    = note: prefixed identifiers and literals are reserved 
+since Rust 2021
+help: consider inserting whitespace here
+    |
+313 |             message: "Staff deleted successfully 
+".to_string(),
+    |                                                 +
+
+error[E0765]: unterminated double quote string
+   --> crates\services\src\auth.rs:313:49
+    |
+313 |               message: "Staff deleted 
+successfully".to_string(),
+    |  _________________________________________________^
+314 | |         }))
+315 | |     }
+316 | | }
+    | |__^
+
+For more information about this error, try `rustc --explain 
+E0765`.
+error: could not compile `services` (lib test) due to 12 
+previous errors
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `services` (lib) due to 12 
+previous errors
+warning: `infra` (lib test) generated 1 warning (run `cargo 
+fix --lib -p infra --tests` to apply 1 suggestion)

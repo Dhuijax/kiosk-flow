@@ -1,0 +1,23 @@
+[package]
+name = "services"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+domain = { path = "../domain" }
+infra = { path = "../infra" }
+proto-gen = { path = "../proto-gen" }
+tonic = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+uuid = { version = "1.8.0", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+sqlx = { workspace = true }
+bigdecimal = "0.4"
+prost-types = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+redis = { workspace = true, features = ["tokio-comp"] }
+tokio-stream = "0.1"
+futures-util = "0.3"

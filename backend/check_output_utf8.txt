@@ -1,0 +1,70 @@
+﻿cargo : warning: error finalizing incremental compilation 
+session directory `\\?\D:\myFlow\kiosk-flow\backend\target\d
+ebug\incremental\build_script_build-36gt8rsepts1p\s-hhzh2hly
+26-1yfps4q-working`: Access is denied. (os error 5)
+At line:1 char:1
++ cargo check --all-targets > check_output.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: error 
+    ...d. (os error 5):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+warning: `proto-gen` (build script) generated 1 warning
+    Checking infra v0.1.0 
+(D:\myFlow\kiosk-flow\backend\crates\infra)
+error: unknown start of token: \
+  --> crates\infra\src\middleware.rs:37:41
+   |
+37 |                 if auth_str.starts_with(\"Bearer \") {
+   |                                         ^
+
+error: prefix `id` is unknown
+  --> crates\infra\src\middleware.rs:62:45
+   |
+62 |         req.metadata_mut().insert("x-tenant-id", 
+"alpha".parse().unwrap());
+   |                                             ^^ unknown 
+prefix
+   |
+   = note: prefixed identifiers and literals are reserved 
+since Rust 2021
+help: consider inserting whitespace here
+   |
+62 |         req.metadata_mut().insert("x-tenant-id ", 
+"alpha".parse().unwrap());
+   |                                               +
+
+error: prefix `com` is unknown
+  --> crates\infra\src\middleware.rs:71:60
+   |
+71 |         req.metadata_mut().insert("host", 
+"beta.mylocalpos.com".parse().unwrap());
+   |                                                        
+    ^^^ unknown prefix
+   |
+   = note: prefixed identifiers and literals are reserved 
+since Rust 2021
+help: consider inserting whitespace here
+   |
+71 |         req.metadata_mut().insert("host", 
+"beta.mylocalpos.com ".parse().unwrap());
+   |                                                        
+       +
+
+error[E0765]: unterminated double quote string
+  --> crates\infra\src\middleware.rs:74:33
+   |
+74 |           assert_eq!(tenant, "beta");
+   |  _________________________________^
+...  |
+77 | |
+   | |_^
+
+For more information about this error, try `rustc --explain 
+E0765`.
+error: could not compile `infra` (lib test) due to 4 
+previous errors
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `infra` (lib) due to 4 previous 
+errors

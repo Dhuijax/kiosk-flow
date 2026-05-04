@@ -1,0 +1,40 @@
+use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
+use uuid::Uuid;
+use chrono::{DateTime, Utc};
+use sqlx::types::BigDecimal;
+
+#[derive(Debug, Serialize, Deserialize, Clone, FromRow)]
+pub struct Inventory {
+    pub id: Uuid,
+    pub tenant_id: Uuid,
+    pub branch_id: Uuid,
+    pub product_id: Uuid,
+    pub quantity: BigDecimal,
+    pub min_quantity: BigDecimal,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, FromRow)]
+pub struct InventoryTransaction {
+    pub id: Uuid,
+    pub tenant_id: Uuid,
+    pub branch_id: Uuid,
+    pub product_id: Uuid,
+    pub r#type: InventoryTransactionType,
+    pub quantity_change: BigDecimal,
+    pub reference_id: Option<Uuid>,
+    pub note: Option<String>,
+    pub created_by: Option<Uuid>,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, sqlx::Type, PartialEq, Eq)]
+#[sqlx(type_name = "inventory_transaction_type", rename_all = "lowercase")]
+pub enum InventoryTransactionType {
+    Sale,
+    Purchase,
+    Adjustment,
+    Transfer,
+    Return,
+}

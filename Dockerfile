@@ -10,8 +10,7 @@ COPY . .
 
 # Force update dependencies to match the latest compiler
 WORKDIR /app/backend
-ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
+ENV SQLX_OFFLINE=true
 RUN cargo update
 RUN cargo build --release -p server
 

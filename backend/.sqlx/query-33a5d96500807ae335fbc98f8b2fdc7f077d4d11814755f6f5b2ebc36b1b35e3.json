@@ -1,0 +1,117 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE products\n            SET category_id = $1, sku = $2, name = $3, description = $4, price = $5, cost_price = $6, unit = $7, image_url = $8, is_active = $9, allow_topping = $10, track_inventory = $11, updated_at = NOW()\n            WHERE id = $12\n            RETURNING id, tenant_id, category_id, sku, name, description, price, cost_price, unit, image_url, is_active as \"is_active!\", allow_topping as \"allow_topping!\", track_inventory as \"track_inventory!\", created_at as \"created_at!\", updated_at as \"updated_at!\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "tenant_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "category_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "sku",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "price",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 7,
+        "name": "cost_price",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 8,
+        "name": "unit",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "image_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "is_active!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "allow_topping!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "track_inventory!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 13,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 14,
+        "name": "updated_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Numeric",
+        "Numeric",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "33a5d96500807ae335fbc98f8b2fdc7f077d4d11814755f6f5b2ebc36b1b35e3"
+}

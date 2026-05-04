@@ -42,6 +42,7 @@ export default function MenuGrid({ selectedCategoryId, searchQuery }: MenuGridPr
   }, [token, tenantId, selectedCategoryId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProducts();
   }, [fetchProducts]);
 

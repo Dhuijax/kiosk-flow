@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, History, Calendar, User, FileText, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { X, History, User, FileText, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { useInventory } from '@/hooks/useInventory';
 import { StockHistoryEntry, GetStockHistoryRequest } from '@/gen/inventory_pb';
 
@@ -29,6 +29,7 @@ export default function StockHistoryModal({ isOpen, onClose, product }: StockHis
 
   useEffect(() => {
     if (isOpen && product) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchHistory();
     } else {
       setHistory([]);

@@ -107,6 +107,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             HeaderName::from_static("content-type"),
             HeaderName::from_static("x-tenant-id"),
             HeaderName::from_static("x-grpc-web"),
+            HeaderName::from_static("x-user-agent"),
             HeaderName::from_static("grpc-timeout"),
         ])
         .allow_methods([http::Method::GET, http::Method::POST, http::Method::OPTIONS]);

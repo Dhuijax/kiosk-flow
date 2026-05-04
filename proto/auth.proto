@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package auth;
+
+import "common.proto";
+
+service AuthService {
+    rpc Register (RegisterRequest) returns (AuthResponse);
+    rpc Login (LoginRequest) returns (AuthResponse);
+    rpc RefreshToken (RefreshRequest) returns (AuthResponse);
+    rpc GetCurrentUser (Empty) returns (User);
+    
+    // Staff Management (S06)
+    rpc CreateStaff (CreateStaffRequest) returns (User);
+    rpc ListStaff (ListStaffRequest) returns (ListStaffResponse);
+    rpc UpdateStaff (UpdateStaffRequest) returns (User);
+    rpc DeleteStaff (DeleteStaffRequest) returns (common.SuccessResponse);
+}
+
+message CreateStaffRequest {
+    string email = 1;
+    string password = 2;
+    string full_name = 3;
+    string role = 4;
+    optional string branch_id = 5;
+}
+
+message ListStaffRequest {
+    optional string branch_id = 1;
+}
+
+message ListStaffResponse {
+    repeated User staff = 1;
+}
+
+message UpdateStaffRequest {
+    string id = 1;
+    optional string full_name = 2;
+    optional string role = 3;
+    optional bool is_active = 4;
+}
+
+message DeleteStaffRequest {
+    string id = 1;
+}
+
+message Empty {}
+
+message RegisterRequest {
+    string email = 1;
+    string password = 2;
+    string full_name = 3;
+    string tenant_slug = 4; // subdomain lookup
+}
+
+message LoginRequest {
+    string email = 1;
+    string password = 2;
+    string tenant_slug = 3;
+}
+
+message RefreshRequest {
+    string refresh_token = 1;
+}
+
+message AuthResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+    User user = 3;
+}
+
+message User {
+    string id = 1;
+    string email = 2;
+    string full_name = 3;
+    string tenant_id = 4;
+    repeated string roles = 5;
+    optional string branch_id = 6;
+}

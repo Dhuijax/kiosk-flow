@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package payment;
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+service PaymentService {
+  rpc ProcessPayment (ProcessPaymentRequest) returns (PaymentResponse);
+  rpc GetPayment (GetPaymentRequest) returns (PaymentResponse);
+  rpc ListPayments (ListPaymentsRequest) returns (ListPaymentsResponse);
+}
+
+enum PaymentMethod {
+  PAYMENT_METHOD_CASH = 0;
+  PAYMENT_METHOD_CARD = 1;
+  PAYMENT_METHOD_TRANSFER = 2;
+  PAYMENT_METHOD_MOMO = 3;
+  PAYMENT_METHOD_ZALOPAY = 4;
+}
+
+enum PaymentStatus {
+  PAYMENT_STATUS_PENDING = 0;
+  PAYMENT_STATUS_COMPLETED = 1;
+  PAYMENT_STATUS_REFUNDED = 2;
+}
+
+message Payment {
+  string id = 1;
+  string order_id = 2;
+  PaymentMethod method = 3;
+  common.Money amount = 4;
+  common.Money received_amount = 5;
+  common.Money change_amount = 6;
+  string transaction_ref = 7;
+  PaymentStatus status = 8;
+  google.protobuf.Timestamp paid_at = 9;
+  string branch_id = 10;
+}
+
+message ProcessPaymentRequest {
+  string order_id = 1;
+  PaymentMethod method = 2;
+  common.Money received_amount = 3;
+  string transaction_ref = 4;
+}
+
+message GetPaymentRequest {
+  oneof query {
+    string id = 1;
+    string order_id = 2;
+  }
+}
+
+message ListPaymentsRequest {
+  string branch_id = 1;
+  common.PaginationRequest pagination = 2;
+}
+
+message ListPaymentsResponse {
+  repeated Payment payments = 1;
+  common.PaginationResponse pagination = 2;
+}
+
+message PaymentResponse {
+  Payment payment = 1;
+}

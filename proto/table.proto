@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package table;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service TableService {
+    // Floor Plan Management
+    rpc CreateFloorPlan(CreateFloorPlanRequest) returns (FloorPlan);
+    rpc ListFloorPlans(ListFloorPlansRequest) returns (ListFloorPlansResponse);
+    rpc UpdateFloorPlan(UpdateFloorPlanRequest) returns (FloorPlan);
+    rpc DeleteFloorPlan(DeleteFloorPlanRequest) returns (google.protobuf.Empty);
+
+    // Table Management
+    rpc CreateTables(CreateTablesRequest) returns (CreateTablesResponse);
+    rpc ListTables(ListTablesRequest) returns (ListTablesResponse);
+    rpc UpdateTable(UpdateTableRequest) returns (Table);
+    rpc DeleteTable(DeleteTableRequest) returns (google.protobuf.Empty);
+    rpc UpdateTableStatus(UpdateTableStatusRequest) returns (Table);
+}
+
+enum TableStatus {
+    AVAILABLE = 0;
+    OCCUPIED = 1;
+    RESERVED = 2;
+    CLEANING = 3;
+}
+
+message FloorPlan {
+    string id = 1;
+    string branch_id = 2;
+    string name = 3;
+    string layout_data = 4; // JSON string
+    google.protobuf.Timestamp created_at = 5;
+}
+
+message Table {
+    string id = 1;
+    string floor_plan_id = 2;
+    string branch_id = 3;
+    string name = 4;
+    int32 capacity = 5;
+    int32 position_x = 6;
+    int32 position_y = 7;
+    TableStatus status = 8;
+    optional string current_order_id = 9;
+}
+
+// Requests & Responses
+message CreateFloorPlanRequest {
+    string branch_id = 1;
+    string name = 2;
+    string layout_data = 3;
+}
+
+message ListFloorPlansRequest {
+    string branch_id = 1;
+}
+
+message ListFloorPlansResponse {
+    repeated FloorPlan floor_plans = 1;
+}
+
+message UpdateFloorPlanRequest {
+    string id = 1;
+    optional string name = 2;
+    optional string layout_data = 3;
+}
+
+message DeleteFloorPlanRequest {
+    string id = 1;
+}
+
+message CreateTablesRequest {
+    string floor_plan_id = 1;
+    string branch_id = 2;
+    repeated TableInfo tables = 3;
+}
+
+message TableInfo {
+    string name = 1;
+    int32 capacity = 2;
+    int32 position_x = 3;
+    int32 position_y = 4;
+}
+
+message CreateTablesResponse {
+    repeated Table tables = 1;
+}
+
+message ListTablesRequest {
+    string floor_plan_id = 1;
+}
+
+message ListTablesResponse {
+    repeated Table tables = 1;
+}
+
+message UpdateTableRequest {
+    string id = 1;
+    optional string name = 2;
+    optional int32 capacity = 3;
+    optional int32 position_x = 4;
+    optional int32 position_y = 5;
+}
+
+message DeleteTableRequest {
+    string id = 1;
+}
+
+message UpdateTableStatusRequest {
+    string id = 1;
+    TableStatus status = 2;
+}

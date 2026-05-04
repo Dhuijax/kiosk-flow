@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package status;
+
+message HealthResponse {
+    bool status = 1;
+    string version = 2;
+    string uptime = 3;
+}
+
+message Empty {}
+
+service StatusService {
+    rpc CheckHealth (Empty) returns (HealthResponse);
+}

@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package product;
+
+import "common.proto";
+
+service ProductService {
+    rpc ListProducts (ListProductsRequest) returns (ListProductsResponse);
+    rpc GetProduct (GetProductRequest) returns (Product);
+    rpc CreateProduct (CreateProductRequest) returns (Product);
+    rpc UpdateProduct (UpdateProductRequest) returns (Product);
+    rpc DeleteProduct (DeleteProductRequest) returns (common.SuccessResponse);
+
+    rpc ListToppings (common.PaginationRequest) returns (ListToppingsResponse);
+    rpc CreateTopping (CreateToppingRequest) returns (Topping);
+    rpc DeleteTopping (DeleteToppingRequest) returns (common.SuccessResponse);
+}
+
+message Product {
+    string id = 1;
+    optional string category_id = 2;
+    string sku = 3;
+    string name = 4;
+    optional string description = 5;
+    common.Money price = 6;
+    common.Money cost_price = 7;
+    optional string unit = 8;
+    optional string image_url = 9;
+    bool is_active = 10;
+    bool allow_topping = 11;
+    bool track_inventory = 12;
+    
+    repeated Topping toppings = 13;
+}
+
+message Topping {
+    string id = 1;
+    string name = 2;
+    common.Money price = 3;
+    bool is_active = 4;
+}
+
+message ListProductsRequest {
+    common.PaginationRequest pagination = 1;
+    optional string category_id = 2;
+}
+
+message ListProductsResponse {
+    repeated Product products = 1;
+    common.PaginationResponse pagination = 2;
+}
+
+message GetProductRequest {
+    string id = 1;
+}
+
+message CreateProductRequest {
+    optional string category_id = 1;
+    string sku = 2;
+    string name = 3;
+    optional string description = 4;
+    common.Money price = 5;
+    common.Money cost_price = 6;
+    optional string unit = 7;
+    optional string image_url = 8;
+    bool is_active = 9;
+    bool allow_topping = 10;
+    bool track_inventory = 11;
+    repeated string topping_ids = 12;
+}
+
+message UpdateProductRequest {
+    string id = 1;
+    optional string category_id = 2;
+    optional string sku = 3;
+    optional string name = 4;
+    optional string description = 5;
+    common.Money price = 6;
+    common.Money cost_price = 7;
+    optional string unit = 8;
+    optional string image_url = 9;
+    optional bool is_active = 10;
+    optional bool allow_topping = 11;
+    optional bool track_inventory = 12;
+    repeated string topping_ids = 13;
+}
+
+message DeleteProductRequest {
+    string id = 1;
+}
+
+// Topping requests
+
+message ListToppingsResponse {
+    repeated Topping toppings = 1;
+    common.PaginationResponse pagination = 2;
+}
+
+message CreateToppingRequest {
+    string name = 1;
+    common.Money price = 2;
+    bool is_active = 3;
+}
+
+message DeleteToppingRequest {
+    string id = 1;
+}

@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+package order;
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+service OrderService {
+  rpc CreateOrder (CreateOrderRequest) returns (OrderResponse);
+  rpc GetOrder (GetOrderRequest) returns (OrderResponse);
+  rpc ListOrders (ListOrdersRequest) returns (ListOrdersResponse);
+  rpc UpdateOrderStatus (UpdateOrderStatusRequest) returns (OrderResponse);
+  rpc CancelOrder (CancelOrderRequest) returns (OrderResponse);
+  rpc StreamOrders (StreamOrdersRequest) returns (stream OrderResponse);
+}
+
+message StreamOrdersRequest {
+  string branch_id = 1;
+}
+
+enum OrderStatus {
+  ORDER_STATUS_DRAFT = 0;
+  ORDER_STATUS_CONFIRMED = 1;
+  ORDER_STATUS_PREPARING = 2;
+  ORDER_STATUS_SERVED = 3;
+  ORDER_STATUS_PAID = 4;
+  ORDER_STATUS_COMPLETED = 5;
+  ORDER_STATUS_CANCELLED = 6;
+}
+
+enum OrderItemStatus {
+  ORDER_ITEM_STATUS_PENDING = 0;
+  ORDER_ITEM_STATUS_PREPARING = 1;
+  ORDER_ITEM_STATUS_READY = 2;
+  ORDER_ITEM_STATUS_SERVED = 3;
+  ORDER_ITEM_STATUS_CANCELLED = 4;
+}
+
+message OrderItemTopping {
+  string id = 1;
+  string topping_id = 2;
+  string name = 3;
+  common.Money price = 4;
+}
+
+message OrderItem {
+  string id = 1;
+  string product_id = 2;
+  string product_name = 3;
+  common.Money unit_price = 4;
+  int32 quantity = 5;
+  common.Money subtotal = 6;
+  string note = 7;
+  OrderItemStatus status = 8;
+  repeated OrderItemTopping toppings = 9;
+}
+
+message Order {
+  string id = 1;
+  string branch_id = 2;
+  string table_id = 3;
+  string table_name = 15;
+  string order_number = 4;
+  OrderStatus status = 5;
+  string customer_name = 6;
+  common.Money subtotal = 7;
+  common.Money tax_amount = 8;
+  common.Money discount_amount = 9;
+  common.Money total = 10;
+  string note = 11;
+  repeated OrderItem items = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+}
+
+message CreateOrderRequest {
+  string branch_id = 1;
+  string table_id = 2;
+  string customer_name = 3;
+  string note = 4;
+  repeated OrderItemRequest items = 5;
+}
+
+message OrderItemRequest {
+  string product_id = 1;
+  int32 quantity = 2;
+  string note = 3;
+  repeated string topping_ids = 4;
+}
+
+message GetOrderRequest {
+  string id = 1;
+}
+
+message ListOrdersRequest {
+  string branch_id = 1;
+  OrderStatus status = 2;
+  common.PaginationRequest pagination = 3;
+}
+
+message ListOrdersResponse {
+  repeated Order orders = 1;
+  common.PaginationResponse pagination = 2;
+}
+
+message UpdateOrderStatusRequest {
+  string id = 1;
+  OrderStatus status = 2;
+}
+
+message CancelOrderRequest {
+  string id = 1;
+  string reason = 2;
+}
+
+message OrderResponse {
+  Order order = 1;
+}

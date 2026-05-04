@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package inventory;
+
+import "common.proto";
+
+service InventoryService {
+    // Inventory RPCs
+    rpc GetStock (GetStockRequest) returns (StockItem);
+    rpc UpdateStock (UpdateStockRequest) returns (StockItem);
+    rpc ListStock (ListStockRequest) returns (ListStockResponse);
+    rpc GetStockHistory (GetStockHistoryRequest) returns (StockHistoryResponse);
+}
+
+message StockItem {
+    string id = 1;
+    string product_id = 2;
+    string branch_id = 3;
+    double quantity = 4;
+    double min_quantity = 5;
+    string updated_at = 6;
+}
+
+message GetStockRequest {
+    string product_id = 1;
+    string branch_id = 2;
+}
+
+message UpdateStockRequest {
+    string product_id = 1;
+    string branch_id = 2;
+    double quantity_change = 3;
+    string type = 4; // adjustment, purchase, sale, transfer, return
+    optional string note = 5;
+}
+
+message ListStockRequest {
+    string branch_id = 1;
+    optional bool low_stock_only = 2;
+    common.PaginationRequest pagination = 3;
+}
+
+message ListStockResponse {
+    repeated StockItem items = 1;
+    common.PaginationResponse pagination = 2;
+}
+
+message StockHistoryEntry {
+    string id = 1;
+    string product_id = 2;
+    string type = 3;
+    double quantity_change = 4;
+    optional string reference_id = 5;
+    optional string note = 6;
+    string created_at = 7;
+    string created_by = 8;
+}
+
+message GetStockHistoryRequest {
+    string product_id = 1;
+    string branch_id = 2;
+    common.PaginationRequest pagination = 3;
+}
+
+message StockHistoryResponse {
+    repeated StockHistoryEntry entries = 1;
+    common.PaginationResponse pagination = 2;
+}

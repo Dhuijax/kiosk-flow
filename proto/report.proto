@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package report;
+
+import "common.proto";
+
+service ReportService {
+  rpc GetRevenueSummary (GetRevenueSummaryRequest) returns (RevenueSummaryResponse);
+  rpc GetTopProducts (GetTopProductsRequest) returns (TopProductsResponse);
+  rpc GetSalesByPeriod (GetSalesByPeriodRequest) returns (SalesByPeriodResponse);
+}
+
+message GetRevenueSummaryRequest {
+  string branch_id = 1;
+  string start_date = 2; // ISO 8601
+  string end_date = 3;   // ISO 8601
+}
+
+message RevenueSummaryResponse {
+  common.Money total_revenue = 1;
+  int32 total_orders = 2;
+  common.Money average_order_value = 3;
+}
+
+message GetTopProductsRequest {
+  string branch_id = 1;
+  string start_date = 2;
+  string end_date = 3;
+  int32 limit = 4;
+}
+
+message TopProductItem {
+  string product_id = 1;
+  string product_name = 2;
+  int32 quantity_sold = 3;
+  common.Money revenue = 4;
+}
+
+message TopProductsResponse {
+  repeated TopProductItem items = 1;
+}
+
+message GetSalesByPeriodRequest {
+  string branch_id = 1;
+  string start_date = 2;
+  string end_date = 3;
+  PeriodType period = 4;
+}
+
+enum PeriodType {
+  DAILY = 0;
+  WEEKLY = 1;
+  MONTHLY = 2;
+}
+
+message SalesPeriodItem {
+  string period_label = 1; // e.g., "2024-04-25" or "Week 16"
+  common.Money revenue = 2;
+  int32 order_count = 3;
+}
+
+message SalesByPeriodResponse {
+  repeated SalesPeriodItem items = 1;
+}

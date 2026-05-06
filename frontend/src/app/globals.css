@@ -1,4 +1,5 @@
-@import "tailwindcss";
+@import "tailwindcss/preflight" layer(base);
+@import "tailwindcss/utilities" layer(utilities);
 
 @theme {
   --color-primary: #8b5e3c;

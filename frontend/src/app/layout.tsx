@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 
-import "./globals.css";
+import "./tailwind.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-sans",

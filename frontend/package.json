@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "concurrently \"tailwindcss -i ./src/app/globals.css -o ./src/app/tailwind.css --watch\" \"next dev\"",
+    "build": "tailwindcss -i ./src/app/globals.css -o ./src/app/tailwind.css && next build",
     "start": "next start",
     "lint": "eslint",
     "generate-proto": "buf generate ../proto"
@@ -28,15 +28,15 @@
     "@bufbuild/buf": "^1.68.4",
     "@bufbuild/protoc-gen-es": "^1.10.1",
     "@connectrpc/protoc-gen-connect-es": "^1.7.0",
-    "@tailwindcss/postcss": "4.0.7",
+    "@tailwindcss/cli": "^4.2.4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/w3c-web-serial": "^1.0.8",
     "@types/web-bluetooth": "^0.0.21",
+    "concurrently": "^9.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
-    "postcss": "^8.5.4",
     "tailwindcss": "4.0.7",
     "typescript": "^5"
   },

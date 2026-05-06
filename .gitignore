@@ -6,3 +6,6 @@ target/
 .next/
 .DS_Store
 *.log
+
+# Generated Tailwind CSS
+frontend/src/app/tailwind.css

@@ -6,8 +6,8 @@ import { Store } from 'lucide-react';
 export default function StoreSettings() {
   return (
     <div className="ai-card p-12 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-      <div className="flex items-center gap-4 border-b-4 border-foreground/10 pb-6">
-        <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white shadow-[4px_4px_0px_0px_rgba(62,39,35,1)]">
+      <div className="flex items-center gap-4 border-b border-foreground/10 pb-6">
+        <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm">
           <Store className="w-6 h-6" />
         </div>
         <div>
@@ -24,7 +24,7 @@ export default function StoreSettings() {
           <input 
             type="text" 
             defaultValue="KioskFlow Demo Store"
-            className="w-full px-6 py-4 bg-surface border-4 border-foreground rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic tracking-tighter"
+            className="w-full px-6 py-4 bg-surface border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic tracking-tighter shadow-sm"
           />
         </div>
         <div className="space-y-3">
@@ -32,7 +32,7 @@ export default function StoreSettings() {
           <input 
             type="text" 
             defaultValue="0987 654 321"
-            className="w-full px-6 py-4 bg-surface border-4 border-foreground rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic tracking-tighter"
+            className="w-full px-6 py-4 bg-surface border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic tracking-tighter shadow-sm"
           />
         </div>
         <div className="md:col-span-2 space-y-3">
@@ -40,7 +40,7 @@ export default function StoreSettings() {
           <input 
             type="text" 
             defaultValue="Thành phố Hồ Chí Minh, Việt Nam"
-            className="w-full px-6 py-4 bg-surface border-4 border-foreground rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic tracking-tighter"
+            className="w-full px-6 py-4 bg-surface border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic tracking-tighter shadow-sm"
           />
         </div>
       </div>

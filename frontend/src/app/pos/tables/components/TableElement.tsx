@@ -22,13 +22,13 @@ export const TableElement: React.FC<TableElementProps> = ({
   const getStatusColor = (status: TableStatus) => {
     switch (status) {
       case TableStatus.AVAILABLE:
-        return 'bg-interaction text-white border-foreground shadow-[4px_4px_0px_0px_var(--color-foreground)]';
+        return 'bg-interaction text-white border-foreground/10 shadow-md';
       case TableStatus.OCCUPIED:
-        return 'bg-primary text-white border-foreground shadow-[4px_4px_0px_0px_var(--color-foreground)]';
+        return 'bg-primary text-white border-foreground/10 shadow-md';
       case TableStatus.RESERVED:
-        return 'bg-accent text-foreground border-foreground shadow-[4px_4px_0px_0px_var(--color-foreground)]';
+        return 'bg-accent text-foreground border-foreground/10 shadow-md';
       case TableStatus.CLEANING:
-        return 'bg-muted text-foreground/60 border-foreground shadow-[4px_4px_0px_0px_var(--color-foreground)]';
+        return 'bg-muted text-foreground/60 border-foreground/10 shadow-md';
       default:
         return 'bg-background text-foreground/40 border-foreground/20';
     }
@@ -59,9 +59,9 @@ export const TableElement: React.FC<TableElementProps> = ({
       }}
       onClick={() => !isDraggingEnabled && onClick(table)}
       className={cn(
-        'absolute w-24 h-24 rounded-2xl border-4 flex flex-col items-center justify-center cursor-pointer transition-all hover:-translate-y-1 active:translate-y-0 active:shadow-none',
+        'absolute w-24 h-24 rounded-2xl border flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95',
         getStatusColor(table.status),
-        isDraggingEnabled && 'cursor-move ring-4 ring-interaction ring-offset-4 ring-offset-background border-foreground'
+        isDraggingEnabled && 'cursor-move ring-2 ring-interaction ring-offset-4 ring-offset-background border-foreground'
       )}
       style={{
         left: 0,
@@ -79,7 +79,7 @@ export const TableElement: React.FC<TableElementProps> = ({
       </div>
 
       {isDraggingEnabled && (
-        <div className="absolute -top-3 -right-3 w-8 h-8 bg-interaction border-4 border-foreground rounded-full flex items-center justify-center text-white text-xs shadow-[2px_2px_0px_0px_var(--color-foreground)]">
+        <div className="absolute -top-3 -right-3 w-8 h-8 bg-interaction border border-foreground/10 rounded-full flex items-center justify-center text-white text-xs shadow-sm">
           ⇅
         </div>
       )}

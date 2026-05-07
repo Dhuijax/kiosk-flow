@@ -113,7 +113,7 @@ export default function InventoryPage() {
         <div className="flex gap-4">
           <button 
             onClick={fetchData}
-            className="w-14 h-14 bg-surface border-4 border-foreground rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-[4px_4px_0px_0px_rgba(62,39,35,1)]"
+            className="w-14 h-14 bg-surface border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-sm"
           >
             <RefreshCw className={`w-6 h-6 stroke-[3] ${loadingStock ? 'animate-spin' : ''}`} />
           </button>
@@ -141,22 +141,22 @@ export default function InventoryPage() {
             placeholder="TÌM THEO TÊN HOẶC MÃ SKU..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-16 pr-6 py-4 bg-background border-4 border-foreground rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic tracking-tighter"
+            className="w-full pl-16 pr-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic tracking-tighter shadow-sm"
           />
         </div>
         <div className="flex items-center gap-4 w-full md:w-auto">
           <button 
             onClick={() => setLowStockOnly(!lowStockOnly)}
-            className={`flex items-center gap-3 px-8 py-4 rounded-2xl border-4 transition-all font-black uppercase italic tracking-tighter text-sm shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] ${
+            className={`flex items-center gap-3 px-8 py-4 rounded-2xl border transition-all font-black uppercase italic tracking-tighter text-sm shadow-sm ${
               lowStockOnly 
-                ? 'bg-accent text-foreground border-foreground' 
+                ? 'bg-accent text-foreground border-accent' 
                 : 'bg-background text-foreground/40 border-foreground/10 hover:border-foreground/40'
             }`}
           >
             <AlertTriangle className="w-5 h-5 stroke-[3]" />
             <span>SẮP HẾT</span>
           </button>
-          <button className="w-14 h-14 bg-surface border-4 border-foreground rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-[4px_4px_0px_0px_rgba(62,39,35,1)]">
+          <button className="w-14 h-14 bg-surface border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-sm">
             <Filter className="w-6 h-6 stroke-[3]" />
           </button>
         </div>
@@ -164,9 +164,9 @@ export default function InventoryPage() {
 
       {/* Inventory Table */}
       <div className="ai-card p-0 overflow-hidden">
-        <div className="p-8 bg-foreground text-background flex items-center justify-between">
+        <div className="p-8 border-b border-foreground/10 flex items-center justify-between">
           <h3 className="text-2xl font-black uppercase italic tracking-tighter flex items-center gap-3">
-            <Package className="w-6 h-6 stroke-[3]" />
+            <Package className="w-6 h-6 stroke-[3] text-interaction" />
             Danh sách vật tư
           </h3>
           <div className="flex items-center gap-2">
@@ -185,7 +185,7 @@ export default function InventoryPage() {
                 <th className="px-8 py-6 text-right">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y-4 divide-foreground/5">
+            <tbody className="divide-y divide-foreground/5">
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
@@ -213,7 +213,7 @@ export default function InventoryPage() {
                     <tr key={item.id} className="group hover:bg-foreground/5 transition-all cursor-pointer">
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-6">
-                          <div className="w-14 h-14 rounded-2xl bg-background border-4 border-foreground/10 flex items-center justify-center text-primary group-hover:border-interaction transition-all">
+                          <div className="w-14 h-14 rounded-2xl bg-background border border-foreground/10 flex items-center justify-center text-primary group-hover:border-interaction group-hover:scale-105 transition-all shadow-sm">>
                             <Package className="w-7 h-7 stroke-[2.5]" />
                           </div>
                           <div>
@@ -234,14 +234,14 @@ export default function InventoryPage() {
                       <td className="px-8 py-6">
                         <div className="flex items-center">
                           {isOut ? (
-                            <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-red-500 text-white border-2 border-foreground uppercase italic tracking-tighter shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">Hết hàng</span>
+                            <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-red-500 text-white border border-foreground/10 uppercase italic tracking-tighter shadow-sm">Hết hàng</span>
                           ) : isLow ? (
-                            <span className="flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black bg-accent text-foreground border-2 border-foreground uppercase italic tracking-tighter shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                            <span className="flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black bg-accent text-foreground border border-foreground/10 uppercase italic tracking-tighter shadow-sm">
                               <span className="w-2 h-2 rounded-full bg-foreground animate-pulse"></span>
                               Sắp hết
                             </span>
                           ) : (
-                            <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-interaction text-white border-2 border-foreground uppercase italic tracking-tighter shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">An toàn</span>
+                            <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-interaction text-white border border-foreground/10 uppercase italic tracking-tighter shadow-sm">An toàn</span>
                           )}
                         </div>
                       </td>
@@ -254,7 +254,7 @@ export default function InventoryPage() {
                               currentQuantity: item.quantity,
                               branchId: item.branchId
                             })}
-                            className="w-12 h-12 bg-surface border-2 border-foreground rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
+                            className="w-12 h-12 bg-surface border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white shadow-sm transition-all"
                             title="Điều chỉnh"
                           >
                             <Settings2 className="w-5 h-5 stroke-[3]" />
@@ -265,7 +265,7 @@ export default function InventoryPage() {
                               name: product?.name || 'Unknown',
                               branchId: item.branchId
                             })}
-                            className="w-12 h-12 bg-surface border-2 border-foreground rounded-xl flex items-center justify-center hover:bg-accent shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
+                            className="w-12 h-12 bg-surface border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-accent shadow-sm transition-all"
                             title="Lịch sử"
                           >
                             <History className="w-5 h-5 stroke-[3]" />

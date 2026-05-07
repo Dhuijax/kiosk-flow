@@ -91,9 +91,9 @@ export default function SettingsPage() {
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
                   className={`
-                    w-full flex items-center gap-4 px-6 py-5 rounded-2xl transition-all duration-300 border-4 font-black uppercase italic tracking-tighter text-sm
+                    w-full flex items-center gap-4 px-6 py-5 rounded-2xl transition-all duration-300 border font-black uppercase italic tracking-tighter text-sm
                     ${isActive 
-                      ? 'bg-interaction text-white border-foreground shadow-[6px_6px_0px_0px_rgba(62,39,35,1)] translate-x-[-2px] translate-y-[-2px]' 
+                      ? 'bg-interaction text-white border-interaction shadow-md scale-[1.02]' 
                       : 'text-foreground/40 border-transparent hover:bg-foreground/5 hover:text-foreground'
                     }
                   `}
@@ -105,7 +105,7 @@ export default function SettingsPage() {
             })}
           </div>
           
-          <div className="p-6 bg-accent/10 border-4 border-dashed border-accent/30 rounded-[2rem] text-center">
+          <div className="p-6 bg-accent/10 border border-dashed border-accent/40 rounded-3xl text-center shadow-sm">
             <p className="text-[10px] font-black uppercase tracking-widest text-accent mb-2">Hỗ trợ kỹ thuật</p>
             <p className="text-xs font-bold text-foreground opacity-60">Bạn cần giúp đỡ với cấu hình? <br /> Liên hệ AI Assistant.</p>
           </div>

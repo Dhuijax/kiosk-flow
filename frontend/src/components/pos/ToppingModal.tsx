@@ -44,11 +44,11 @@ export default function ToppingModal({ product, isOpen, onClose, onConfirm }: To
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="w-full max-w-4xl bg-surface border-4 border-foreground rounded-[3rem] shadow-[24px_24px_0px_0px_rgba(62,39,35,1)] flex flex-col md:flex-row overflow-hidden max-h-[90vh]"
+          className="w-full max-w-4xl bg-surface border border-foreground/10 rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row overflow-hidden max-h-[90vh]"
         >
           {/* Left: Product Image & Info */}
-          <div className="w-full md:w-2/5 bg-background border-b-4 md:border-b-0 md:border-r-4 border-foreground flex flex-col p-8 md:p-12">
-            <div className="relative aspect-square w-full rounded-[2rem] overflow-hidden border-4 border-foreground mb-8">
+          <div className="w-full md:w-2/5 bg-background border-b md:border-b-0 md:border-r border-foreground/10 flex flex-col p-8 md:p-12">
+            <div className="relative aspect-square w-full rounded-3xl overflow-hidden border border-foreground/10 mb-8">
               {product.imageUrl ? (
                 <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
               ) : (
@@ -97,9 +97,9 @@ export default function ToppingModal({ product, isOpen, onClose, onConfirm }: To
                         key={topping.id}
                         onClick={() => toggleTopping(topping)}
                         className={`
-                          group p-4 rounded-2xl border-4 transition-all flex items-center justify-between gap-4
+                          group p-4 rounded-2xl border transition-all flex items-center justify-between gap-4
                           ${isSelected 
-                            ? 'bg-interaction border-foreground shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] translate-x-[-2px] translate-y-[-2px]' 
+                            ? 'bg-interaction border-interaction shadow-md scale-[1.02]' 
                             : 'bg-background border-foreground/10 hover:border-foreground/40'}
                         `}
                       >
@@ -120,7 +120,7 @@ export default function ToppingModal({ product, isOpen, onClose, onConfirm }: To
                     );
                   })
                 ) : (
-                  <div className="col-span-2 py-12 text-center bg-background rounded-3xl border-4 border-dashed border-foreground/10">
+                  <div className="col-span-2 py-12 text-center bg-background rounded-3xl border border-dashed border-foreground/10">
                     <p className="text-sm font-black uppercase italic tracking-tighter opacity-20">Sản phẩm này không có topping</p>
                   </div>
                 )}
@@ -128,8 +128,8 @@ export default function ToppingModal({ product, isOpen, onClose, onConfirm }: To
             </div>
 
             {/* Bottom Actions */}
-            <div className="p-8 md:p-12 bg-background border-t-4 border-foreground flex flex-col sm:flex-row items-center justify-between gap-8">
-              <div className="flex items-center gap-6 bg-surface p-2 border-4 border-foreground rounded-[2rem] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="p-8 md:p-12 bg-background border-t border-foreground/10 flex flex-col sm:flex-row items-center justify-between gap-8">
+              <div className="flex items-center gap-6 bg-surface p-2 border border-foreground/10 rounded-3xl shadow-sm">
                 <button 
                   onClick={() => setQuantity(q => Math.max(1, q - 1))}
                   className="w-12 h-12 flex items-center justify-center text-foreground hover:bg-foreground/5 rounded-2xl transition-colors"

@@ -74,7 +74,7 @@ function LoginForm() {
   return (
     <div className="w-full max-w-md ai-card p-12 relative">
       <div className="mb-12 text-center">
-        <div className="w-20 h-20 bg-primary rounded-[2rem] flex items-center justify-center shadow-[6px_6px_0px_0px_rgba(62,39,35,1)] mx-auto mb-6 transform -rotate-6">
+        <div className="w-20 h-20 bg-primary rounded-2xl flex items-center justify-center shadow-sm mx-auto mb-6 transform -rotate-6">
           <Sparkles className="w-10 h-10 text-white" />
         </div>
         <h1 className="text-5xl font-black tracking-tighter uppercase italic text-foreground">
@@ -93,7 +93,7 @@ function LoginForm() {
               type="text"
               value={tenantSlug}
               onChange={(e) => setTenantSlug(e.target.value)}
-              className="w-full pl-14 pr-6 py-4 bg-background border-4 border-foreground rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm uppercase"
+              className="w-full pl-14 pr-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm uppercase shadow-sm"
               placeholder="SLUG-CUA-HANG"
               required
             />
@@ -109,7 +109,7 @@ function LoginForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full pl-14 pr-6 py-4 bg-background border-4 border-foreground rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm"
+              className="w-full pl-14 pr-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm shadow-sm"
               placeholder="admin@kioskflow.vn"
               required
             />
@@ -125,7 +125,7 @@ function LoginForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-14 pr-6 py-4 bg-background border-4 border-foreground rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm"
+              className="w-full pl-14 pr-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm shadow-sm"
               placeholder="••••••••"
               required
             />
@@ -133,7 +133,7 @@ function LoginForm() {
         </div>
 
         {error && (
-          <div className="p-4 bg-red-500/10 border-4 border-red-500 rounded-2xl text-red-600 text-xs flex items-center gap-3 font-black uppercase italic tracking-tighter">
+          <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-2xl text-red-600 text-xs flex items-center gap-3 font-black uppercase italic tracking-tighter shadow-sm">
             <AlertCircle className="w-5 h-5 flex-none" />
             {error}
           </div>

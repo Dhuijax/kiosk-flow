@@ -16,9 +16,9 @@ export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }
   };
 
   return (
-    <div aria-label="Tóm tắt đơn hàng" className="w-[480px] bg-surface flex flex-col hidden lg:flex h-full border-l-4 border-foreground relative">
+    <div aria-label="Tóm tắt đơn hàng" className="w-[480px] bg-surface flex flex-col hidden lg:flex h-full border-l border-foreground/10 relative">
       {/* AI Assistance Header */}
-      <div className="p-8 flex items-center justify-between border-b-4 border-foreground bg-accent/10">
+      <div className="p-8 flex items-center justify-between border-b border-foreground/10 bg-accent/5">
         <div className="flex flex-col">
           <h2 className="text-2xl font-black text-foreground flex items-center gap-3 italic uppercase tracking-tighter">
             <ShoppingCart className="w-8 h-8 text-primary stroke-[3]" />
@@ -55,7 +55,7 @@ export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }
               recognition.start();
             }}
             className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-[2px_2px_0px_0px_rgba(62,39,35,1)]",
+              "w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-sm",
               isListening ? "bg-red-500 animate-pulse" : "bg-interaction"
             )}
             title="Gọi món bằng giọng nói"
@@ -77,7 +77,7 @@ export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }
               animate={{ opacity: 1 }}
               className="h-full flex flex-col items-center justify-center text-center p-6 gap-6"
             >
-              <div className="w-32 h-32 bg-background border-4 border-foreground rounded-[2rem] flex items-center justify-center relative">
+              <div className="w-32 h-32 bg-background border border-foreground/10 rounded-3xl flex items-center justify-center relative">
                 <ShoppingCart className="w-16 h-16 text-foreground/20" />
                 <Sparkles className="absolute -top-4 -right-4 w-12 h-12 text-accent animate-float" />
               </div>
@@ -96,7 +96,7 @@ export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="bg-background p-6 rounded-[2rem] border-4 border-foreground shadow-[6px_6px_0px_0px_rgba(62,39,35,1)] group relative"
+                  className="bg-background p-6 rounded-3xl border border-foreground/10 shadow-sm group relative"
                 >
                   <div className="flex justify-between items-start mb-6">
                     <div className="flex-1 min-w-0 pr-4">
@@ -104,7 +104,7 @@ export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }
                       {item.selectedToppings.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {item.selectedToppings.map((t) => (
-                            <span key={t.id} className="text-[10px] font-black uppercase italic tracking-tighter bg-interaction/10 text-interaction px-2 py-0.5 rounded-lg border-2 border-interaction/20">
+                            <span key={t.id} className="text-[10px] font-black uppercase italic tracking-tighter bg-interaction/10 text-interaction px-2 py-0.5 rounded-lg border border-interaction/20">
                               + {t.name}
                             </span>
                           ))}
@@ -114,14 +114,14 @@ export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }
                     </div>
                     <button 
                       onClick={() => removeItem(item.id)}
-                      className="p-2 text-foreground/40 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all border-2 border-transparent hover:border-red-500/50"
+                      className="p-2 text-foreground/40 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-500/50"
                     >
                       <Trash2 size={20} className="stroke-[3]" />
                     </button>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center bg-white rounded-2xl border-4 border-foreground p-1 gap-6">
+                    <div className="flex items-center bg-white rounded-2xl border border-foreground/10 p-1 gap-6">
                       <button 
                         onClick={() => updateQuantity(item.id, -1)}
                         className="p-3 text-foreground hover:bg-interaction hover:text-white rounded-xl transition-all"
@@ -148,7 +148,7 @@ export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }
       </div>
 
       {/* Footer / Summary */}
-      <div className="p-8 border-t-4 border-foreground bg-background">
+      <div className="p-8 border-t border-foreground/10 bg-background">
         <div className="space-y-4 mb-8">
           <div className="flex justify-between text-foreground/60 font-black uppercase text-sm tracking-tighter">
             <span>Tạm tính</span>
@@ -158,7 +158,7 @@ export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }
             <span>Thuế (10%)</span>
             <span className="">{formatCurrency(tax)}</span>
           </div>
-          <div className="flex justify-between text-foreground font-black text-4xl pt-6 mt-2 border-t-4 border-foreground uppercase italic tracking-tighter">
+          <div className="flex justify-between text-foreground font-black text-4xl pt-6 mt-2 border-t border-foreground/10 uppercase italic tracking-tighter">
             <span>TỔNG</span>
             <span className="text-interaction">{formatCurrency(total)}</span>
           </div>
@@ -168,9 +168,9 @@ export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }
           onClick={onCheckout}
           disabled={items.length === 0}
           className={cn(
-            "w-full py-8 flex items-center justify-center gap-4 rounded-[2rem] font-black text-2xl uppercase italic tracking-tighter transition-all border-4",
+            "w-full py-8 flex items-center justify-center gap-4 rounded-3xl font-black text-2xl uppercase italic tracking-tighter transition-all border",
             items.length > 0 
-              ? "bg-primary text-white border-foreground shadow-[8px_8px_0px_0px_rgba(62,39,35,1)] hover:shadow-[12px_12px_0px_0px_rgba(62,39,35,1)] hover:-translate-x-1 hover:-translate-y-1 active:translate-x-0 active:translate-y-0 active:shadow-none" 
+              ? "bg-primary text-white border-primary shadow-lg hover:bg-primary/90 transition-all" 
               : "bg-muted text-foreground/20 border-foreground/10 cursor-not-allowed"
           )}
         >

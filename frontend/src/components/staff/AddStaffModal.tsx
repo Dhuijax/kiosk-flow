@@ -80,12 +80,12 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }: AddStaffMo
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-2xl bg-surface border-4 border-foreground rounded-[3rem] shadow-[24px_24px_0px_0px_rgba(62,39,35,1)] overflow-hidden flex flex-col"
+          className="relative w-full max-w-2xl bg-surface border border-foreground/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col"
         >
           {/* Header */}
-          <div className="p-8 border-b-4 border-foreground bg-background flex items-center justify-between">
+          <div className="p-8 border-b border-foreground/10 bg-background flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-interaction border-4 border-foreground rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-white">
+              <div className="w-12 h-12 bg-interaction border border-foreground/10 rounded-2xl flex items-center justify-center shadow-sm text-white">
                 <UserPlus size={24} />
               </div>
               <div>
@@ -108,7 +108,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }: AddStaffMo
                   required
                   value={formData.fullName}
                   onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                  className="w-full px-6 py-4 bg-background border-4 border-foreground rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm uppercase italic"
+                  className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm uppercase italic shadow-sm"
                   placeholder="NGUYỄN VĂN A"
                 />
               </div>
@@ -123,7 +123,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }: AddStaffMo
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="w-full pl-14 pr-6 py-4 bg-background border-4 border-foreground rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm"
+                    className="w-full pl-14 pr-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm shadow-sm"
                     placeholder="admin@kioskflow.vn"
                   />
                 </div>
@@ -139,7 +139,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }: AddStaffMo
                     required
                     value={formData.password}
                     onChange={(e) => setFormData({...formData, password: e.target.value})}
-                    className="w-full pl-14 pr-6 py-4 bg-background border-4 border-foreground rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm"
+                    className="w-full pl-14 pr-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm shadow-sm"
                     placeholder="••••••••"
                   />
                 </div>
@@ -153,7 +153,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }: AddStaffMo
                   <select 
                     value={formData.role}
                     onChange={(e) => setFormData({...formData, role: e.target.value})}
-                    className="w-full pl-14 pr-6 py-4 bg-background border-4 border-foreground rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic appearance-none"
+                    className="w-full pl-14 pr-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic appearance-none shadow-sm"
                   >
                     <option value="Staff">Nhân viên</option>
                     <option value="Manager">Quản lý</option>
@@ -171,7 +171,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }: AddStaffMo
                   <select 
                     value={formData.branchId}
                     onChange={(e) => setFormData({...formData, branchId: e.target.value})}
-                    className="w-full pl-14 pr-6 py-4 bg-background border-4 border-foreground rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic appearance-none"
+                    className="w-full pl-14 pr-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic appearance-none shadow-sm"
                   >
                     <option value="">Tất cả chi nhánh</option>
                   </select>
@@ -183,7 +183,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }: AddStaffMo
               <motion.div 
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="p-4 bg-red-500/10 border-4 border-red-500 rounded-2xl text-red-600 text-xs flex items-center gap-3 font-black uppercase italic tracking-tighter"
+                className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-600 text-xs flex items-center gap-3 font-black uppercase italic tracking-tighter"
               >
                 <X size={20} />
                 {error}
@@ -192,7 +192,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess }: AddStaffMo
           </form>
 
           {/* Footer Actions */}
-          <div className="p-8 md:p-12 bg-background border-t-4 border-foreground flex items-center justify-end gap-6">
+          <div className="p-8 md:p-12 bg-background border-t border-foreground/10 flex items-center justify-end gap-6">
             <button 
               type="button"
               onClick={onClose}

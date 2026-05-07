@@ -86,10 +86,10 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="bg-surface border-4 border-foreground rounded-[4rem] w-full max-w-5xl overflow-hidden shadow-[24px_24px_0px_0px_rgba(62,39,35,1)] relative z-10 flex flex-col md:flex-row"
+          className="bg-surface border border-foreground/10 rounded-[2.5rem] w-full max-w-5xl overflow-hidden shadow-2xl relative z-10 flex flex-col md:flex-row"
         >
           {/* Left Side: Method Selection */}
-          <div className="flex-1 p-12 border-r-4 border-foreground space-y-10">
+          <div className="flex-1 p-12 border-r border-foreground/10 space-y-10">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <h2 className="text-4xl font-black uppercase italic tracking-tighter text-foreground leading-none">Thanh Toán</h2>
@@ -97,7 +97,7 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
               </div>
               <button 
                 onClick={onClose}
-                className="w-12 h-12 bg-background border-4 border-foreground rounded-2xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1"
+                className="w-12 h-12 bg-background border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm"
               >
                 <X size={24} />
               </button>
@@ -109,15 +109,15 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
                   key={method.id}
                   onClick={() => handleMethodSelect(method.id)}
                   className={cn(
-                    "flex items-center justify-between p-8 rounded-[2rem] border-4 transition-all group relative overflow-hidden",
+                    "flex items-center justify-between p-8 rounded-3xl border transition-all group relative overflow-hidden",
                     selectedMethod === method.id 
-                      ? `${method.color} text-white border-foreground shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] -translate-x-1 -translate-y-1` 
+                      ? `${method.color} text-white border-transparent shadow-lg scale-[1.02]` 
                       : "bg-background text-foreground/40 border-foreground/5 hover:border-foreground/20 hover:text-foreground"
                   )}
                 >
                   <div className="flex items-center gap-6 relative z-10">
                     <div className={cn(
-                      "w-16 h-16 rounded-2xl border-4 border-foreground flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]",
+                      "w-16 h-16 rounded-2xl border border-foreground/10 flex items-center justify-center shadow-sm",
                       selectedMethod === method.id ? "bg-white/20" : "bg-foreground/5"
                     )}>
                       <method.icon size={32} className="stroke-[3]" />
@@ -125,7 +125,7 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
                     <span className="text-2xl font-black uppercase italic tracking-tighter">{method.name}</span>
                   </div>
                   <div className={cn(
-                    "w-10 h-10 rounded-full border-4 border-foreground flex items-center justify-center relative z-10",
+                    "w-10 h-10 rounded-full border border-foreground/10 flex items-center justify-center relative z-10",
                     selectedMethod === method.id ? "bg-white text-foreground" : "bg-background"
                   )}>
                     {selectedMethod === method.id && <CheckCircle size={20} className="stroke-[3]" />}
@@ -134,7 +134,7 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
               ))}
             </div>
 
-            <div className="p-8 bg-background rounded-[3rem] border-4 border-foreground flex items-center justify-between">
+            <div className="p-8 bg-background rounded-3xl border border-foreground/10 flex items-center justify-between shadow-sm">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-accent border-2 border-foreground rounded-xl flex items-center justify-center text-foreground">
                   <Wallet size={24} />
@@ -165,7 +165,7 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
                           type="number"
                           value={receivedAmount}
                           onChange={(e) => setReceivedAmount(Number(e.target.value))}
-                          className="w-full pl-20 pr-8 py-6 bg-surface border-4 border-foreground rounded-[2rem] text-4xl font-black italic tracking-tighter text-foreground outline-none focus:bg-white transition-all shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
+                          className="w-full pl-20 pr-8 py-6 bg-surface border border-foreground/10 rounded-3xl text-4xl font-black italic tracking-tighter text-foreground outline-none focus:bg-white transition-all shadow-md"
                         />
                       </div>
                     </div>
@@ -175,19 +175,19 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
                         <button
                           key={amt}
                           onClick={() => setReceivedAmount(amt)}
-                          className="py-4 bg-surface border-4 border-foreground rounded-2xl font-black text-sm hover:bg-accent transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] active:shadow-none active:translate-x-1 active:translate-y-1"
+                          className="py-4 bg-surface border border-foreground/10 rounded-2xl font-black text-sm hover:bg-accent transition-all shadow-sm"
                         >
                           {formatVND(amt)}
                         </button>
                       ))}
                     </div>
 
-                    <div className="p-8 bg-foreground text-background rounded-[3rem] border-4 border-foreground shadow-[12px_12px_0px_0px_rgba(43,168,162,1)] flex items-center justify-between">
+                    <div className="p-8 bg-foreground text-background rounded-3xl border border-foreground/5 shadow-xl flex items-center justify-between">
                       <div className="space-y-1">
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Tiền thừa trả khách</p>
                         <p className="text-4xl font-black italic tracking-tighter text-accent">{formatVND(change)}</p>
                       </div>
-                      <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center text-foreground shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+                      <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center text-foreground">
                         <Calculator size={32} />
                       </div>
                     </div>
@@ -202,8 +202,8 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
                     exit={{ opacity: 0, x: -20 }}
                     className="flex flex-col items-center justify-center space-y-8"
                   >
-                    <div className="bg-white p-8 rounded-[3rem] border-8 border-foreground shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative group">
-                      <div className="w-64 h-64 bg-background border-2 border-foreground/5 flex items-center justify-center overflow-hidden">
+                    <div className="bg-white p-8 rounded-3xl border border-foreground/10 shadow-2xl relative group">
+                      <div className="w-64 h-64 bg-background border border-foreground/5 flex items-center justify-center overflow-hidden">
                         <Image 
                           src={`https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=vietqr://payment?amount=${total}&note=ORDER_${timestamp}`}
                           alt="VietQR"
@@ -212,7 +212,7 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
                           className="w-full h-full object-contain"
                         />
                       </div>
-                      <div className="absolute -top-4 -right-4 w-12 h-12 bg-primary border-4 border-foreground rounded-2xl flex items-center justify-center text-white rotate-12 group-hover:rotate-0 transition-transform">
+                      <div className="absolute -top-4 -right-4 w-12 h-12 bg-primary border border-white/20 rounded-2xl flex items-center justify-center text-white rotate-12 group-hover:rotate-0 transition-transform shadow-lg">
                         <QrCode size={24} />
                       </div>
                     </div>
@@ -232,7 +232,7 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
                     className="flex flex-col items-center justify-center h-full space-y-12"
                   >
                     <div className="relative">
-                      <div className="w-64 h-64 bg-surface border-4 border-foreground rounded-full flex items-center justify-center shadow-[16px_16px_0px_0px_rgba(62,39,35,1)]">
+                      <div className="w-64 h-64 bg-surface border border-foreground/10 rounded-full flex items-center justify-center shadow-xl">
                         <CreditCard size={120} className="text-foreground animate-pulse" />
                       </div>
                       <Sparkles className="absolute -top-4 -right-4 w-16 h-16 text-accent animate-float" />
@@ -250,10 +250,10 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
               onClick={handleConfirm}
               disabled={isSubmitting || (selectedMethod === PaymentMethod.CASH && receivedAmount < total)}
               className={cn(
-                "w-full py-8 mt-12 rounded-[2.5rem] font-black text-3xl uppercase italic tracking-tighter flex items-center justify-center gap-6 border-4 transition-all",
+                "w-full py-8 mt-12 rounded-3xl font-black text-3xl uppercase italic tracking-tighter flex items-center justify-center gap-6 border transition-all",
                 isSubmitting 
                   ? "bg-muted text-foreground/20 border-foreground/10 cursor-not-allowed" 
-                  : "bg-interaction text-white border-foreground shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 active:translate-x-0 active:translate-y-0 active:shadow-none"
+                  : "bg-interaction text-white border-interaction shadow-lg hover:bg-interaction/90"
               )}
             >
               {isSubmitting ? (

@@ -92,8 +92,8 @@ export default function OrderClient() {
             exit={{ opacity: 0, y: -50 }}
             className="absolute top-0 left-1/2 -translate-x-1/2 z-[150] pointer-events-none"
           >
-            <div className={`px-10 py-5 rounded-[2rem] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] border-4 flex items-center gap-6 ${
-              status.type === 'success' ? 'bg-interaction border-foreground text-white' : 'bg-red-400 border-foreground text-white'
+            <div className={`px-10 py-5 rounded-full shadow-2xl border flex items-center gap-6 ${
+              status.type === 'success' ? 'bg-interaction border-foreground/10 text-white' : 'bg-red-400 border-foreground/10 text-white'
             }`}>
               {status.type === 'success' ? <CheckCircle size={32} className="stroke-[3]" /> : <AlertCircle size={32} className="stroke-[3]" />}
               <span className="font-black uppercase tracking-tighter text-2xl italic">{status.message}</span>
@@ -103,7 +103,7 @@ export default function OrderClient() {
       </AnimatePresence>
 
       {/* Adaptive Header / Search */}
-      <div className="flex-none flex items-center bg-background border-b-4 border-foreground h-32 px-12 gap-12">
+      <div className="flex-none flex items-center bg-background border-b border-foreground/10 h-32 px-12 gap-12">
         <div className="flex-1">
           <div className="relative group">
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-8 h-8 text-foreground opacity-40 group-focus-within:opacity-100 transition-opacity" />
@@ -112,10 +112,10 @@ export default function OrderClient() {
               placeholder="BẠN MUỐN TÌM GÌ HÔM NAY?" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-20 pr-8 py-6 bg-surface border-4 border-foreground rounded-[2rem] outline-none focus:bg-white transition-all font-black text-2xl uppercase italic tracking-tighter"
+              className="w-full pl-20 pr-8 py-6 bg-surface border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-2xl uppercase italic tracking-tighter shadow-sm"
             />
             <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-4">
-              <button className="w-12 h-12 bg-accent border-2 border-foreground rounded-xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all">
+              <button className="w-12 h-12 bg-accent border border-foreground/10 rounded-xl flex items-center justify-center shadow-sm active:scale-95 transition-all">
                 <Mic size={24} />
               </button>
             </div>
@@ -123,7 +123,7 @@ export default function OrderClient() {
         </div>
         
         <div className="flex items-center gap-6">
-          <button className="px-8 py-5 bg-surface hover:bg-foreground hover:text-background border-4 border-foreground rounded-2xl transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] font-black uppercase italic tracking-tighter flex items-center gap-3">
+          <button className="px-8 py-5 bg-surface hover:bg-foreground hover:text-background border border-foreground/10 rounded-2xl transition-all shadow-sm font-black uppercase italic tracking-tighter flex items-center gap-3">
             <Filter className="w-6 h-6 stroke-[3]" />
             LỌC
           </button>
@@ -133,9 +133,9 @@ export default function OrderClient() {
       {/* Main Experience */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Side: Categories & Products */}
-        <div className="flex-1 flex flex-col min-w-0 border-r-4 border-foreground">
+        <div className="flex-1 flex flex-col min-w-0 border-r border-foreground/10">
           {/* Categories */}
-          <div className="flex-none border-b-4 border-foreground/10 bg-background">
+          <div className="flex-none border-b border-foreground/10 bg-background">
             <CategoryTabs 
               selectedId={selectedCategoryId} 
               onSelect={setSelectedCategoryId} 
@@ -167,9 +167,9 @@ export default function OrderClient() {
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-background/90 backdrop-blur-2xl z-[200] flex items-center justify-center"
           >
-            <div className="flex flex-col items-center gap-12 p-20 bg-surface border-4 border-foreground rounded-[4rem] shadow-[24px_24px_0px_0px_rgba(43,168,162,1)]">
+            <div className="flex flex-col items-center gap-12 p-20 bg-surface border border-foreground/10 rounded-[2.5rem] shadow-2xl">
               <div className="relative">
-                <div className="w-32 h-32 border-[12px] border-interaction/20 border-t-interaction rounded-full animate-spin" />
+                <div className="w-32 h-32 border-4 border-interaction/20 border-t-interaction rounded-full animate-spin" />
                 <Sparkles className="absolute inset-0 m-auto w-12 h-12 text-accent animate-pulse" />
               </div>
               <div className="text-center space-y-4">

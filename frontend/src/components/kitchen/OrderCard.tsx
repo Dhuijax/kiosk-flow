@@ -47,12 +47,12 @@ export function OrderCard({ order, onUpdateStatus, isHistory }: OrderCardProps) 
       initial={{ opacity: 0, scale: 0.9, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9, y: -20 }}
-      className={`flex flex-col bg-surface border-4 rounded-[3rem] p-8 transition-all relative overflow-hidden group ${
+      className={`flex flex-col bg-surface border rounded-3xl p-8 transition-all relative overflow-hidden group ${
         isHistory 
           ? "border-foreground/10 opacity-60 grayscale shadow-none" 
           : isLate 
-            ? "border-red-500 shadow-[12px_12px_0px_0px_rgba(239,68,68,1)] bg-red-50" 
-            : "border-foreground shadow-[12px_12px_0px_0px_rgba(62,39,35,1)] hover:shadow-[16px_16px_0px_0px_rgba(43,168,162,1)] hover:-translate-x-1 hover:-translate-y-1"
+            ? "border-red-500 shadow-xl shadow-red-500/10 bg-red-50" 
+            : "border-foreground/10 shadow-lg hover:shadow-xl hover:border-interaction/30"
       }`}
     >
       {/* Late Alert Overlay */}
@@ -64,7 +64,7 @@ export function OrderCard({ order, onUpdateStatus, isHistory }: OrderCardProps) 
       <div className="flex items-start justify-between mb-8">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="bg-primary border-4 border-foreground text-white rounded-2xl px-4 py-2 font-black text-2xl flex items-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] italic tracking-tighter">
+            <div className="bg-primary border border-white/20 text-white rounded-2xl px-4 py-2 font-black text-2xl flex items-center gap-2 shadow-lg italic tracking-tighter">
               <Hash size={20} className="stroke-[4]" />
               <span>{order.orderNumber}</span>
             </div>
@@ -74,7 +74,7 @@ export function OrderCard({ order, onUpdateStatus, isHistory }: OrderCardProps) 
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2 px-3 py-1 bg-background border-2 border-foreground rounded-lg w-fit">
+          <div className="flex items-center gap-2 px-3 py-1 bg-background border border-foreground/10 rounded-lg w-fit">
             <span className="text-[10px] font-black uppercase italic tracking-widest text-foreground">
               {order.tableName || "MANG ĐI"}
             </span>
@@ -93,7 +93,7 @@ export function OrderCard({ order, onUpdateStatus, isHistory }: OrderCardProps) 
       </div>
 
       {/* Customer Info */}
-      <div className="flex items-center gap-3 mb-8 p-3 bg-background/50 border-2 border-foreground/10 rounded-2xl">
+      <div className="flex items-center gap-3 mb-8 p-3 bg-background/50 border border-foreground/10 rounded-2xl">
         <div className="w-10 h-10 bg-foreground text-background rounded-full flex items-center justify-center">
           <User size={18} />
         </div>
@@ -132,11 +132,11 @@ export function OrderCard({ order, onUpdateStatus, isHistory }: OrderCardProps) 
 
       {/* Footer / Actions */}
       {!isHistory && (
-        <div className="mt-8 pt-8 border-t-4 border-foreground/5 flex gap-4">
+        <div className="mt-8 pt-8 border-t border-foreground/5 flex gap-4">
           {order.status === OrderStatus.CONFIRMED ? (
             <button
               onClick={() => onUpdateStatus(order.id, OrderStatus.PREPARING)}
-              className="flex-1 bg-interaction text-white font-black py-5 rounded-[2rem] flex items-center justify-center gap-3 transition-all active:scale-95 uppercase italic tracking-tighter text-lg border-4 border-foreground shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)]"
+              className="flex-1 bg-interaction text-white font-black py-5 rounded-3xl flex items-center justify-center gap-3 transition-all active:scale-95 uppercase italic tracking-tighter text-lg border border-interaction/20 shadow-lg hover:bg-interaction/90"
             >
               <Play size={24} fill="currentColor" className="stroke-[3]" />
               BẮT ĐẦU NẤU
@@ -144,7 +144,7 @@ export function OrderCard({ order, onUpdateStatus, isHistory }: OrderCardProps) 
           ) : (
             <button
               onClick={() => onUpdateStatus(order.id, OrderStatus.SERVED)}
-              className="flex-1 bg-primary text-white font-black py-5 rounded-[2rem] flex items-center justify-center gap-3 transition-all active:scale-95 uppercase italic tracking-tighter text-lg border-4 border-foreground shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)]"
+              className="flex-1 bg-primary text-white font-black py-5 rounded-3xl flex items-center justify-center gap-3 transition-all active:scale-95 uppercase italic tracking-tighter text-lg border border-primary/20 shadow-lg hover:bg-primary/90"
             >
               <CheckCircle size={24} className="stroke-[3]" />
               XONG & GIAO MÓN
@@ -158,10 +158,10 @@ export function OrderCard({ order, onUpdateStatus, isHistory }: OrderCardProps) 
 
 function ItemRow({ item }: { item: OrderItem }) {
   return (
-    <div className="flex flex-col bg-background border-2 border-foreground/10 rounded-2xl p-4 hover:border-interaction/30 transition-colors">
+    <div className="flex flex-col bg-background border border-foreground/10 rounded-2xl p-4 hover:border-interaction/30 transition-colors shadow-sm">
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center text-xl font-black italic border-2 border-foreground shadow-[3px_3px_0px_0px_rgba(0,0,0,0.1)]">
+          <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center text-xl font-black italic border border-foreground/10 shadow-sm">
             {item.quantity}
           </div>
           <div>
@@ -169,7 +169,7 @@ function ItemRow({ item }: { item: OrderItem }) {
             {item.toppings.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {item.toppings.map(t => (
-                  <span key={t.id} className="text-[10px] font-black uppercase italic tracking-tighter bg-interaction/5 text-interaction/60 px-2 py-0.5 rounded-lg border-2 border-interaction/10">
+                  <span key={t.id} className="text-[10px] font-black uppercase italic tracking-tighter bg-interaction/5 text-interaction/60 px-2 py-0.5 rounded-lg border border-interaction/10">
                     + {t.name}
                   </span>
                 ))}
@@ -180,7 +180,7 @@ function ItemRow({ item }: { item: OrderItem }) {
       </div>
       
       {item.note && (
-        <div className="mt-4 p-3 bg-accent/10 border-2 border-accent/20 rounded-xl text-xs text-foreground font-bold flex items-start gap-2">
+        <div className="mt-4 p-3 bg-accent/10 border border-accent/20 rounded-xl text-xs text-foreground font-bold flex items-start gap-2">
           <span className="text-accent uppercase italic font-black">Note:</span>
           <span className="opacity-60">&quot;{item.note}&quot;</span>
         </div>

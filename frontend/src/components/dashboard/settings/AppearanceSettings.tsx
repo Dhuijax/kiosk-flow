@@ -6,8 +6,8 @@ import { Palette, Sparkles, Monitor, Smartphone } from 'lucide-react';
 export default function AppearanceSettings() {
   return (
     <div className="ai-card p-12 space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
-      <div className="flex items-center gap-4 border-b-4 border-foreground/10 pb-6">
-        <div className="w-12 h-12 bg-interaction rounded-xl flex items-center justify-center text-white shadow-[4px_4px_0px_0px_rgba(62,39,35,1)]">
+      <div className="flex items-center gap-4 border-b border-foreground/10 pb-6">
+        <div className="w-12 h-12 bg-interaction rounded-xl flex items-center justify-center text-white shadow-sm">
           <Palette className="w-6 h-6" />
         </div>
         <div>
@@ -38,11 +38,11 @@ export default function AppearanceSettings() {
             Chế độ hiển thị
           </h4>
           <div className="flex gap-4">
-            <button className="flex-1 p-6 border-4 border-foreground rounded-[2rem] bg-surface flex flex-col items-center gap-3 shadow-[6px_6px_0px_0px_rgba(62,39,35,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all">
+            <button className="flex-1 p-6 border border-interaction rounded-3xl bg-surface flex flex-col items-center gap-3 shadow-md hover:bg-interaction/5 transition-all">
               <Monitor className="w-8 h-8 text-foreground" />
               <span className="font-black uppercase italic tracking-tighter text-xs">Máy tính</span>
             </button>
-            <button className="flex-1 p-6 border-4 border-foreground/10 rounded-[2rem] bg-surface/50 flex flex-col items-center gap-3 opacity-50 hover:opacity-100 transition-all">
+            <button className="flex-1 p-6 border border-foreground/10 rounded-3xl bg-surface/50 flex flex-col items-center gap-3 opacity-50 hover:opacity-100 transition-all">
               <Smartphone className="w-8 h-8 text-foreground" />
               <span className="font-black uppercase italic tracking-tighter text-xs">Di động</span>
             </button>
@@ -55,10 +55,10 @@ export default function AppearanceSettings() {
 
 function ThemeOption({ name, active, color }: { name: string, active: boolean, color: string }) {
   return (
-    <button className={`p-4 border-4 rounded-2xl flex items-center gap-4 transition-all ${
-      active ? 'border-foreground bg-surface shadow-[4px_4px_0px_0px_rgba(62,39,35,1)]' : 'border-foreground/10 bg-surface/30 opacity-60 hover:opacity-100'
+    <button className={`p-4 border rounded-2xl flex items-center gap-4 transition-all ${
+      active ? 'border-interaction bg-surface shadow-md scale-[1.02]' : 'border-foreground/10 bg-surface/30 opacity-60 hover:opacity-100 shadow-sm'
     }`}>
-      <div className={`w-8 h-8 rounded-lg ${color} shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)]`}></div>
+      <div className={`w-8 h-8 rounded-lg ${color} shadow-sm`}></div>
       <span className="font-black uppercase italic tracking-tighter text-xs">{name}</span>
     </button>
   );

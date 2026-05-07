@@ -30,8 +30,8 @@ export default function KitchenPage() {
   if (!loading && !token) {
     return (
       <div className="h-screen flex items-center justify-center bg-background p-8">
-        <div className="bg-surface border-4 border-foreground rounded-[3rem] p-12 text-center space-y-8 max-w-md shadow-[16px_16px_0px_0px_var(--color-foreground)]">
-          <div className="w-20 h-20 bg-primary border-4 border-foreground rounded-[2rem] flex items-center justify-center mx-auto shadow-[4px_4px_0px_0px_var(--color-foreground)] text-white">
+        <div className="bg-surface border border-foreground/10 rounded-3xl p-12 text-center space-y-8 max-w-md shadow-2xl">
+          <div className="w-20 h-20 bg-primary border border-foreground/10 rounded-2xl flex items-center justify-center mx-auto shadow-sm text-white">
             <Sparkles className="w-10 h-10" />
           </div>
           <div className="space-y-2">
@@ -50,10 +50,10 @@ export default function KitchenPage() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--color-primary)_0%,_transparent_1px)] bg-[size:40px_40px] opacity-[0.03] pointer-events-none" />
 
       {/* Navbar */}
-      <header className="h-32 border-b-4 border-foreground bg-surface flex items-center justify-between px-12 shrink-0 z-20 shadow-[0px_4px_0px_0px_rgba(0,0,0,0.02)]">
+      <header className="h-32 border-b border-foreground/10 bg-surface flex items-center justify-between px-12 shrink-0 z-20 shadow-sm">
         <div className="flex items-center gap-12">
           <Link href="/dashboard" className="flex items-center gap-4 group">
-            <div className="w-16 h-16 bg-primary border-4 border-foreground rounded-2xl flex items-center justify-center shadow-[6px_6px_0px_0px_var(--color-foreground)] group-hover:rotate-6 transition-all text-white">
+            <div className="w-16 h-16 bg-primary border border-foreground/10 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-105 group-hover:rotate-6 transition-all text-white">
               <ChefHat size={32} />
             </div>
             <div>
@@ -65,12 +65,12 @@ export default function KitchenPage() {
           </Link>
           
           <div className="hidden xl:flex items-center gap-6">
-            <div className="flex items-center gap-3 px-6 py-3 bg-background border-4 border-foreground rounded-2xl shadow-[4px_4px_0px_0px_var(--color-foreground)]">
+            <div className="flex items-center gap-3 px-6 py-3 bg-background border border-foreground/10 rounded-2xl shadow-sm">
               <Store size={18} className="text-primary" />
               <span className="font-black uppercase italic tracking-tighter text-sm text-foreground">Chi nhánh chính</span>
             </div>
             
-            <div className={`flex items-center gap-3 px-6 py-3 rounded-2xl border-4 font-black uppercase italic tracking-tighter text-sm shadow-[4px_4px_0px_0px_var(--color-foreground)] transition-colors ${
+            <div className={`flex items-center gap-3 px-6 py-3 rounded-2xl border font-black uppercase italic tracking-tighter text-sm shadow-sm transition-colors ${
               isConnected 
                 ? 'bg-interaction/10 border-interaction text-interaction' 
                 : 'bg-red-500/10 border-red-500 text-red-500'
@@ -89,10 +89,10 @@ export default function KitchenPage() {
 
           <button 
             onClick={() => setShowHistory(!showHistory)}
-            className={`flex items-center gap-4 px-10 py-5 rounded-[2rem] font-black uppercase italic tracking-tighter text-lg transition-all border-4 shadow-[8px_8px_0px_0px_var(--color-foreground)] active:shadow-none active:translate-x-1 active:translate-y-1 ${
+            className={`flex items-center gap-4 px-10 py-5 rounded-3xl font-black uppercase italic tracking-tighter text-lg transition-all border shadow-sm active:scale-95 ${
               showHistory 
-                ? 'bg-interaction text-white border-foreground' 
-                : 'bg-background text-foreground border-foreground hover:bg-surface'
+                ? 'bg-interaction text-white border-interaction' 
+                : 'bg-background text-foreground border-foreground/10 hover:bg-surface'
             }`}
           >
             {showHistory ? <LayoutGrid size={24} /> : <History size={24} />}
@@ -119,7 +119,7 @@ export default function KitchenPage() {
             >
               {activeOrders.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center space-y-8">
-                  <div className="w-40 h-40 bg-surface border-4 border-foreground rounded-[4rem] flex items-center justify-center shadow-[12px_12px_0px_0px_var(--color-foreground)]">
+                  <div className="w-40 h-40 bg-surface border border-foreground/10 rounded-3xl flex items-center justify-center shadow-sm">
                     <Timer size={80} className="text-foreground/10" />
                   </div>
                   <div className="text-center space-y-2">
@@ -150,7 +150,7 @@ export default function KitchenPage() {
               className="absolute inset-0 p-12 overflow-y-auto custom-scrollbar"
             >
               <div className="flex items-center gap-4 mb-12">
-                <div className="w-10 h-10 bg-interaction border-4 border-foreground rounded-xl flex items-center justify-center text-white">
+                <div className="w-10 h-10 bg-interaction border border-interaction/30 rounded-xl flex items-center justify-center text-white shadow-sm">
                   <History size={20} />
                 </div>
                 <h2 className="text-4xl font-black uppercase italic tracking-tighter text-foreground">Lịch sử hôm nay</h2>
@@ -172,7 +172,7 @@ export default function KitchenPage() {
       </main>
 
       {/* Footer Info */}
-      <footer className="h-12 bg-foreground border-t-4 border-foreground px-12 flex items-center justify-between text-background/40 font-black uppercase italic tracking-widest text-[10px] z-20">
+      <footer className="h-12 bg-foreground border-t border-foreground px-12 flex items-center justify-between text-background/40 font-black uppercase italic tracking-widest text-[10px] z-20">
         <div className="flex items-center gap-6">
           <span>AI KioskFlow Engine v2.0</span>
           <span className="w-1 h-1 bg-background/20 rounded-full" />

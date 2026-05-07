@@ -53,7 +53,7 @@ export default function InventoryStats({
           key={index} 
           className="ai-card group flex items-center gap-6"
         >
-          <div className={`w-16 h-16 rounded-2xl border-2 border-foreground flex items-center justify-center ${stat.bg} ${stat.color} shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:shadow-none transition-all`}>
+          <div className={`w-16 h-16 rounded-2xl border border-foreground/10 flex items-center justify-center ${stat.bg} ${stat.color} shadow-sm group-hover:scale-105 transition-all`}>
             <stat.icon className={`w-8 h-8 stroke-[3] ${stat.pulse ? 'animate-pulse' : ''}`} />
           </div>
           <div>

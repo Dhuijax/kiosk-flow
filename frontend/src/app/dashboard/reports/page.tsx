@@ -70,7 +70,7 @@ export default function ReportsPage() {
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="flex bg-surface border-4 border-foreground rounded-2xl p-1 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="flex bg-surface border border-foreground/10 rounded-2xl p-1 shadow-sm">
             {(['DAILY', 'WEEKLY', 'MONTHLY'] as const).map((p) => (
               <button
                 key={p}
@@ -103,10 +103,10 @@ export default function ReportsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className="ai-card flex flex-col justify-between h-48 group hover:shadow-[12px_12px_0px_0px_rgba(43,168,162,1)]"
+            className="ai-card flex flex-col justify-between h-48 group hover:scale-[1.02] transition-all shadow-sm"
           >
             <div className="flex justify-between items-start">
-              <div className={`w-14 h-14 rounded-2xl border-4 border-foreground flex items-center justify-center text-white ${metric.color} shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] group-hover:scale-110 transition-transform`}>
+              <div className={`w-14 h-14 rounded-2xl border border-foreground/10 flex items-center justify-center text-white ${metric.color} shadow-sm group-hover:scale-110 transition-transform`}>
                 <metric.icon size={28} className="stroke-[3]" />
               </div>
               <div className={`flex items-center gap-1 font-black text-xs ${metric.trend === 'up' ? 'text-primary' : 'text-red-500'}`}>
@@ -161,12 +161,12 @@ export default function ReportsPage() {
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'var(--color-surface)', 
-                    border: '4px solid var(--color-foreground)', 
+                    border: '1px solid rgba(0,0,0,0.1)', 
                     borderRadius: '16px',
                     fontWeight: '900',
                     textTransform: 'uppercase',
                     fontStyle: 'italic',
-                    boxShadow: '4px 4px 0px 0px var(--color-foreground)'
+                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
                   }}
                   itemStyle={{ color: 'var(--color-primary)' }}
                 />
@@ -255,11 +255,11 @@ export default function ReportsPage() {
         </div>
 
         {/* Insights Section */}
-        <div className="bg-foreground text-background rounded-[4rem] p-12 border-4 border-foreground shadow-[12px_12px_0px_0px_rgba(62,39,35,1)] relative overflow-hidden group">
+        <div className="bg-foreground text-background rounded-3xl p-12 border border-foreground shadow-2xl relative overflow-hidden group">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--color-primary)_0%,_transparent_1px)] bg-[size:30px:30px] opacity-[0.05]" />
           <div className="relative z-10 space-y-10">
             <div className="flex items-center gap-6">
-              <div className="w-20 h-20 bg-primary border-4 border-background rounded-[2rem] flex items-center justify-center text-white">
+              <div className="w-20 h-20 bg-primary border border-background/20 rounded-2xl flex items-center justify-center text-white">
                 <Sparkles size={40} className="animate-pulse" />
               </div>
               <div className="space-y-1">
@@ -283,7 +283,7 @@ export default function ReportsPage() {
               ))}
             </div>
 
-            <button className="w-full py-6 bg-primary text-white rounded-3xl font-black text-xl uppercase italic tracking-tighter shadow-[8px_8px_0px_0px_rgba(0,0,0,0.1)] hover:bg-interaction hover:text-white transition-all">
+            <button className="w-full py-6 bg-primary text-white rounded-3xl font-black text-xl uppercase italic tracking-tighter shadow-sm hover:bg-interaction hover:text-white transition-all">
               XEM CHI TIẾT DỰ BÁO DOANH THU
             </button>
           </div>

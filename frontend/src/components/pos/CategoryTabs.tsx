@@ -47,12 +47,12 @@ export default function CategoryTabs({ onSelect, selectedId }: CategoryTabsProps
   };
 
   return (
-    <div className="relative group w-full bg-background border-b-4 border-foreground">
+    <div className="relative group w-full bg-background border-b border-foreground/10">
       <div className="flex items-center">
         {/* Scroll Left Button */}
         <button 
           onClick={() => scroll('left')}
-          className="h-24 px-6 text-foreground/40 hover:text-interaction transition-colors z-10 border-r-4 border-foreground/5"
+          className="h-24 px-6 text-foreground/40 hover:text-interaction transition-colors z-10 border-r border-foreground/10"
         >
           <ChevronLeft className="w-8 h-8 stroke-[3]" />
         </button>
@@ -65,9 +65,9 @@ export default function CategoryTabs({ onSelect, selectedId }: CategoryTabsProps
           <button
             onClick={() => onSelect(null)}
             className={`
-              flex-none px-10 h-14 rounded-2xl flex items-center gap-3 font-black text-sm transition-all duration-300 border-4 italic uppercase tracking-tighter
+              flex-none px-10 h-14 rounded-2xl flex items-center gap-3 font-black text-sm transition-all duration-300 border italic uppercase tracking-tighter
               ${selectedId === null 
-                ? 'bg-interaction text-white border-foreground shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] translate-x-[-2px] translate-y-[-2px]' 
+                ? 'bg-interaction text-white border-interaction shadow-md scale-[1.02]' 
                 : 'bg-surface text-foreground/40 border-foreground/10 hover:border-foreground/40 hover:text-foreground'}
             `}
           >
@@ -85,9 +85,9 @@ export default function CategoryTabs({ onSelect, selectedId }: CategoryTabsProps
                 key={category.id}
                 onClick={() => onSelect(category.id)}
                 className={`
-                  flex-none px-10 h-14 rounded-2xl flex items-center gap-3 font-black text-sm transition-all duration-300 border-4 whitespace-nowrap italic uppercase tracking-tighter
+                  flex-none px-10 h-14 rounded-2xl flex items-center gap-3 font-black text-sm transition-all duration-300 border whitespace-nowrap italic uppercase tracking-tighter
                   ${selectedId === category.id 
-                    ? 'bg-interaction text-white border-foreground shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] translate-x-[-2px] translate-y-[-2px]' 
+                    ? 'bg-interaction text-white border-interaction shadow-md scale-[1.02]' 
                     : 'bg-surface text-foreground/40 border-foreground/10 hover:border-foreground/40 hover:text-foreground'}
                 `}
               >
@@ -100,7 +100,7 @@ export default function CategoryTabs({ onSelect, selectedId }: CategoryTabsProps
         {/* Scroll Right Button */}
         <button 
           onClick={() => scroll('right')}
-          className="h-24 px-6 text-foreground/40 hover:text-interaction transition-colors z-10 border-l-4 border-foreground/5"
+          className="h-24 px-6 text-foreground/40 hover:text-interaction transition-colors z-10 border-l border-foreground/10"
         >
           <ChevronRight className="w-8 h-8 stroke-[3]" />
         </button>

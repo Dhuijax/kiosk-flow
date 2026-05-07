@@ -136,7 +136,7 @@ export default function DashboardPage() {
           </p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-6 bg-surface p-4 border-4 border-foreground rounded-[2rem] shadow-[6px_6px_0px_0px_rgba(62,39,35,1)]">
+        <div className="flex flex-wrap items-center gap-6 bg-surface p-4 border border-foreground/10 rounded-3xl shadow-sm">
           <DashboardFilters 
             dateRange={dateRange} 
             onDateRangeChange={setDateRange}
@@ -213,7 +213,7 @@ export default function DashboardPage() {
             <TopProducts products={reportData.topProducts} loading={reportData.loading} />
           </div>
 
-          <div className="ai-card bg-red-500/5 border-red-500 shadow-[8px_8px_0px_0px_rgba(239,68,68,1)]">
+          <div className="ai-card bg-red-500/5 border border-red-500/20 shadow-md">
             <h3 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3 mb-6 text-red-600">
               <AlertTriangle className="w-6 h-6 stroke-[3]" />
               Cảnh báo kho
@@ -231,12 +231,12 @@ export default function DashboardPage() {
 
       {/* Recent Orders Table */}
       <div className="ai-card p-0 overflow-hidden">
-        <div className="p-8 flex items-center justify-between bg-foreground text-background">
+        <div className="p-8 flex items-center justify-between border-b border-foreground/10">
           <h3 className="text-2xl font-black uppercase italic tracking-tighter flex items-center gap-3">
-            <ShoppingCart className="w-6 h-6 stroke-[3]" />
+            <ShoppingCart className="w-6 h-6 stroke-[3] text-interaction" />
             Giao dịch mới nhất
           </h3>
-          <Link href="/dashboard/orders" className="text-xs font-black uppercase tracking-widest hover:text-accent transition-all flex items-center gap-2">
+          <Link href="/dashboard/orders" className="text-xs font-black uppercase tracking-widest text-foreground/40 hover:text-interaction transition-all flex items-center gap-2">
             TẤT CẢ ĐƠN HÀNG
             <ArrowUpRight className="w-4 h-4" />
           </Link>
@@ -252,7 +252,7 @@ export default function DashboardPage() {
                 <th className="px-8 py-6 text-center">Trạng thái</th>
               </tr>
             </thead>
-            <tbody className="divide-y-4 divide-foreground/5">
+            <tbody className="divide-y divide-foreground/5">
               <OrderRow id="#ORD-0424" target="BÀN 12" time="12:45" amount="125.000 ₫" status="Đang xử lý" type="processing" />
               <OrderRow id="#ORD-0423" target="MANG VỀ" time="12:30" amount="45.000 ₫" status="Hoàn thành" type="done" />
               <OrderRow id="#ORD-0422" target="BÀN 05" time="12:15" amount="210.000 ₫" status="Hoàn thành" type="done" />
@@ -281,7 +281,7 @@ function StatCard({ title, value, trend, isUp, icon: Icon, color }: {
   return (
     <div className="ai-card group">
       <div className="flex items-center justify-between mb-8">
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border-2 border-foreground ${colorClasses[color]}`}>
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border border-foreground/10 shadow-sm ${colorClasses[color]}`}>
           <Icon className="w-7 h-7 stroke-[3]" />
         </div>
         {trend && (
@@ -304,7 +304,7 @@ function StockAlertItem({ name, stock, min }: {
   min: string;
 }) {
   return (
-    <div className="p-4 bg-background border-2 border-foreground/10 rounded-2xl flex items-center justify-between group hover:border-red-500 transition-all">
+    <div className="p-4 bg-background border border-foreground/10 rounded-2xl flex items-center justify-between group hover:border-red-500/30 transition-all shadow-sm">
       <div className="space-y-1">
         <p className="text-sm font-black uppercase italic tracking-tighter text-foreground">{name}</p>
         <p className="text-[10px] font-bold opacity-40 uppercase">Tồn: {stock} / Min: {min}</p>
@@ -336,7 +336,7 @@ function OrderRow({ id, target, time, amount, status, type }: {
       <td className="px-8 py-6 text-right font-black text-lg tracking-tighter text-primary">{amount}</td>
       <td className="px-8 py-6">
         <div className="flex justify-center">
-          <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase italic tracking-tighter border-2 border-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${typeClasses[type]}`}>
+          <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase italic tracking-tighter border border-foreground/10 shadow-sm ${typeClasses[type]}`}>
             {status}
           </span>
         </div>

@@ -6,8 +6,8 @@ import { Smartphone, Printer, Cpu, RefreshCw } from 'lucide-react';
 export default function KioskSettings() {
   return (
     <div className="ai-card p-12 space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
-      <div className="flex items-center gap-4 border-b-4 border-foreground/10 pb-6">
-        <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white shadow-[4px_4px_0px_0px_rgba(62,39,35,1)]">
+      <div className="flex items-center gap-4 border-b border-foreground/10 pb-6">
+        <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm">
           <Smartphone className="w-6 h-6" />
         </div>
         <div>
@@ -25,14 +25,14 @@ export default function KioskSettings() {
             Máy in hóa đơn
           </h4>
           <div className="space-y-4">
-            <div className="p-6 bg-surface border-4 border-foreground rounded-[2rem] flex items-center justify-between">
+            <div className="p-6 bg-surface border border-foreground/10 rounded-3xl flex items-center justify-between shadow-sm">
               <div className="flex items-center gap-4">
                 <Printer className="text-foreground/40" />
                 <span className="font-black uppercase italic tracking-tighter text-sm">EPSON TM-T88VI</span>
               </div>
               <span className="px-3 py-1 bg-interaction/20 text-interaction rounded-lg text-[10px] font-black uppercase tracking-widest">CONNECTED</span>
             </div>
-            <button className="w-full py-4 border-4 border-dashed border-foreground/20 rounded-[2rem] text-foreground/40 font-black uppercase italic tracking-tighter text-xs hover:border-foreground hover:text-foreground transition-all flex items-center justify-center gap-3">
+            <button className="w-full py-4 border border-dashed border-foreground/20 rounded-3xl text-foreground/40 font-black uppercase italic tracking-tighter text-xs hover:border-foreground/40 hover:text-foreground transition-all flex items-center justify-center gap-3 shadow-sm">
               <RefreshCw className="w-4 h-4" />
               TÌM THIẾT BỊ MỚI
             </button>

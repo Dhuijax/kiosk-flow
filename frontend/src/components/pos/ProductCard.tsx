@@ -21,14 +21,14 @@ export default function ProductCard({ product, onAddToCart, stockQuantity = 999 
       disabled={isSoldOut}
       aria-label={product.name}
       className={cn(
-        "group relative flex flex-col bg-surface border-4 border-foreground rounded-[2rem] overflow-hidden transition-all duration-300 text-left h-full",
+        "group relative flex flex-col bg-surface border border-foreground/10 rounded-3xl overflow-hidden transition-all duration-300 text-left h-full",
         isSoldOut 
-          ? "opacity-60 grayscale cursor-not-allowed border-foreground/20 shadow-none" 
-          : "shadow-[8px_8px_0px_0px_rgba(62,39,35,1)] hover:shadow-[12px_12px_0px_0px_rgba(43,168,162,1)] hover:-translate-x-1 hover:-translate-y-1 active:translate-x-0 active:translate-y-0 active:shadow-none"
+          ? "opacity-60 grayscale cursor-not-allowed shadow-none" 
+          : "shadow-sm hover:shadow-xl hover:border-interaction/30 transition-all"
       )}
     >
       {/* Image Container */}
-      <div className="aspect-square relative flex items-center justify-center bg-background overflow-hidden border-b-4 border-foreground">
+      <div className="aspect-square relative flex items-center justify-center bg-background overflow-hidden border-b border-foreground/5">
         {product.imageUrl ? (
           <Image 
             src={product.imageUrl} 
@@ -43,7 +43,7 @@ export default function ProductCard({ product, onAddToCart, stockQuantity = 999 
         {/* Sold Out Overlay */}
         {isSoldOut && (
           <div className="absolute inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-10">
-            <div className="bg-red-500 border-4 border-foreground px-6 py-2 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -rotate-12">
+            <div className="bg-red-500 border border-white/20 px-6 py-2 rounded-xl shadow-lg -rotate-12">
               <span className="text-white font-black uppercase italic tracking-tighter text-xl">HẾT HÀNG</span>
             </div>
           </div>
@@ -59,7 +59,7 @@ export default function ProductCard({ product, onAddToCart, stockQuantity = 999 
 
         {/* Quick Add Badge */}
         {!isSoldOut && (
-          <div className="absolute bottom-4 right-4 w-12 h-12 bg-accent border-2 border-foreground rounded-full flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute bottom-4 right-4 w-12 h-12 bg-accent border border-foreground/10 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
             <Plus className="w-6 h-6 text-foreground" />
           </div>
         )}

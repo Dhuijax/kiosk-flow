@@ -99,7 +99,7 @@ export default function FloorPlanManager() {
   return (
     <div className="flex flex-col h-full gap-6">
       {/* Header with Area Selector and Actions */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-surface border-4 border-foreground rounded-[2rem] shadow-[8px_8px_0px_0px_var(--color-foreground)]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-surface border border-foreground/10 rounded-3xl shadow-sm">
         <div className="flex items-center gap-4 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
           <div className="p-2.5 bg-primary/10 border-2 border-primary/20 rounded-xl text-primary">
             <MapIcon size={20} />
@@ -116,9 +116,9 @@ export default function FloorPlanManager() {
               key={plan.id}
               onClick={() => setSelectedPlanId(plan.id)}
               className={cn(
-                "px-5 py-2 rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all duration-300 border-4",
+                "px-5 py-2 rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all duration-300 border shadow-sm",
                 selectedPlanId === plan.id
-                  ? "bg-interaction text-white border-foreground shadow-[4px_4px_0px_0px_var(--color-foreground)] -translate-y-0.5"
+                  ? "bg-interaction text-white border-interaction shadow-md scale-105"
                   : "bg-background text-foreground/40 border-transparent hover:bg-foreground/5 hover:text-foreground"
               )}
             >
@@ -132,13 +132,13 @@ export default function FloorPlanManager() {
             <>
               <button
                 onClick={() => setIsEditMode(false)}
-                className="flex items-center gap-2 px-4 py-2 bg-background hover:bg-foreground/5 text-foreground/40 rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all border-4 border-transparent"
+                className="flex items-center gap-2 px-4 py-2 bg-background hover:bg-foreground/5 text-foreground/40 rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all border border-transparent shadow-sm"
               >
                 <X size={16} /> Hủy
               </button>
               <button
                 onClick={saveLayout}
-                className="flex items-center gap-2 px-5 py-2 bg-primary hover:bg-interaction text-white rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all shadow-[4px_4px_0px_0px_var(--color-foreground)] border-4 border-foreground"
+                className="flex items-center gap-2 px-5 py-2 bg-primary hover:bg-interaction text-white rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all shadow-md border border-primary/20"
               >
                 <Save size={16} /> Lưu sơ đồ
               </button>
@@ -147,13 +147,13 @@ export default function FloorPlanManager() {
             <>
               <button 
                 onClick={fetchTables}
-                className="w-12 h-12 bg-background hover:bg-foreground/5 text-foreground/40 rounded-xl transition-all border-4 border-foreground/10 flex items-center justify-center"
+                className="w-12 h-12 bg-background hover:bg-foreground/5 text-foreground/40 rounded-xl transition-all border border-foreground/10 flex items-center justify-center shadow-sm"
               >
                 <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
               </button>
               <button
                 onClick={() => setIsEditMode(true)}
-                className="flex items-center gap-2 px-5 py-2 bg-foreground text-background rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all border-4 border-foreground shadow-[4px_4px_0px_0px_var(--color-foreground)] hover:bg-interaction hover:text-white"
+                className="flex items-center gap-2 px-5 py-2 bg-foreground text-background rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all border border-foreground/10 shadow-md hover:bg-interaction hover:text-white"
               >
                 <Edit3 size={16} /> Chỉnh sửa
               </button>

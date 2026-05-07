@@ -100,7 +100,7 @@ export default function CustomersPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="ai-card flex items-center gap-8">
-          <div className="w-20 h-20 bg-primary border-4 border-foreground rounded-[2rem] flex items-center justify-center text-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+          <div className="w-20 h-20 bg-primary border border-foreground/10 rounded-2xl flex items-center justify-center text-white shadow-sm">
             <Crown size={40} className="stroke-[2.5]" />
           </div>
           <div>
@@ -109,7 +109,7 @@ export default function CustomersPage() {
           </div>
         </div>
         <div className="ai-card flex items-center gap-8">
-          <div className="w-20 h-20 bg-accent border-4 border-foreground rounded-[2rem] flex items-center justify-center text-foreground shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+          <div className="w-20 h-20 bg-accent border border-foreground/10 rounded-2xl flex items-center justify-center text-foreground shadow-sm">
             <Star size={40} className="stroke-[2.5] fill-current" />
           </div>
           <div>
@@ -118,7 +118,7 @@ export default function CustomersPage() {
           </div>
         </div>
         <div className="ai-card flex items-center gap-8">
-          <div className="w-20 h-20 bg-interaction border-4 border-foreground rounded-[2rem] flex items-center justify-center text-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+          <div className="w-20 h-20 bg-interaction border border-foreground/10 rounded-2xl flex items-center justify-center text-white shadow-sm">
             <TrendingUp size={40} className="stroke-[2.5]" />
           </div>
           <div>
@@ -137,10 +137,10 @@ export default function CustomersPage() {
             placeholder="TÌM THEO TÊN, SỐ ĐIỆN THOẠI HOẶC EMAIL..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-16 pr-6 py-5 bg-background border-4 border-foreground rounded-3xl outline-none focus:bg-white transition-all font-black text-lg uppercase italic tracking-tighter"
+            className="w-full pl-16 pr-6 py-5 bg-background border border-foreground/10 rounded-3xl outline-none focus:bg-white transition-all font-black text-lg uppercase italic tracking-tighter shadow-sm"
           />
         </div>
-        <button className="w-16 h-16 bg-surface border-4 border-foreground rounded-2xl flex items-center justify-center hover:bg-foreground hover:text-background transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1">
+        <button className="w-16 h-16 bg-surface border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-foreground hover:text-background transition-all shadow-sm active:scale-95">
           <Filter className="w-6 h-6 stroke-[3]" />
         </button>
       </div>
@@ -153,19 +153,19 @@ export default function CustomersPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className="group bg-surface border-4 border-foreground rounded-[3rem] p-10 flex flex-col md:flex-row gap-10 transition-all shadow-[12px_12px_0px_0px_rgba(62,39,35,1)] hover:shadow-[16px_16px_0px_0px_rgba(43,168,162,1)] hover:-translate-x-1 hover:-translate-y-1 relative overflow-hidden"
+            className="group bg-surface border border-foreground/10 rounded-3xl p-10 flex flex-col md:flex-row gap-10 transition-all shadow-sm hover:shadow-md hover:scale-[1.01] relative overflow-hidden"
           >
             {/* Background Accent */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-interaction/10 transition-colors" />
 
             {/* Profile Info */}
             <div className="flex flex-col items-center gap-6 md:w-48 shrink-0">
-              <div className="w-24 h-24 rounded-[2rem] bg-foreground border-4 border-foreground overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative group-hover:rotate-3 transition-transform">
+              <div className="w-24 h-24 rounded-2xl bg-foreground border border-foreground/10 overflow-hidden shadow-sm relative group-hover:rotate-3 transition-transform">
                 <div className="w-full h-full bg-primary/20 flex items-center justify-center">
                   <span className="text-4xl font-black text-foreground italic">{customer.name.charAt(0)}</span>
                 </div>
               </div>
-              <div className={`px-4 py-1.5 rounded-xl border-2 text-[10px] font-black uppercase italic tracking-widest shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${getTierColor(customer.tier)}`}>
+              <div className={`px-4 py-1.5 rounded-xl border text-[10px] font-black uppercase italic tracking-widest shadow-sm ${getTierColor(customer.tier)}`}>
                 {customer.tier}
               </div>
             </div>
@@ -188,7 +188,7 @@ export default function CustomersPage() {
               </div>
 
               {/* Stats Bar */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 p-6 bg-background rounded-[2rem] border-2 border-foreground/5">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 p-6 bg-background rounded-2xl border border-foreground/5">
                 <div>
                   <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">Điểm tích lũy</p>
                   <p className="text-xl font-black italic tracking-tighter text-foreground">{customer.points.toLocaleString()}</p>
@@ -222,7 +222,7 @@ export default function CustomersPage() {
       {/* AI Recommendation Footer */}
       <div className="ai-card bg-foreground text-background flex flex-col md:flex-row items-center gap-8 overflow-hidden relative group">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--color-primary)_0%,_transparent_1px)] bg-[size:20px_20px] opacity-[0.05]" />
-        <div className="w-20 h-20 bg-primary border-4 border-background rounded-3xl flex items-center justify-center text-white z-10 shrink-0">
+        <div className="w-20 h-20 bg-primary border border-background/20 rounded-2xl flex items-center justify-center text-white z-10 shrink-0">
           <Sparkles size={40} className="animate-pulse" />
         </div>
         <div className="flex-1 space-y-2 z-10">

@@ -103,7 +103,7 @@ export default function MenuGrid({ selectedCategoryId, searchQuery }: MenuGridPr
     return (
       <div className="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-8 p-12">
         {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="aspect-[4/5] bg-foreground/5 animate-pulse rounded-[2rem] border-4 border-foreground/5" />
+          <div key={i} className="aspect-[4/5] bg-foreground/5 animate-pulse rounded-3xl border border-foreground/5" />
         ))}
       </div>
     );
@@ -112,7 +112,7 @@ export default function MenuGrid({ selectedCategoryId, searchQuery }: MenuGridPr
   if (filteredProducts.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-foreground gap-8">
-        <div className="w-32 h-32 bg-surface rounded-[2rem] border-4 border-foreground flex items-center justify-center relative shadow-[8px_8px_0px_0px_rgba(62,39,35,1)]">
+        <div className="w-32 h-32 bg-surface rounded-3xl border border-foreground/10 flex items-center justify-center relative shadow-sm">>
           <Package className="w-16 h-16 opacity-10" />
           <Sparkles className="absolute -top-4 -right-4 w-12 h-12 text-accent animate-float" />
         </div>

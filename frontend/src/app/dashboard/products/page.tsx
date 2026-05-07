@@ -42,9 +42,9 @@ export default function ProductsPage() {
           <p className="text-foreground/40 font-bold italic">Tổ chức thực đơn, thiết lập giá và quản lý toppings.</p>
         </div>
         
-        <div className="flex items-center gap-6 bg-surface p-4 border-4 border-foreground rounded-[2rem] shadow-[6px_6px_0px_0px_rgba(62,39,35,1)]">
-          <div className="flex bg-background p-2 rounded-2xl border-2 border-foreground/10">
-            <button className="w-12 h-12 bg-foreground text-background rounded-xl flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
+        <div className="flex items-center gap-6 bg-surface p-4 border border-foreground/10 rounded-3xl shadow-sm">
+          <div className="flex bg-background p-2 rounded-2xl border border-foreground/10">
+            <button className="w-12 h-12 bg-foreground text-background rounded-xl flex items-center justify-center shadow-sm transition-all">
               <List className="w-6 h-6 stroke-[3]" />
             </button>
             <button className="w-12 h-12 text-foreground/20 hover:text-foreground rounded-xl flex items-center justify-center transition-all">

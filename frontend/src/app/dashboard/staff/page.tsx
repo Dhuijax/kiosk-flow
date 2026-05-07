@@ -80,8 +80,8 @@ export default function StaffPage() {
             exit={{ opacity: 0, y: -20 }}
             className="fixed top-8 left-1/2 -translate-x-1/2 z-[100]"
           >
-            <div className={`px-8 py-4 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-4 flex items-center gap-4 ${
-              status.type === 'success' ? 'bg-interaction border-foreground text-white' : 'bg-red-400 border-foreground text-white'
+            <div className={`px-8 py-4 rounded-full shadow-2xl border flex items-center gap-4 ${
+              status.type === 'success' ? 'bg-interaction border-foreground/10 text-white' : 'bg-red-400 border-foreground/10 text-white'
             }`}>
               {status.type === 'success' ? <CheckCircle size={24} /> : <AlertCircle size={24} />}
               <span className="font-black uppercase tracking-tighter italic">{status.message}</span>
@@ -94,7 +94,7 @@ export default function StaffPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
         <div className="space-y-2">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary border-4 border-foreground rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="w-12 h-12 bg-primary border border-foreground/10 rounded-2xl flex items-center justify-center shadow-sm">
               <Users className="w-6 h-6 text-white" />
             </div>
             <h1 className="text-5xl font-black text-foreground uppercase italic tracking-tighter">Nhân sự</h1>
@@ -120,18 +120,18 @@ export default function StaffPage() {
             placeholder="TÌM KIẾM NHÂN VIÊN..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-16 pr-6 py-5 bg-surface border-4 border-foreground rounded-[2rem] outline-none focus:bg-white transition-all shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] font-black text-lg uppercase italic tracking-tighter"
+            className="w-full pl-16 pr-6 py-5 bg-surface border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all shadow-sm font-black text-lg uppercase italic tracking-tighter"
           />
         </div>
         
         <div className="flex gap-4">
-          <div className="bg-background border-4 border-foreground rounded-2xl px-8 py-4 flex flex-col justify-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] min-w-[160px]">
+          <div className="bg-background border border-foreground/10 rounded-2xl px-8 py-4 flex flex-col justify-center shadow-sm min-w-[160px]">
             <span className="text-[10px] font-black uppercase opacity-40">Tổng số</span>
             <span className="text-3xl font-black italic tracking-tighter">{staff.length}</span>
           </div>
           <button 
             onClick={() => fetchStaff()}
-            className="w-20 bg-accent border-4 border-foreground rounded-2xl flex items-center justify-center shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+            className="w-20 bg-accent border border-foreground/10 rounded-2xl flex items-center justify-center shadow-sm hover:scale-105 transition-all"
           >
             <RefreshCw className={`w-8 h-8 text-foreground ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -142,10 +142,10 @@ export default function StaffPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {loading && staff.length === 0 ? (
           Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-64 bg-foreground/5 animate-pulse rounded-[3rem] border-4 border-foreground/5" />
+            <div key={i} className="h-64 bg-foreground/5 animate-pulse rounded-3xl border border-foreground/5" />
           ))
         ) : filteredStaff.length === 0 ? (
-          <div className="col-span-full py-32 flex flex-col items-center justify-center gap-6 bg-surface border-4 border-foreground border-dashed rounded-[3rem] opacity-40">
+          <div className="col-span-full py-32 flex flex-col items-center justify-center gap-6 bg-surface border border-foreground/10 border-dashed rounded-3xl opacity-40">
             <Users size={80} />
             <p className="text-2xl font-black uppercase italic tracking-tighter">Không tìm thấy nhân viên nào</p>
           </div>
@@ -154,10 +154,10 @@ export default function StaffPage() {
             <motion.div
               layout
               key={member.id}
-              className="bg-surface border-4 border-foreground rounded-[3rem] p-8 shadow-[12px_12px_0px_0px_rgba(62,39,35,1)] hover:shadow-[16px_16px_0px_0px_rgba(43,168,162,1)] hover:-translate-x-1 hover:-translate-y-1 transition-all group relative overflow-hidden"
+              className="bg-surface border border-foreground/10 rounded-3xl p-8 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all group relative overflow-hidden"
             >
               <div className="flex items-start justify-between mb-8">
-                <div className="w-20 h-20 bg-background border-4 border-foreground rounded-3xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] group-hover:bg-interaction transition-colors overflow-hidden relative">
+                <div className="w-20 h-20 bg-background border border-foreground/10 rounded-3xl flex items-center justify-center shadow-sm group-hover:bg-interaction transition-colors overflow-hidden relative">
                   <span className="text-3xl font-black uppercase italic tracking-tighter group-hover:text-white">
                     {member.fullName.charAt(0)}
                   </span>
@@ -165,12 +165,12 @@ export default function StaffPage() {
                 </div>
                 
                 <div className="flex gap-2">
-                  <button className="w-10 h-10 bg-background border-2 border-foreground rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all">
+                  <button className="w-10 h-10 bg-background border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-sm">
                     <Edit size={18} />
                   </button>
                   <button 
                     onClick={() => handleDeleteStaff(member.id)}
-                    className="w-10 h-10 bg-background border-2 border-foreground rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
+                    className="w-10 h-10 bg-background border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm"
                   >
                     <Trash2 size={18} />
                   </button>

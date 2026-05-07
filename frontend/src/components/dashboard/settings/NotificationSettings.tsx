@@ -6,8 +6,8 @@ import { Bell, Mail, Smartphone, Zap, type LucideIcon } from 'lucide-react';
 export default function NotificationSettings() {
   return (
     <div className="ai-card p-12 space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
-      <div className="flex items-center gap-4 border-b-4 border-foreground/10 pb-6">
-        <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center text-foreground shadow-[4px_4px_0px_0px_rgba(62,39,35,1)]">
+      <div className="flex items-center gap-4 border-b border-foreground/10 pb-6">
+        <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center text-foreground shadow-sm">
           <Bell className="w-6 h-6" />
         </div>
         <div>
@@ -44,9 +44,9 @@ export default function NotificationSettings() {
 
 function NotificationToggle({ title, desc, icon: Icon, defaultChecked }: { title: string, desc: string, icon: LucideIcon, defaultChecked: boolean }) {
   return (
-    <div className="p-6 bg-surface border-4 border-foreground/10 rounded-[2rem] flex items-center justify-between group hover:border-foreground transition-all">
+    <div className="p-6 bg-surface border border-foreground/10 rounded-3xl flex items-center justify-between group hover:border-interaction/30 transition-all shadow-sm">
       <div className="flex items-center gap-6">
-        <div className="w-14 h-14 bg-background border-2 border-foreground/10 rounded-2xl flex items-center justify-center group-hover:bg-accent group-hover:border-foreground transition-all">
+        <div className="w-14 h-14 bg-background border border-foreground/10 rounded-2xl flex items-center justify-center group-hover:bg-accent group-hover:border-foreground/20 transition-all shadow-sm">
           <Icon className="w-6 h-6 text-foreground/40 group-hover:text-foreground" />
         </div>
         <div>

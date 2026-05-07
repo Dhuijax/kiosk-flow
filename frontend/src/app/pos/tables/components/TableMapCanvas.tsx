@@ -18,7 +18,7 @@ export const TableMapCanvas: React.FC<TableMapCanvasProps> = ({
   onTableClick,
 }) => {
   return (
-    <div className="relative w-full h-[calc(100vh-200px)] bg-foreground/5 rounded-[3rem] overflow-hidden border-4 border-foreground shadow-inner group">
+    <div className="relative w-full h-[calc(100vh-200px)] bg-foreground/5 rounded-3xl overflow-hidden border border-foreground/10 shadow-inner group">
       {/* Grid Pattern Background */}
       <div 
         className="absolute inset-0 opacity-[0.03] pointer-events-none" 
@@ -57,7 +57,7 @@ export const TableMapCanvas: React.FC<TableMapCanvasProps> = ({
       </div>
       
       {/* Area Legend */}
-      <div className="absolute bottom-6 right-6 flex gap-4 p-4 bg-surface border-4 border-foreground rounded-2xl shadow-[4px_4px_0px_0px_var(--color-foreground)] text-[10px] font-black uppercase italic tracking-tighter text-foreground/40">
+      <div className="absolute bottom-6 right-6 flex gap-4 p-4 bg-surface border border-foreground/10 rounded-2xl shadow-md text-[10px] font-black uppercase italic tracking-tighter text-foreground/40">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
           Trống

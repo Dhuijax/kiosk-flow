@@ -40,10 +40,10 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-background text-foreground font-sans selection:bg-accent selection:text-accent-foreground">
       {/* Sidebar */}
-      <aside className="w-80 bg-surface border-r-4 border-foreground flex flex-col sticky top-0 h-screen z-[100]">
+      <aside className="w-80 bg-surface border-r border-foreground/10 flex flex-col sticky top-0 h-screen z-[100] shadow-sm">
         <div className="p-8">
           <Link href="/dashboard" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 bg-primary border-2 border-foreground rounded-xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] group-hover:-translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
+            <div className="w-12 h-12 bg-primary border border-foreground/10 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-all">
               <Sparkles className="text-white w-7 h-7" />
             </div>
             <span className="text-2xl font-black uppercase italic tracking-tighter">
@@ -60,9 +60,9 @@ export default function DashboardLayout({
                 key={item.name}
                 href={item.href}
                 className={`
-                  flex items-center justify-between px-6 py-4 rounded-2xl transition-all duration-300 group border-4
+                  flex items-center justify-between px-6 py-4 rounded-2xl transition-all duration-300 group border
                   ${isActive 
-                    ? 'bg-interaction text-white border-foreground shadow-[6px_6px_0px_0px_rgba(62,39,35,1)] translate-x-[-2px] translate-y-[-2px]' 
+                    ? 'bg-interaction text-white border-interaction shadow-md scale-[1.02]' 
                     : 'text-foreground/40 border-transparent hover:bg-foreground/5 hover:text-foreground'
                   }
                 `}
@@ -77,7 +77,7 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        <div className="p-6 mt-auto border-t-4 border-foreground/5">
+        <div className="p-6 mt-auto border-t border-foreground/5">
           <button 
             onClick={() => {
               logout();
@@ -94,8 +94,8 @@ export default function DashboardLayout({
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Top Navbar */}
-        <header className="h-24 border-b-4 border-foreground flex items-center justify-between px-12 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
-          <div className="flex items-center gap-4 bg-surface px-6 py-3 rounded-2xl border-4 border-foreground w-[480px] max-w-full group focus-within:shadow-[6px_6px_0px_0px_rgba(43,168,162,1)] transition-all">
+        <header className="h-24 border-b border-foreground/10 flex items-center justify-between px-12 bg-background/80 backdrop-blur-xl sticky top-0 z-50 shadow-sm">
+          <div className="flex items-center gap-4 bg-surface px-6 py-3 rounded-2xl border border-foreground/10 w-[480px] max-w-full group focus-within:border-interaction focus-within:shadow-md transition-all">
             <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction" />
             <input 
               type="text" 
@@ -106,17 +106,17 @@ export default function DashboardLayout({
           </div>
 
           <div className="flex items-center gap-8">
-            <button className="w-12 h-12 bg-surface border-4 border-foreground rounded-xl flex items-center justify-center hover:bg-accent transition-all shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] relative">
+            <button className="w-12 h-12 bg-surface border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-accent transition-all shadow-sm relative">
               <Bell className="w-6 h-6" />
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary border-2 border-foreground rounded-full"></span>
             </button>
             
-            <div className="flex items-center gap-4 pl-4 border-l-4 border-foreground/10">
+            <div className="flex items-center gap-4 pl-4 border-l border-foreground/10">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-black text-foreground uppercase italic tracking-tighter">Admin Master</p>
                 <p className="text-[10px] font-black text-interaction uppercase tracking-widest">Store Owner</p>
               </div>
-              <div className="w-14 h-14 rounded-2xl bg-surface border-4 border-foreground flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(62,39,35,1)] overflow-hidden">
+              <div className="w-14 h-14 rounded-2xl bg-surface border border-foreground/10 flex items-center justify-center shadow-sm overflow-hidden">
                 <div className="w-full h-full bg-primary/10 flex items-center justify-center">
                   <Users className="w-7 h-7 text-primary" />
                 </div>

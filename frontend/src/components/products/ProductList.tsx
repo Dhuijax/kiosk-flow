@@ -90,13 +90,13 @@ export default function ProductList({ selectedCategoryId, onEdit }: ProductListP
           <input 
             type="text" 
             placeholder="TÌM KIẾM MÓN ĂN, MÃ SKU..." 
-            className="w-full pl-16 pr-6 py-4 bg-background border-4 border-foreground rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic tracking-tighter"
+            className="w-full pl-16 pr-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic tracking-tighter"
           />
         </div>
         <div className="flex gap-4">
           <button 
             onClick={() => fetchProducts()}
-            className="w-14 h-14 bg-surface border-4 border-foreground rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
+            className="w-14 h-14 bg-surface border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white shadow-sm transition-all"
             title="Làm mới"
           >
             <RefreshCw className={`w-6 h-6 stroke-[3] ${loading ? 'animate-spin' : ''}`} />
@@ -141,7 +141,7 @@ export default function ProductList({ selectedCategoryId, onEdit }: ProductListP
                   <tr key={product.id} className="hover:bg-foreground/5 transition-all group cursor-pointer">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-6">
-                        <div className="w-20 h-20 rounded-2xl bg-background overflow-hidden border-4 border-foreground/10 flex items-center justify-center group-hover:border-interaction transition-all relative">
+                        <div className="w-20 h-20 rounded-2xl bg-background overflow-hidden border border-foreground/10 flex items-center justify-center group-hover:border-interaction transition-all relative">
                           {product.imageUrl ? (
                             <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
                           ) : (
@@ -166,7 +166,7 @@ export default function ProductList({ selectedCategoryId, onEdit }: ProductListP
                     <td className="px-8 py-6">
                       <div className="flex justify-center">
                         {product.isActive ? (
-                          <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-interaction text-white border-2 border-foreground uppercase italic tracking-tighter shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                          <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-interaction text-white border border-foreground uppercase italic tracking-tighter shadow-sm">
                             Đang bán
                           </span>
                         ) : (
@@ -180,7 +180,7 @@ export default function ProductList({ selectedCategoryId, onEdit }: ProductListP
                       <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
                         <button 
                           onClick={() => onEdit(product)}
-                          className="w-12 h-12 bg-surface border-2 border-foreground rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
+                          className="w-12 h-12 bg-surface border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white shadow-sm transition-all"
                         >
                           <Edit className="w-5 h-5 stroke-[3]" />
                         </button>
@@ -189,7 +189,7 @@ export default function ProductList({ selectedCategoryId, onEdit }: ProductListP
                             e.stopPropagation();
                             handleDeleteProduct(product.id, product.name);
                           }}
-                          className="w-12 h-12 bg-surface border-2 border-foreground rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
+                          className="w-12 h-12 bg-surface border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white shadow-sm transition-all"
                         >
                           <Trash2 className="w-5 h-5 stroke-[3]" />
                         </button>
@@ -203,7 +203,7 @@ export default function ProductList({ selectedCategoryId, onEdit }: ProductListP
         </div>
 
         {/* Footer / Pagination */}
-        <div className="px-12 py-8 bg-foreground/5 border-t-4 border-foreground flex items-center justify-between">
+        <div className="px-12 py-8 bg-foreground/5 border-t border-foreground/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Hiển thị</span>
             <span className="px-4 py-2 bg-foreground text-background rounded-xl font-black text-xs italic tracking-tighter">{(page - 1) * pageSize + 1} - {Math.min(page * pageSize, totalItems)}</span>
@@ -214,11 +214,11 @@ export default function ProductList({ selectedCategoryId, onEdit }: ProductListP
             <button 
               onClick={() => setPage(prev => Math.max(1, prev - 1))}
               disabled={page === 1 || loading}
-              className="w-12 h-12 bg-surface border-2 border-foreground rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white disabled:opacity-30 disabled:hover:bg-surface disabled:hover:text-foreground transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              className="w-12 h-12 bg-surface border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white disabled:opacity-30 disabled:hover:bg-surface disabled:hover:text-foreground transition-all shadow-sm"
             >
               <ChevronLeft className="w-6 h-6 stroke-[3]" />
             </button>
-            <div className="flex items-center px-6 py-2 bg-surface border-4 border-foreground rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex items-center px-6 py-2 bg-surface border border-foreground/10 rounded-2xl shadow-sm">
               <span className="font-black text-interaction italic text-xl tracking-tighter">{page}</span>
               <span className="mx-2 font-black opacity-20">/</span>
               <span className="font-black text-foreground italic text-xl tracking-tighter">{totalPages || 1}</span>
@@ -226,7 +226,7 @@ export default function ProductList({ selectedCategoryId, onEdit }: ProductListP
             <button 
               onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
               disabled={page >= totalPages || loading}
-              className="w-12 h-12 bg-surface border-2 border-foreground rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white disabled:opacity-30 disabled:hover:bg-surface disabled:hover:text-foreground transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              className="w-12 h-12 bg-surface border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white disabled:opacity-30 disabled:hover:bg-surface disabled:hover:text-foreground transition-all shadow-sm"
             >
               <ChevronRight className="w-6 h-6 stroke-[3]" />
             </button>

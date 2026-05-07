@@ -108,7 +108,7 @@ export default function DashboardLayout({
           <div className="flex items-center gap-8">
             <button className="w-12 h-12 bg-surface border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-accent transition-all shadow-sm relative">
               <Bell className="w-6 h-6" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary border-2 border-foreground rounded-full"></span>
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary border border-foreground/50 rounded-full"></span>
             </button>
             
             <div className="flex items-center gap-4 pl-4 border-l border-foreground/10">

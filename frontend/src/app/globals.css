@@ -29,42 +29,32 @@
 
 @layer components {
   .ai-card {
-    @apply bg-surface border-4 border-foreground rounded-2xl p-6 transition-all duration-300 relative overflow-hidden;
-    box-shadow: 8px 8px 0px 0px var(--color-foreground);
-  }
-
-  .ai-card:hover {
-    @apply translate-x-[-4px] translate-y-[-4px];
-    box-shadow: 12px 12px 0px 0px var(--color-interaction);
+    @apply bg-surface border border-foreground/10 rounded-2xl p-6 transition-all duration-300 relative overflow-hidden shadow-sm hover:shadow-md;
   }
 
   .btn-dynamic {
-    @apply flex items-center justify-center gap-3 px-8 py-4 bg-primary text-white border-4 border-foreground rounded-2xl font-black uppercase italic transition-all duration-200 cursor-pointer;
-    box-shadow: 4px 4px 0px 0px var(--color-foreground);
+    @apply flex items-center justify-center gap-3 px-8 py-4 bg-primary text-white border border-foreground/10 rounded-2xl font-black uppercase italic transition-all duration-200 cursor-pointer shadow-md active:scale-95;
   }
 
   .btn-dynamic:hover {
-    @apply translate-x-[-2px] translate-y-[-2px] bg-interaction;
-    box-shadow: 6px 6px 0px 0px var(--color-foreground);
+    @apply bg-interaction shadow-lg;
   }
 
   .mic-button {
-    @apply w-24 h-24 bg-accent border-4 border-foreground rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer;
-    box-shadow: 8px 8px 0px 0px var(--color-foreground);
+    @apply w-24 h-24 bg-accent border border-foreground/10 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer shadow-md;
   }
 
   .mic-button:hover {
-    @apply scale-105 translate-x-[-4px] translate-y-[-4px] bg-interaction;
-    box-shadow: 12px 12px 0px 0px var(--color-foreground);
+    @apply scale-105 bg-interaction shadow-lg;
   }
 
   .nav-blur {
-    @apply sticky top-0 z-50 bg-background/80 backdrop-blur-3xl border-b-4 border-foreground px-8 py-4;
+    @apply sticky top-0 z-50 bg-background/80 backdrop-blur-3xl border-b border-foreground/10 px-8 py-4;
   }
 
   /* Custom Scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 10px;
+    width: 8px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -72,7 +62,7 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-foreground/10 rounded-full border-4 border-background;
+    @apply bg-foreground/10 rounded-full border-2 border-background;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {

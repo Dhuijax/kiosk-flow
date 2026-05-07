@@ -22,7 +22,7 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className="nav-blur flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary border-2 border-foreground rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-primary border border-foreground/20 rounded-lg flex items-center justify-center">
             <Sparkles className="text-white w-6 h-6" />
           </div>
           <span className="font-black text-2xl tracking-tighter uppercase italic">KioskFlow <span className="text-interaction">AI</span></span>
@@ -39,7 +39,7 @@ export default function LandingPage() {
       <section id="features" className="relative pt-20 pb-32 px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-20">
           <div className="flex-1 space-y-12 z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-interaction/10 border-2 border-interaction rounded-full text-interaction font-black text-xs uppercase tracking-widest">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-interaction/10 border border-interaction/30 rounded-full text-interaction font-black text-xs uppercase tracking-widest">
               <Zap className="w-4 h-4" />
               <span>Next-Gen Conversational Kiosk</span>
             </div>
@@ -61,8 +61,8 @@ export default function LandingPage() {
                 Trải nghiệm ngay <ArrowRight className="w-6 h-6" />
               </Link>
               
-              <div className="flex items-center gap-4 p-2 bg-foreground/5 border-2 border-foreground rounded-2xl">
-                <div className="w-12 h-12 bg-white border-2 border-foreground rounded-xl flex items-center justify-center font-black">
+              <div className="flex items-center gap-4 p-2 bg-foreground/5 border border-foreground/10 rounded-2xl">
+                <div className="w-12 h-12 bg-white border border-foreground/10 rounded-xl flex items-center justify-center font-black">
                   +50
                 </div>
                 <div className="text-xs font-black uppercase tracking-tighter opacity-60">
@@ -118,11 +118,11 @@ export default function LandingPage() {
                       <div className="space-y-4">
                         <p className="font-bold text-lg leading-snug italic">{intent}</p>
                         <div className="grid grid-cols-2 gap-3">
-                          <div className="p-3 bg-background rounded-xl border-2 border-foreground/10 flex flex-col gap-2">
+                          <div className="p-3 bg-background rounded-xl border border-foreground/10 flex flex-col gap-2">
                             <Coffee className="w-5 h-5 text-primary" />
                             <span className="font-black text-xs uppercase">Latte Hạnh Nhân</span>
                           </div>
-                          <div className="p-3 bg-background rounded-xl border-2 border-foreground/10 flex flex-col gap-2">
+                          <div className="p-3 bg-background rounded-xl border border-foreground/10 flex flex-col gap-2">
                             <Utensils className="w-5 h-5 text-primary" />
                             <span className="font-black text-xs uppercase">Bánh Sừng Bò</span>
                           </div>

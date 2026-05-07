@@ -9,6 +9,7 @@ import { formatVND } from '@/lib/utils/format';
 
 export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }) {
   const { items, removeItem, updateQuantity, subtotal, total, tax } = useOrderCart();
+  const [isListening, setIsListening] = React.useState(false);
 
   const formatCurrency = (value: number) => {
     return formatVND(value);
@@ -26,7 +27,39 @@ export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }
           <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1">Hệ thống AI đang hỗ trợ...</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="w-10 h-10 bg-interaction rounded-full flex items-center justify-center text-white shadow-[2px_2px_0px_0px_rgba(62,39,35,1)]">
+          <button 
+            onClick={() => {
+              if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert("Trình duyệt của bạn không hỗ trợ nhận dạng giọng nói.");
+                return;
+              }
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+              const recognition = new SpeechRecognition();
+              recognition.lang = 'vi-VN';
+              recognition.interimResults = false;
+              
+              recognition.onstart = () => setIsListening(true);
+              recognition.onend = () => setIsListening(false);
+              recognition.onerror = () => {
+                setIsListening(false);
+                alert("Không thể nhận diện giọng nói, vui lòng thử lại.");
+              };
+              
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              recognition.onresult = (event: any) => {
+                const transcript = event.results[0][0].transcript;
+                alert(`AI nhận diện: "${transcript}"\n(Tính năng gọi món tự động bằng NLP đang được phát triển)`);
+              };
+              
+              recognition.start();
+            }}
+            className={cn(
+              "w-10 h-10 rounded-full flex items-center justify-center text-white transition-all shadow-[2px_2px_0px_0px_rgba(62,39,35,1)]",
+              isListening ? "bg-red-500 animate-pulse" : "bg-interaction"
+            )}
+            title="Gọi món bằng giọng nói"
+          >
             <Mic size={18} />
           </button>
           <span className="px-4 py-1.5 bg-foreground text-background rounded-xl text-sm font-black uppercase tracking-tighter">

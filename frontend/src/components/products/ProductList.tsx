@@ -60,6 +60,20 @@ export default function ProductList({ selectedCategoryId, onEdit }: ProductListP
     return () => clearTimeout(timer);
   }, [fetchProducts]);
 
+  const handleDeleteProduct = async (id: string, name: string) => {
+    if (!token || !tenantId) return;
+    if (!confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${name}"?`)) return;
+    
+    try {
+      const client = getAuthenticatedClient(ProductService, tenantId, token);
+      await client.deleteProduct({ id });
+      fetchProducts();
+    } catch (err) {
+      console.error('Failed to delete product:', err);
+      alert('Có lỗi xảy ra khi xóa sản phẩm');
+    }
+  };
+
   const totalPages = Math.ceil(totalItems / pageSize);
 
   const formatCurrency = (amount: bigint | undefined) => {
@@ -170,7 +184,13 @@ export default function ProductList({ selectedCategoryId, onEdit }: ProductListP
                         >
                           <Edit className="w-5 h-5 stroke-[3]" />
                         </button>
-                        <button className="w-12 h-12 bg-surface border-2 border-foreground rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteProduct(product.id, product.name);
+                          }}
+                          className="w-12 h-12 bg-surface border-2 border-foreground rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
+                        >
                           <Trash2 className="w-5 h-5 stroke-[3]" />
                         </button>
                       </div>

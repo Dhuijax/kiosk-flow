@@ -29,14 +29,14 @@ export default function LandingPage() {
         </div>
         
         <div className="hidden md:flex items-center gap-8 font-black uppercase text-sm tracking-widest italic">
-          <Link href="#" className="hover:text-interaction transition-colors">Tính năng</Link>
-          <Link href="#" className="hover:text-interaction transition-colors">Vận hành</Link>
+          <Link href="#features" className="hover:text-interaction transition-colors">Tính năng</Link>
+          <Link href="#operations" className="hover:text-interaction transition-colors">Vận hành</Link>
           <Link href="/auth/login" className="px-6 py-3 bg-foreground text-background rounded-xl hover:bg-interaction transition-all">Đăng nhập</Link>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-20 pb-32 px-8 overflow-hidden">
+      <section id="features" className="relative pt-20 pb-32 px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-20">
           <div className="flex-1 space-y-12 z-10">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-interaction/10 border-2 border-interaction rounded-full text-interaction font-black text-xs uppercase tracking-widest">
@@ -138,7 +138,7 @@ export default function LandingPage() {
       </section>
 
       {/* Philosophy Grid */}
-      <section className="bg-foreground text-background py-32 px-8">
+      <section id="operations" className="bg-foreground text-background py-32 px-8">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
           <div className="md:col-span-2 space-y-6">
             <h2 className="text-5xl md:text-7xl font-black leading-none tracking-tighter uppercase italic">

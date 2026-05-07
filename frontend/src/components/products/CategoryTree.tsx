@@ -6,6 +6,7 @@ import { Category } from '@/gen/category_pb';
 import { CategoryService } from '@/gen/category_connect';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { useAuth } from '@/lib/auth/AuthContext';
+import CategoryModal from './CategoryModal';
 
 interface CategoryTreeProps {
   onSelect: (categoryId: string | null) => void;
@@ -17,6 +18,9 @@ export default function CategoryTree({ onSelect, selectedId }: CategoryTreeProps
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | undefined>(undefined);
 
   const fetchCategories = useCallback(async () => {
     if (!token || !tenantId) return;
@@ -80,7 +84,14 @@ export default function CategoryTree({ onSelect, selectedId }: CategoryTreeProps
                 </div>
                 
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="p-1.5 hover:bg-foreground/5 rounded-lg text-foreground/20 hover:text-interaction">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingCategory(category);
+                      setIsModalOpen(true);
+                    }}
+                    className="p-1.5 hover:bg-foreground/5 rounded-lg text-foreground/20 hover:text-interaction"
+                  >
                     <Edit className="w-4 h-4" />
                   </button>
                 </div>
@@ -101,7 +112,13 @@ export default function CategoryTree({ onSelect, selectedId }: CategoryTreeProps
           <Layers className="w-5 h-5 text-interaction stroke-[3]" />
           Phân loại
         </h2>
-        <button className="w-10 h-10 bg-primary text-white border-2 border-foreground rounded-lg flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all">
+        <button 
+          onClick={() => {
+            setEditingCategory(undefined);
+            setIsModalOpen(true);
+          }}
+          className="w-10 h-10 bg-primary text-white border-2 border-foreground rounded-lg flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all"
+        >
           <Plus className="w-6 h-6 stroke-[3]" />
         </button>
       </div>
@@ -134,6 +151,14 @@ export default function CategoryTree({ onSelect, selectedId }: CategoryTreeProps
           </div>
         )}
       </div>
+
+      <CategoryModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchCategories}
+        editingCategory={editingCategory}
+        categories={categories}
+      />
     </div>
   );
 }

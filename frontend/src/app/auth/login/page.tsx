@@ -149,7 +149,7 @@ function LoginForm() {
       </form>
 
       <div className="mt-12 text-center text-[10px] font-black uppercase tracking-widest opacity-40">
-        Chưa có tài khoản? <a href="#" className="text-interaction hover:underline underline-offset-4">Liên hệ hỗ trợ</a>
+        Chưa có tài khoản? <a href="mailto:support@kioskflow.vn" className="text-interaction hover:underline underline-offset-4">Liên hệ hỗ trợ</a>
       </div>
     </div>
   );

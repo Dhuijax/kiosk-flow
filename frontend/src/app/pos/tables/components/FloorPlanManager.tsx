@@ -106,7 +106,7 @@ export default function FloorPlanManager() {
           </div>
           <div className="whitespace-nowrap mr-2">
             <h2 className="text-lg font-black text-foreground uppercase italic tracking-tighter">Khu vực</h2>
-            <p className="text-[10px] text-foreground/40 uppercase font-black tracking-widest leading-none">Sơ đồ bàn</p>
+            <p className="text-[10px] text-foreground/40 uppercase font-black tracking-widest leading-tight">Sơ đồ bàn</p>
           </div>
           
           <div className="h-10 w-px bg-foreground/10 mx-2" />

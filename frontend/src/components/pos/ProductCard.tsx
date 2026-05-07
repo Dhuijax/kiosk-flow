@@ -74,7 +74,7 @@ export default function ProductCard({ product, onAddToCart, stockQuantity = 999 
         <div className="flex items-end justify-between">
           <div className="flex flex-col">
             <span className="text-[10px] uppercase font-black opacity-40 mb-1">Giá bán</span>
-            <span className="text-primary font-black text-2xl tracking-tighter leading-none">
+            <span className="text-primary font-black text-2xl tracking-tighter leading-tight">
               {formatVND(product.price)}
             </span>
           </div>

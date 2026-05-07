@@ -149,7 +149,7 @@ export default function ProductList({ selectedCategoryId, onEdit }: ProductListP
                           )}
                         </div>
                         <div>
-                          <p className="text-xl font-black text-foreground uppercase italic tracking-tighter group-hover:text-interaction transition-all leading-none">{product.name}</p>
+                          <p className="text-xl font-black text-foreground uppercase italic tracking-tighter group-hover:text-interaction transition-all leading-tight">{product.name}</p>
                           <p className="text-[10px] text-foreground/40 font-black uppercase tracking-widest mt-2">DVT: {product.unit || 'PHẦN'}</p>
                         </div>
                       </div>

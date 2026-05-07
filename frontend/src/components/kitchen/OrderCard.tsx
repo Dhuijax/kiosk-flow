@@ -64,7 +64,7 @@ export function OrderCard({ order, onUpdateStatus, isHistory }: OrderCardProps) 
       <div className="flex items-start justify-between mb-8">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="bg-primary border border-white/20 text-white rounded-2xl px-4 py-2 font-black text-2xl flex items-center gap-2 shadow-lg italic tracking-tight">
+            <div className="bg-primary border border-white/20 text-white rounded-2xl px-4 py-2 font-black text-2xl flex items-center gap-2 shadow-lg italic tracking-tighter">
               <Hash size={20} className="stroke-[4]" />
               <span>{order.orderNumber}</span>
             </div>
@@ -99,7 +99,7 @@ export function OrderCard({ order, onUpdateStatus, isHistory }: OrderCardProps) 
         </div>
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Khách hàng</p>
-          <p className="font-black text-foreground uppercase italic tracking-tighter leading-none">{order.customerName || "KHÁCH LẺ"}</p>
+          <p className="font-black text-foreground uppercase italic tracking-tighter leading-tight">{order.customerName || "KHÁCH LẺ"}</p>
         </div>
       </div>
 

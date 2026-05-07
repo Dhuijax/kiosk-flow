@@ -36,7 +36,7 @@ export default function ProductsPage() {
             <LayoutGrid className="w-5 h-5" />
             <span>Thực đơn & Danh mục</span>
           </div>
-          <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tight text-foreground leading-tight">
+          <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground">
             Quản lý <span className="text-primary">Sản phẩm</span>
           </h1>
           <p className="text-foreground/40 font-bold italic">Tổ chức thực đơn, thiết lập giá và quản lý toppings.</p>

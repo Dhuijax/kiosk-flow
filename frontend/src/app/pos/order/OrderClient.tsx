@@ -96,7 +96,7 @@ export default function OrderClient() {
               status.type === 'success' ? 'bg-interaction border-foreground/10 text-white' : 'bg-red-400 border-foreground/10 text-white'
             }`}>
               {status.type === 'success' ? <CheckCircle size={32} className="stroke-[3]" /> : <AlertCircle size={32} className="stroke-[3]" />}
-              <span className="font-black uppercase tracking-tight text-2xl italic">{status.message}</span>
+              <span className="font-black uppercase tracking-tighter text-2xl italic">{status.message}</span>
             </div>
           </motion.div>
         )}
@@ -112,7 +112,7 @@ export default function OrderClient() {
               placeholder="BẠN MUỐN TÌM GÌ HÔM NAY?" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-20 pr-8 py-6 bg-surface border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-2xl uppercase italic tracking-tight shadow-sm"
+              className="w-full pl-20 pr-8 py-6 bg-surface border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-2xl uppercase italic tracking-tighter shadow-sm"
             />
             <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-4">
               <button className="w-12 h-12 bg-accent border border-foreground/10 rounded-xl flex items-center justify-center shadow-sm active:scale-95 transition-all">
@@ -123,7 +123,7 @@ export default function OrderClient() {
         </div>
         
         <div className="flex items-center gap-6">
-          <button className="px-8 py-5 bg-surface hover:bg-foreground hover:text-background border border-foreground/10 rounded-2xl transition-all shadow-sm font-black uppercase italic tracking-tight flex items-center gap-3">
+          <button className="px-8 py-5 bg-surface hover:bg-foreground hover:text-background border border-foreground/10 rounded-2xl transition-all shadow-sm font-black uppercase italic tracking-tighter flex items-center gap-3">
             <Filter className="w-6 h-6 stroke-[3]" />
             LỌC
           </button>

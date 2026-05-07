@@ -127,7 +127,7 @@ export default function DashboardPage() {
             <Sparkles className="w-5 h-5" />
             <span>Hệ thống vận hành thông minh</span>
           </div>
-          <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tight text-foreground leading-tight">
+          <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground">
             Xin chào, <span className="text-primary">Admin</span>
           </h1>
           <p className="text-foreground/40 font-bold flex items-center gap-2 italic">

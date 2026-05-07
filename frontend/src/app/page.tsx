@@ -25,7 +25,7 @@ export default function LandingPage() {
           <div className="w-10 h-10 bg-primary border-2 border-foreground rounded-lg flex items-center justify-center">
             <Sparkles className="text-white w-6 h-6" />
           </div>
-          <span className="font-black text-2xl tracking-tight uppercase italic">KioskFlow <span className="text-interaction">AI</span></span>
+          <span className="font-black text-2xl tracking-tighter uppercase italic">KioskFlow <span className="text-interaction">AI</span></span>
         </div>
         
         <div className="hidden md:flex items-center gap-8 font-black uppercase text-sm tracking-widest italic">
@@ -44,7 +44,7 @@ export default function LandingPage() {
               <span>Next-Gen Conversational Kiosk</span>
             </div>
             
-            <h1 className="text-6xl md:text-9xl font-black leading-[1.1] tracking-tight uppercase italic">
+            <h1 className="text-6xl md:text-9xl font-black leading-tight tracking-tighter uppercase italic">
               Bán hàng <br />
               <span className="text-primary">Bằng hơi thở</span>
             </h1>
@@ -141,7 +141,7 @@ export default function LandingPage() {
       <section id="operations" className="bg-foreground text-background py-32 px-8">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
           <div className="md:col-span-2 space-y-6">
-            <h2 className="text-5xl md:text-7xl font-black leading-tight tracking-tight uppercase italic">
+            <h2 className="text-5xl md:text-7xl font-black leading-tight tracking-tighter uppercase italic">
               AI Chữa Lành <br /> Quy trình vận hành
             </h2>
             <div className="w-24 h-4 bg-accent"></div>

@@ -86,7 +86,7 @@ export default function CustomersPage() {
             <Heart className="w-5 h-5 fill-current" />
             <span>Quan hệ khách hàng</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-black uppercase italic tracking-tight text-foreground leading-tight">
+          <h1 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter text-foreground leading-tight">
             Khách <span className="text-primary">Thân Thiết</span>
           </h1>
           <p className="text-foreground/40 font-bold italic text-lg">Quản lý lòng trung thành và thấu hiểu hành vi khách hàng.</p>

@@ -92,7 +92,7 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
           <div className="flex-1 p-12 border-r border-foreground/10 space-y-10">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <h2 className="text-4xl font-black uppercase italic tracking-tighter text-foreground leading-none">Thanh Toán</h2>
+                <h2 className="text-4xl font-black uppercase italic tracking-tighter text-foreground leading-tight">Thanh Toán</h2>
                 <p className="text-[10px] font-black uppercase tracking-widest opacity-40 italic">Chọn phương thức bạn muốn sử dụng</p>
               </div>
               <button 
@@ -238,7 +238,7 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
                       <Sparkles className="absolute -top-4 -right-4 w-16 h-16 text-accent animate-float" />
                     </div>
                     <div className="text-center space-y-4">
-                      <h3 className="text-3xl font-black uppercase italic tracking-tighter text-foreground leading-none">VUI LÒNG QUẸT THẺ</h3>
+                      <h3 className="text-3xl font-black uppercase italic tracking-tighter text-foreground leading-tight">VUI LÒNG QUẸT THẺ</h3>
                       <p className="text-sm font-bold opacity-40 uppercase tracking-widest leading-relaxed">Kết nối với thiết bị đầu cuối POS...</p>
                     </div>
                   </motion.div>

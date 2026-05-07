@@ -57,7 +57,7 @@ export default function InventoryStats({
             <stat.icon className={`w-8 h-8 stroke-[3] ${stat.pulse ? 'animate-pulse' : ''}`} />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 leading-none mb-1">{stat.label}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 leading-tight mb-1">{stat.label}</p>
             <p className="text-3xl font-black text-foreground italic tracking-tighter">{stat.value}</p>
           </div>
         </div>

@@ -63,7 +63,7 @@ export default function ReportsPage() {
             <Target className="w-5 h-5" />
             <span>Phân tích dữ liệu</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-black uppercase italic tracking-tight text-foreground leading-tight">
+          <h1 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter text-foreground leading-tight">
             Báo Cáo <span className="text-primary">Kết Quả</span>
           </h1>
           <p className="text-foreground/40 font-bold italic text-lg">Phân tích chuyên sâu về hiệu suất kinh doanh của bạn.</p>

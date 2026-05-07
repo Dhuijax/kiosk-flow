@@ -112,7 +112,7 @@ export default function MenuGrid({ selectedCategoryId, searchQuery }: MenuGridPr
   if (filteredProducts.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-foreground gap-8">
-        <div className="w-32 h-32 bg-surface rounded-3xl border border-foreground/10 flex items-center justify-center relative shadow-sm">>
+        <div className="w-32 h-32 bg-surface rounded-3xl border border-foreground/10 flex items-center justify-center relative shadow-sm">
           <Package className="w-16 h-16 opacity-10" />
           <Sparkles className="absolute -top-4 -right-4 w-12 h-12 text-accent animate-float" />
         </div>

@@ -54,7 +54,7 @@ export default function SecuritySettings() {
         </button>
       </div>
 
-      <div className="p-8 bg-red-500/5 border border-red-500/20 rounded-3xl flex items-center justify-between">>
+      <div className="p-8 bg-red-500/5 border border-red-500/20 rounded-3xl flex items-center justify-between">
         <div className="space-y-1">
           <p className="font-black uppercase italic tracking-tighter text-red-600">Đăng xuất khỏi tất cả thiết bị</p>
           <p className="text-xs font-bold text-red-600/40 uppercase tracking-widest">Nếu bạn nghi ngờ tài khoản bị xâm nhập</p>

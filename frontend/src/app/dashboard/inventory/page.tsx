@@ -213,7 +213,7 @@ export default function InventoryPage() {
                     <tr key={item.id} className="group hover:bg-foreground/5 transition-all cursor-pointer">
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-6">
-                          <div className="w-14 h-14 rounded-2xl bg-background border border-foreground/10 flex items-center justify-center text-primary group-hover:border-interaction group-hover:scale-105 transition-all shadow-sm">>
+                          <div className="w-14 h-14 rounded-2xl bg-background border border-foreground/10 flex items-center justify-center text-primary group-hover:border-interaction group-hover:scale-105 transition-all shadow-sm">
                             <Package className="w-7 h-7 stroke-[2.5]" />
                           </div>
                           <div>

@@ -57,7 +57,7 @@ export default function KitchenPage() {
               <ChefHat size={32} />
             </div>
             <div>
-              <h1 className="text-4xl font-black uppercase italic tracking-tighter text-foreground leading-none">
+              <h1 className="text-4xl font-black uppercase italic tracking-tight text-foreground leading-tight">
                 KioskFlow <span className="text-interaction">KDS</span>
               </h1>
               <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1">Hệ thống điều phối bếp</p>

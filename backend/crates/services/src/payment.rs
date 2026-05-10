@@ -10,7 +10,7 @@ use proto_gen::payment::{
     Payment as ProtoPayment, PaymentMethod as ProtoPaymentMethod, PaymentStatus as ProtoPaymentStatus
 };
 use proto_gen::common::Money;
-use infra::repository::{PaymentRepository, OrderRepository};
+use infra::repository::{PaymentRepository, OrderRepository, CustomerRepository, UserRepository};
 use domain::models::payment::{Payment as DomainPayment, PaymentMethod as DomainPaymentMethod, PaymentStatus as DomainPaymentStatus};
 use domain::models::order::OrderStatus as DomainOrderStatus;
 use infra::security::Claims;
@@ -18,11 +18,13 @@ use infra::security::Claims;
 pub struct PaymentServiceImpl {
     payment_repo: Arc<PaymentRepository>,
     order_repo: Arc<OrderRepository>,
+    customer_repo: Arc<CustomerRepository>,
+    user_repo: Arc<UserRepository>,
 }
 
 impl PaymentServiceImpl {
-    pub fn new(payment_repo: Arc<PaymentRepository>, order_repo: Arc<OrderRepository>) -> Self {
-        Self { payment_repo, order_repo }
+    pub fn new(payment_repo: Arc<PaymentRepository>, order_repo: Arc<OrderRepository>, customer_repo: Arc<CustomerRepository>, user_repo: Arc<UserRepository>) -> Self {
+        Self { payment_repo, order_repo, customer_repo, user_repo }
     }
 
     fn get_context<T>(&self, request: &Request<T>) -> Result<(Uuid, Uuid), Status> {
@@ -90,6 +92,24 @@ impl PaymentService for PaymentServiceImpl {
         // 4. Create Payment and Update Order Status Atomically
         let created = self.payment_repo.create_with_order_status(&domain_payment, DomainOrderStatus::Paid).await
             .map_err(|e| Status::internal(e.to_string()))?;
+
+        // 5. Update Order with Cashier Name and Customer Points (Post-payment hooks)
+        let cashier_name = self.user_repo.find_by_id(&tenant_id, &domain_payment.created_by).await
+            .ok().flatten()
+            .map(|u| u.full_name);
+        
+        // Update order with cashier name
+        if let Some(name) = cashier_name {
+            let _ = self.order_repo.update_cashier_name(&tenant_id, &order_id, &name).await;
+        }
+
+        // 6. Point Accumulation
+        if let Some(customer_id) = order.customer_id {
+            let points = (order.total.to_f32().unwrap_or(0.0) / 10000.0) as i32;
+            if points > 0 {
+                let _ = self.customer_repo.update_points(&tenant_id, &customer_id, points).await;
+            }
+        }
 
         Ok(Response::new(PaymentResponse {
             payment: Some(map_domain_to_proto(created)),

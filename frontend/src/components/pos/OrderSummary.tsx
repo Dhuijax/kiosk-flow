@@ -6,8 +6,16 @@ import { useOrderCart } from '@/lib/order/OrderCartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { formatVND } from '@/lib/utils/format';
+import CustomerSelector from './CustomerSelector';
+import { Customer } from '@/gen/customer_pb';
 
-export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }) {
+interface OrderSummaryProps {
+  onCheckout?: () => void;
+  selectedCustomer: Customer | null;
+  onCustomerSelect: (customer: Customer | null) => void;
+}
+
+export default function OrderSummary({ onCheckout, selectedCustomer, onCustomerSelect }: OrderSummaryProps) {
   const { items, removeItem, updateQuantity, subtotal, total, tax } = useOrderCart();
   const [isListening, setIsListening] = React.useState(false);
 
@@ -66,6 +74,14 @@ export default function OrderSummary({ onCheckout }: { onCheckout?: () => void }
             {items.reduce((acc, item) => acc + item.quantity, 0)} MÓN
           </span>
         </div>
+      </div>
+
+      {/* Customer Selection */}
+      <div className="p-8 border-b border-foreground/10 bg-background">
+        <CustomerSelector 
+          selectedCustomer={selectedCustomer}
+          onSelect={onCustomerSelect}
+        />
       </div>
       
       {/* Items List */}

@@ -6,3 +6,4 @@ pub mod order;
 pub mod payment;
 pub mod inventory;
 pub mod tenant;
+pub mod customer;

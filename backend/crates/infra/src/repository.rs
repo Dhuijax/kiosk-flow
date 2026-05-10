@@ -7,6 +7,7 @@ use domain::models::order::{Order, OrderItem, OrderItemTopping, OrderStatus};
 use domain::models::payment::Payment;
 use domain::models::inventory::{Inventory, InventoryTransaction, InventoryTransactionType};
 use domain::models::tenant::Tenant;
+use domain::models::customer::Customer;
 use anyhow::Result;
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
@@ -1019,9 +1020,9 @@ impl OrderRepository {
         // 2. Insert Order
         let created_order: Order = sqlx::query_as(
             r#"
-            INSERT INTO orders (id, tenant_id, branch_id, table_id, order_number, status, customer_name, subtotal, tax_amount, discount_amount, total, note, created_by)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-            RETURNING id, tenant_id, branch_id, table_id, order_number, status, customer_name, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at
+            INSERT INTO orders (id, tenant_id, branch_id, table_id, order_number, status, customer_name, customer_id, cashier_name, guest_id, subtotal, tax_amount, discount_amount, total, note, created_by)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+            RETURNING id, tenant_id, branch_id, table_id, order_number, status, customer_name, customer_id, cashier_name, guest_id, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at
             "#
         )
         .bind(order.id)
@@ -1031,6 +1032,9 @@ impl OrderRepository {
         .bind(order_number)
         .bind(&order.status)
         .bind(&order.customer_name)
+        .bind(order.customer_id)
+        .bind(&order.cashier_name)
+        .bind(&order.guest_id)
         .bind(&order.subtotal)
         .bind(&order.tax_amount)
         .bind(&order.discount_amount)
@@ -1089,7 +1093,7 @@ impl OrderRepository {
 
         let order: Option<Order> = sqlx::query_as(
             r#"
-            SELECT id, tenant_id, branch_id, table_id, order_number, status, customer_name, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at
+            SELECT id, tenant_id, branch_id, table_id, order_number, status, customer_name, customer_id, cashier_name, guest_id, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at
             FROM orders WHERE id = $1
             "#
         )
@@ -1144,7 +1148,7 @@ impl OrderRepository {
             UPDATE orders
             SET status = $1, completed_at = COALESCE($2, completed_at), updated_at = NOW()
             WHERE id = $3
-            RETURNING id, tenant_id, branch_id, table_id, order_number, status, customer_name, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at
+            RETURNING id, tenant_id, branch_id, table_id, order_number, status, customer_name, customer_id, cashier_name, guest_id, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at
             "#
         )
         .bind(&status)
@@ -1163,7 +1167,7 @@ impl OrderRepository {
         let orders: Vec<Order> = if let Some(s) = status {
             sqlx::query_as(
                 r#"
-                SELECT id, tenant_id, branch_id, table_id, order_number, status, customer_name, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at
+                SELECT id, tenant_id, branch_id, table_id, order_number, status, customer_name, customer_id, cashier_name, guest_id, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at
                 FROM orders
                 WHERE branch_id = $1 AND status = $2
                 ORDER BY created_at DESC
@@ -1179,7 +1183,7 @@ impl OrderRepository {
         } else {
             sqlx::query_as(
                 r#"
-                SELECT id, tenant_id, branch_id, table_id, order_number, status, customer_name, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at
+                SELECT id, tenant_id, branch_id, table_id, order_number, status, customer_name, customer_id, cashier_name, guest_id, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at
                 FROM orders
                 WHERE branch_id = $1
                 ORDER BY created_at DESC
@@ -1195,6 +1199,41 @@ impl OrderRepository {
 
         tx.commit().await?;
         Ok(orders)
+    }
+
+    pub async fn list_by_customer(&self, tenant_id: &Uuid, customer_id: &Uuid, start_date: DateTime<Utc>) -> Result<Vec<Order>> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        let orders: Vec<Order> = sqlx::query_as(
+            r#"
+            SELECT id, tenant_id, branch_id, table_id, order_number, status, customer_name, customer_id, cashier_name, guest_id, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at
+            FROM orders
+            WHERE customer_id = $1 AND created_at >= $2
+            ORDER BY created_at DESC
+            "#
+        )
+        .bind(customer_id)
+        .bind(start_date)
+        .fetch_all(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(orders)
+    }
+
+    pub async fn update_cashier_name(&self, tenant_id: &Uuid, id: &Uuid, cashier_name: &str) -> Result<()> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        sqlx::query!(
+            "UPDATE orders SET cashier_name = $1, updated_at = NOW() WHERE id = $2",
+            cashier_name,
+            id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(())
     }
 }
 
@@ -1485,5 +1524,138 @@ impl InventoryRepository {
 
         tx.commit().await?;
         Ok(history)
+    }
+}pub struct CustomerRepository {
+    pool: PgPool,
+}
+
+impl CustomerRepository {
+    pub fn new(pool: PgPool) -> Self {
+        Self { pool }
+    }
+
+    async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
+        let mut tx = self.pool.begin().await?;
+        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
+            .bind(tenant_id.to_string())
+            .execute(&mut *tx)
+            .await?;
+        Ok(tx)
+    }
+
+    pub async fn create(&self, customer: &Customer) -> Result<Customer> {
+        let mut tx = self.tx_with_tenant(&customer.tenant_id).await?;
+
+        let created = sqlx::query_as!(
+            Customer,
+            r#"
+            INSERT INTO customers (id, tenant_id, phone, name, points)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id, tenant_id, phone, name, points, created_at as "created_at!", updated_at as "updated_at!"
+            "#,
+            customer.id,
+            customer.tenant_id,
+            customer.phone,
+            customer.name,
+            customer.points
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(created)
+    }
+
+    pub async fn find_by_id(&self, tenant_id: &Uuid, id: &Uuid) -> Result<Option<Customer>> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        let customer = sqlx::query_as!(
+            Customer,
+            r#"
+            SELECT id, tenant_id, phone, name, points, created_at as "created_at!", updated_at as "updated_at!"
+            FROM customers
+            WHERE id = $1
+            "#,
+            id
+        )
+        .fetch_optional(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(customer)
+    }
+
+    pub async fn find_by_phone(&self, tenant_id: &Uuid, phone: &str) -> Result<Option<Customer>> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        let customer = sqlx::query_as!(
+            Customer,
+            r#"
+            SELECT id, tenant_id, phone, name, points, created_at as "created_at!", updated_at as "updated_at!"
+            FROM customers
+            WHERE phone = $1
+            "#,
+            phone
+        )
+        .fetch_optional(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(customer)
+    }
+
+    pub async fn list(&self, tenant_id: &Uuid, search: Option<String>) -> Result<Vec<Customer>> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        let customers = if let Some(q) = search {
+            let search_pattern = format!("%{}%", q);
+            sqlx::query_as!(
+                Customer,
+                r#"
+                SELECT id, tenant_id, phone, name, points, created_at as "created_at!", updated_at as "updated_at!"
+                FROM customers
+                WHERE phone LIKE $1 OR name ILIKE $1
+                ORDER BY created_at DESC
+                "#,
+                search_pattern
+            )
+            .fetch_all(&mut *tx)
+            .await?
+        } else {
+            sqlx::query_as!(
+                Customer,
+                r#"
+                SELECT id, tenant_id, phone, name, points, created_at as "created_at!", updated_at as "updated_at!"
+                FROM customers
+                ORDER BY created_at DESC
+                "#
+            )
+            .fetch_all(&mut *tx)
+            .await?
+        };
+
+        tx.commit().await?;
+        Ok(customers)
+    }
+
+    pub async fn update_points(&self, tenant_id: &Uuid, id: &Uuid, points_to_add: i32) -> Result<Customer> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        let updated = sqlx::query_as!(
+            Customer,
+            r#"
+            UPDATE customers
+            SET points = points + $1, updated_at = NOW()
+            WHERE id = $2
+            RETURNING id, tenant_id, phone, name, points, created_at as "created_at!", updated_at as "updated_at!"
+            "#,
+            points_to_add,
+            id
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(updated)
     }
 }

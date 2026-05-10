@@ -5,6 +5,9 @@ import { X, UserPlus, Mail, Phone, User, Loader2, Sparkles, CheckCircle } from '
 import { motion, AnimatePresence } from 'framer-motion';
 
 import Portal from '@/components/ui/Portal';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { getAuthenticatedClient } from '@/lib/grpc/client';
+import { CustomerService } from '@/gen/customer_connect';
 
 interface AddCustomerModalProps {
   isOpen: boolean;
@@ -23,15 +26,23 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
     notes: '',
   });
 
+  const { tenantId, token } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    if (!tenantId) return;
 
-    // Simulate API call since CustomerService is not yet implemented in backend
-    setTimeout(() => {
-      setLoading(false);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const client = getAuthenticatedClient(CustomerService, tenantId, token || undefined);
+      await client.registerCustomer({
+        name: formData.fullName,
+        phone: formData.phone,
+      });
+
       setShowSuccess(true);
       setTimeout(() => {
         onSuccess();
@@ -39,7 +50,12 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
         setShowSuccess(false);
         setFormData({ fullName: '', email: '', phone: '', notes: '' });
       }, 1500);
-    }, 1000);
+    } catch (err: any) {
+      console.error('Failed to register customer:', err);
+      setError(err.message || 'Có lỗi xảy ra khi đăng ký khách hàng.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -87,6 +103,11 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-8 flex-1 overflow-y-auto custom-scrollbar">
+                  {error && (
+                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-xs font-bold uppercase italic tracking-widest">
+                      {error}
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 gap-8">
                     {/* Full Name */}
                     <div className="space-y-2">

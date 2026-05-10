@@ -18,6 +18,8 @@ import {
   TrendingUp
 } from 'lucide-react';
 
+import StatusBadge from '@/components/ui/StatusBadge';
+
 const navigation = [
   { name: 'Tổng quan', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Bán hàng', href: '/pos/order', icon: Store },
@@ -25,7 +27,7 @@ const navigation = [
   { name: 'Báo cáo', href: '/dashboard/reports', icon: TrendingUp },
   { name: 'Nhân viên', href: '/dashboard/staff', icon: Users },
   { name: 'Sản phẩm', href: '/dashboard/products', icon: Package },
-  { name: 'Cấu hình', href: '/dashboard/settings', icon: Settings },
+  { name: 'Cấu hình', href: '/dashboard/settings', icon: Settings, status: 'demo' as const },
 ];
 
 export default function DashboardLayout({
@@ -69,7 +71,10 @@ export default function DashboardLayout({
               >
                 <div className="flex items-center gap-4">
                   <item.icon className={`w-6 h-6 stroke-[3] ${isActive ? 'text-white' : ''}`} />
-                  <span className="font-black uppercase italic tracking-tighter text-sm">{item.name}</span>
+                  <div className="flex flex-col items-start gap-1">
+                    <span className="font-black uppercase italic tracking-tighter text-sm">{item.name}</span>
+                    {item.status && <StatusBadge status={item.status} className={cn(isActive ? "bg-white/20 text-white border-white/20" : "")} />}
+                  </div>
                 </div>
                 {isActive && <ChevronRight className="w-5 h-5 text-white/50" />}
               </Link>

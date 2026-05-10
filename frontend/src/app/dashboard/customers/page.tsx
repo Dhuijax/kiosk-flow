@@ -18,53 +18,19 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AddCustomerModal from '@/components/customers/AddCustomerModal';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { getAuthenticatedClient } from '@/lib/grpc/client';
+import { CustomerService } from '@/gen/customer_connect';
+import { Customer } from '@/gen/customer_pb';
+import { useEffect, useCallback } from 'react';
+import { format } from 'date-fns';
 
-const MOCK_CUSTOMERS = [
-  {
-    id: '1',
-    name: 'Nguyễn Văn A',
-    phone: '0901234567',
-    email: 'vana@gmail.com',
-    tier: 'GOLD',
-    points: 2450,
-    totalSpent: 12500000,
-    lastVisit: '2026-05-01',
-    orders: 42
-  },
-  {
-    id: '2',
-    name: 'Trần Thị B',
-    phone: '0987654321',
-    email: 'thib@yahoo.com',
-    tier: 'SILVER',
-    points: 850,
-    totalSpent: 4200000,
-    lastVisit: '2026-04-28',
-    orders: 15
-  },
-  {
-    id: '3',
-    name: 'Lê Văn C',
-    phone: '0912345678',
-    email: 'vanc@outlook.com',
-    tier: 'PLATINUM',
-    points: 5200,
-    totalSpent: 28900000,
-    lastVisit: '2026-05-04',
-    orders: 89
-  },
-  {
-    id: '4',
-    name: 'Phạm Minh D',
-    phone: '0933445566',
-    email: 'minhd@gmail.com',
-    tier: 'BRONZE',
-    points: 120,
-    totalSpent: 850000,
-    lastVisit: '2026-04-15',
-    orders: 3
-  },
-];
+const getTier = (points: number) => {
+  if (points >= 5000) return 'PLATINUM';
+  if (points >= 2000) return 'GOLD';
+  if (points >= 500) return 'SILVER';
+  return 'BRONZE';
+};
 
 const getTierColor = (tier: string) => {
   switch (tier) {
@@ -78,6 +44,32 @@ const getTierColor = (tier: string) => {
 export default function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { tenantId, token } = useAuth();
+
+  const fetchCustomers = useCallback(async () => {
+    if (!tenantId) return;
+    try {
+      setLoading(true);
+      const client = getAuthenticatedClient(CustomerService, tenantId, token || undefined);
+      const response = await client.listCustomers({
+        searchQuery: searchQuery,
+      });
+      setCustomers(response.customers);
+    } catch (err) {
+      console.error('Failed to fetch customers:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [tenantId, token, searchQuery]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchCustomers();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [fetchCustomers]);
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -152,76 +144,100 @@ export default function CustomersPage() {
 
       {/* Customer List */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {MOCK_CUSTOMERS.map((customer, idx) => (
-          <motion.div
-            key={customer.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className="group bg-surface border border-foreground/10 rounded-3xl p-10 flex flex-col md:flex-row gap-10 transition-all shadow-sm hover:shadow-md hover:scale-[1.01] relative overflow-hidden"
-          >
-            {/* Background Accent */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-interaction/10 transition-colors" />
+        {loading ? (
+          <div className="col-span-full py-20 flex justify-center">
+            <div className="w-12 h-12 border-4 border-interaction border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : customers.length === 0 ? (
+          <div className="col-span-full py-20 text-center space-y-4">
+            <p className="text-2xl font-black uppercase italic tracking-tighter text-foreground/40">Không tìm thấy khách hàng</p>
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="text-interaction font-bold uppercase text-xs tracking-widest hover:underline"
+            >
+              Đăng ký thành viên mới ngay
+            </button>
+          </div>
+        ) : (
+          customers.map((customer, idx) => {
+            const tier = getTier(Number(customer.points));
+            return (
+              <motion.div
+                key={customer.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="group bg-surface border border-foreground/10 rounded-3xl p-10 flex flex-col md:flex-row gap-10 transition-all shadow-sm hover:shadow-md hover:scale-[1.01] relative overflow-hidden"
+              >
+                {/* Background Accent */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-interaction/10 transition-colors" />
 
-            {/* Profile Info */}
-            <div className="flex flex-col items-center gap-6 md:w-48 shrink-0">
-              <div className="w-24 h-24 rounded-2xl bg-foreground border border-foreground/10 overflow-hidden shadow-sm relative group-hover:rotate-3 transition-transform">
-                <div className="w-full h-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-4xl font-black text-foreground italic">{customer.name.charAt(0)}</span>
-                </div>
-              </div>
-              <div className={`px-4 py-1.5 rounded-xl border text-[10px] font-black uppercase italic tracking-widest shadow-sm ${getTierColor(customer.tier)}`}>
-                {customer.tier}
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 space-y-8">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-3xl font-black uppercase italic tracking-tighter text-foreground group-hover:text-interaction transition-colors leading-none mb-2">
-                    {customer.name}
-                  </h3>
-                  <div className="flex flex-wrap gap-4 text-foreground/40 font-bold text-sm italic">
-                    <span className="flex items-center gap-2"><Phone size={14} className="text-primary" /> {customer.phone}</span>
-                    <span className="flex items-center gap-2"><Mail size={14} className="text-primary" /> {customer.email}</span>
+                {/* Profile Info */}
+                <div className="flex flex-col items-center gap-6 md:w-48 shrink-0">
+                  <div className="w-24 h-24 rounded-2xl bg-foreground/5 border border-foreground/10 overflow-hidden shadow-sm relative group-hover:rotate-3 transition-transform">
+                    <div className="w-full h-full bg-primary flex items-center justify-center">
+                      <span className="text-4xl font-black text-background italic">{customer.name.charAt(0)}</span>
+                    </div>
+                  </div>
+                  <div className={`px-4 py-1.5 rounded-xl border text-[10px] font-black uppercase italic tracking-widest shadow-sm ${getTierColor(tier)}`}>
+                    {tier}
                   </div>
                 </div>
-                <button className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-foreground/5 transition-colors">
-                  <MoreVertical size={20} />
-                </button>
-              </div>
 
-              {/* Stats Bar */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 p-6 bg-background rounded-2xl border border-foreground/5">
-                <div>
-                  <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">Điểm tích lũy</p>
-                  <p className="text-xl font-black italic tracking-tighter text-foreground">{customer.points.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">Tổng chi tiêu</p>
-                  <p className="text-xl font-black italic tracking-tighter text-foreground">{(customer.totalSpent / 1000000).toFixed(1)}M</p>
-                </div>
-                <div className="hidden md:block">
-                  <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">Số đơn hàng</p>
-                  <p className="text-xl font-black italic tracking-tighter text-foreground">{customer.orders}</p>
-                </div>
-              </div>
+                {/* Content */}
+                <div className="flex-1 space-y-8">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-3xl font-black uppercase italic tracking-tighter text-foreground group-hover:text-interaction transition-colors leading-none mb-2">
+                        {customer.name}
+                      </h3>
+                      <div className="flex flex-wrap gap-4 text-foreground/40 font-bold text-sm italic">
+                        <span className="flex items-center gap-2"><Phone size={14} className="text-primary" /> {customer.phone}</span>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => console.log('More options for:', customer.name)}
+                      className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-foreground/5 transition-colors"
+                    >
+                      <MoreVertical size={20} className="text-foreground/40" />
+                    </button>
+                  </div>
 
-              {/* Footer Info */}
-              <div className="flex items-center justify-between pt-4 border-t-2 border-foreground/5">
-                <div className="flex items-center gap-2 text-foreground/30 font-black uppercase text-[10px] tracking-widest italic">
-                  <Calendar size={14} />
-                  <span>Ghé thăm: {customer.lastVisit}</span>
+                  {/* Stats Bar */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6 p-6 bg-background rounded-2xl border border-foreground/5">
+                    <div>
+                      <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">Điểm tích lũy</p>
+                      <p className="text-xl font-black italic tracking-tighter text-foreground">{Number(customer.points).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">Tổng chi tiêu</p>
+                      <p className="text-xl font-black italic tracking-tighter text-foreground">0M</p>
+                    </div>
+                    <div className="hidden md:block">
+                      <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">Số đơn hàng</p>
+                      <p className="text-xl font-black italic tracking-tighter text-foreground">0</p>
+                    </div>
+                  </div>
+
+                  {/* Footer Info */}
+                  <div className="flex items-center justify-between pt-4 border-t-2 border-foreground/5">
+                    <div className="flex items-center gap-2 text-foreground/30 font-black uppercase text-[10px] tracking-widest italic">
+                      <Calendar size={14} />
+                      <span>Tham gia: {customer.createdAt ? format(new Date(Number(customer.createdAt.seconds) * 1000), 'dd/MM/yyyy') : '-'}</span>
+                    </div>
+                    <button 
+                      onClick={() => console.log('View details for:', customer.name)}
+                      className="flex items-center gap-2 text-interaction font-black uppercase text-xs italic tracking-tighter group-hover:translate-x-2 transition-transform"
+                    >
+                      Chi tiết 
+                      <ChevronRight size={14} className="stroke-[3]" />
+                    </button>
+                  </div>
                 </div>
-                <button className="flex items-center gap-2 text-interaction font-black uppercase text-xs italic tracking-tighter group-hover:translate-x-2 transition-transform">
-                  Chi tiết 
-                  <ChevronRight size={16} className="stroke-[3]" />
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+              </motion.div>
+            );
+          })
+        )}
       </div>
 
       {/* AI Recommendation Footer */}
@@ -243,7 +259,7 @@ export default function CustomersPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => {
-          // Re-fetch or refresh mock data
+          fetchCustomers();
         }}
       />
     </div>

@@ -26,6 +26,8 @@ import RevenueChart from '@/components/dashboard/RevenueChart';
 import TopProducts from '@/components/dashboard/TopProducts';
 import DashboardFilters, { DateRange } from '@/components/dashboard/DashboardFilters';
 
+import StatusBadge from '@/components/ui/StatusBadge';
+
 export default function DashboardPage() {
   const { token, tenantId } = useAuth();
   
@@ -218,6 +220,7 @@ export default function DashboardPage() {
               <AlertTriangle className="w-6 h-6 stroke-[3]" />
               Cảnh báo kho
             </h3>
+            <StatusBadge status="coming-soon" className="mb-6" />
             <div className="space-y-4">
               <StockAlertItem name="Cà phê Robusta" stock="2.5kg" min="5.0kg" />
               <StockAlertItem name="Sữa đặc Lon" stock="8 lon" min="12 lon" />
@@ -236,10 +239,13 @@ export default function DashboardPage() {
             <ShoppingCart className="w-6 h-6 stroke-[3] text-interaction" />
             Giao dịch mới nhất
           </h3>
-          <Link href="/dashboard/orders" className="text-xs font-black uppercase tracking-widest text-foreground/40 hover:text-interaction transition-all flex items-center gap-2">
-            TẤT CẢ ĐƠN HÀNG
-            <ArrowUpRight className="w-4 h-4" />
-          </Link>
+          <div className="flex items-center gap-4">
+            <StatusBadge status="demo" />
+            <Link href="/dashboard/orders" className="text-xs font-black uppercase tracking-widest text-foreground/40 hover:text-interaction transition-all flex items-center gap-2">
+              TẤT CẢ ĐƠN HÀNG
+              <ArrowUpRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">

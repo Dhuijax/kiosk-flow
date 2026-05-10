@@ -11,7 +11,7 @@ use proto_gen::order::{
     OrderStatus as ProtoOrderStatus, OrderItemStatus as ProtoOrderItemStatus
 };
 use proto_gen::common::Money;
-use infra::repository::{OrderRepository, ProductRepository, InventoryRepository, ToppingRepository};
+use infra::repository::{OrderRepository, ProductRepository, InventoryRepository, ToppingRepository, TableRepository};
 use domain::models::inventory::InventoryTransactionType;
 use domain::models::order::{Order as DomainOrder, OrderItem as DomainOrderItem, OrderItemTopping as DomainOrderItemTopping, OrderStatus as DomainOrderStatus, OrderItemStatus as DomainOrderItemStatus};
 use infra::security::Claims;
@@ -27,6 +27,7 @@ pub struct OrderServiceImpl {
     product_repo: Arc<ProductRepository>,
     topping_repo: Arc<ToppingRepository>,
     inventory_repo: Arc<InventoryRepository>,
+    table_repo: Arc<TableRepository>,
     redis: ConnectionManager,
 }
 
@@ -39,8 +40,8 @@ struct OrderEvent {
 }
 
 impl OrderServiceImpl {
-    pub fn new(order_repo: Arc<OrderRepository>, product_repo: Arc<ProductRepository>, topping_repo: Arc<ToppingRepository>, inventory_repo: Arc<InventoryRepository>, redis: ConnectionManager) -> Self {
-        Self { order_repo, product_repo, topping_repo, inventory_repo, redis }
+    pub fn new(order_repo: Arc<OrderRepository>, product_repo: Arc<ProductRepository>, topping_repo: Arc<ToppingRepository>, inventory_repo: Arc<InventoryRepository>, table_repo: Arc<TableRepository>, redis: ConnectionManager) -> Self {
+        Self { order_repo, product_repo, topping_repo, inventory_repo, table_repo, redis }
     }
 
     fn get_context<T>(&self, request: &Request<T>) -> Result<(Uuid, Uuid), Status> {
@@ -134,6 +135,26 @@ impl OrderService for OrderServiceImpl {
             domain_items.push((domain_item, domain_toppings));
         }
 
+        let customer_id = if !req.customer_id.is_empty() {
+            Some(Uuid::parse_str(&req.customer_id).map_err(|_| Status::invalid_argument("Invalid customer_id"))?)
+        } else {
+            None
+        };
+
+        let guest_id = if customer_id.is_none() {
+            let table_name = if let Some(tid) = table_id {
+                self.table_repo.find_by_id(&tenant_id, &tid).await
+                    .ok().flatten()
+                    .map(|t| t.name)
+                    .unwrap_or_else(|| "TA".to_string())
+            } else {
+                "TA".to_string()
+            };
+            Some(format!("{}_{}", table_name, Utc::now().format("%Y%m%d%H%M%S")))
+        } else {
+            None
+        };
+
         let order = DomainOrder {
             id: Uuid::new_v4(),
             tenant_id,
@@ -142,6 +163,9 @@ impl OrderService for OrderServiceImpl {
             order_number: "".to_string(), // set by repo
             status: DomainOrderStatus::Draft,
             customer_name: Some(req.customer_name),
+            customer_id,
+            cashier_name: None, // Set at payment
+            guest_id,
             subtotal: total_price.clone(),
             tax_amount: BigDecimal::zero(),
             discount_amount: BigDecimal::zero(),
@@ -358,6 +382,9 @@ fn map_domain_to_proto(order: DomainOrder, items: Vec<(DomainOrderItem, Vec<Doma
         order_number: order.order_number,
         status: map_domain_status_to_proto(order.status) as i32,
         customer_name: order.customer_name.unwrap_or_default(),
+        customer_id: order.customer_id.map(|id| id.to_string()).unwrap_or_default(),
+        cashier_name: order.cashier_name.unwrap_or_default(),
+        guest_id: order.guest_id.unwrap_or_default(),
         subtotal: map_money_to_proto(order.subtotal),
         tax_amount: map_money_to_proto(order.tax_amount),
         discount_amount: map_money_to_proto(order.discount_amount),

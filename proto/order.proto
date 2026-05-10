@@ -63,6 +63,9 @@ message Order {
   string order_number = 4;
   OrderStatus status = 5;
   string customer_name = 6;
+  string customer_id = 16;
+  string cashier_name = 17;
+  string guest_id = 18;
   common.Money subtotal = 7;
   common.Money tax_amount = 8;
   common.Money discount_amount = 9;
@@ -77,6 +80,7 @@ message CreateOrderRequest {
   string branch_id = 1;
   string table_id = 2;
   string customer_name = 3;
+  string customer_id = 6;
   string note = 4;
   repeated OrderItemRequest items = 5;
 }

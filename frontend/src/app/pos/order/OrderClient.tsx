@@ -14,6 +14,7 @@ import { OrderService } from '@/gen/order_connect';
 import { PaymentService } from '@/gen/payment_connect';
 import { PaymentMethod } from '@/gen/payment_pb';
 import PaymentModal from '@/components/pos/PaymentModal';
+import { Customer } from '@/gen/customer_pb';
 
 export default function OrderClient() {
   const { token, tenantId, branchId } = useAuth();
@@ -23,6 +24,7 @@ export default function OrderClient() {
   const [status, setStatus] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   const handleCheckout = () => {
     if (!token || !tenantId || !branchId || items.length === 0) {
@@ -44,7 +46,8 @@ export default function OrderClient() {
       const response = await orderClient.createOrder({
         branchId,
         tableId: tableId || "",
-        customerName: "Kiosk Customer",
+        customerName: selectedCustomer?.name || "Kiosk Customer",
+        customerId: selectedCustomer?.id || "",
         note: "",
         items: items.map(item => ({
           productId: item.productId,
@@ -68,6 +71,7 @@ export default function OrderClient() {
 
       setStatus({ message: 'Thanh toán & Đặt hàng thành công!', type: 'success' });
       clearCart();
+      setSelectedCustomer(null);
       setIsPaymentModalOpen(false);
       setTimeout(() => setStatus(null), 3000);
     } catch (err) {
@@ -154,7 +158,11 @@ export default function OrderClient() {
 
         {/* Right Side: Order Summary */}
         <div className="w-[480px] flex-none">
-          <OrderSummary onCheckout={handleCheckout} />
+          <OrderSummary 
+            onCheckout={handleCheckout} 
+            selectedCustomer={selectedCustomer}
+            onCustomerSelect={setSelectedCustomer}
+          />
         </div>
       </div>
 

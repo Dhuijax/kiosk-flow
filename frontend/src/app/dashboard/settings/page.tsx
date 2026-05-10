@@ -16,6 +16,7 @@ import AppearanceSettings from '@/components/dashboard/settings/AppearanceSettin
 import NotificationSettings from '@/components/dashboard/settings/NotificationSettings';
 import SecuritySettings from '@/components/dashboard/settings/SecuritySettings';
 import KioskSettings from '@/components/dashboard/settings/KioskSettings';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 type SettingsTab = 'store' | 'appearance' | 'notifications' | 'security' | 'kiosk';
 
@@ -33,7 +34,7 @@ export default function SettingsPage() {
     { id: 'appearance', name: 'Giao diện', icon: Palette },
     { id: 'notifications', name: 'Thông báo', icon: Bell },
     { id: 'security', name: 'Bảo mật', icon: Shield },
-    { id: 'kiosk', name: 'Thiết bị Kiosk', icon: Smartphone },
+    { id: 'kiosk', name: 'Thiết bị Kiosk', icon: Smartphone, status: 'coming-soon' as const },
   ] as const;
 
   const renderContent = () => {
@@ -64,20 +65,23 @@ export default function SettingsPage() {
           </p>
         </div>
         
-        <button 
-          onClick={handleSave}
-          disabled={saving}
-          className="btn-dynamic py-5 px-10 text-lg min-w-[240px] flex items-center justify-center"
-        >
-          {saving ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
-          ) : (
-            <>
-              <Save className="w-6 h-6" />
-              <span>LƯU THAY ĐỔI</span>
-            </>
-          )}
-        </button>
+        <div className="flex flex-col items-end gap-3">
+          <button 
+            onClick={handleSave}
+            disabled={saving}
+            className="btn-dynamic py-5 px-10 text-lg min-w-[240px] flex items-center justify-center"
+          >
+            {saving ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              <>
+                <Save className="w-6 h-6" />
+                <span>LƯU THAY ĐỔI</span>
+              </>
+            )}
+          </button>
+          <StatusBadge status="demo" />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
@@ -91,15 +95,18 @@ export default function SettingsPage() {
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
                   className={`
-                    w-full flex items-center gap-4 px-6 py-5 rounded-2xl transition-all duration-300 border font-black uppercase italic tracking-tighter text-sm
+                    w-full flex items-center justify-between px-6 py-5 rounded-2xl transition-all duration-300 border font-black uppercase italic tracking-tighter text-sm
                     ${isActive 
                       ? 'bg-interaction text-white border-interaction shadow-md scale-[1.02]' 
                       : 'text-foreground/40 border-transparent hover:bg-foreground/5 hover:text-foreground'
                     }
                   `}
                 >
-                  <item.icon className={`w-6 h-6 stroke-[3] ${isActive ? 'text-white' : ''}`} />
-                  {item.name}
+                  <div className="flex items-center gap-4">
+                    <item.icon className={`w-6 h-6 stroke-[3] ${isActive ? 'text-white' : ''}`} />
+                    {item.name}
+                  </div>
+                  {'status' in item && <StatusBadge status={item.status} className={isActive ? "bg-white/20 text-white border-white/20" : ""} />}
                 </button>
               );
             })}

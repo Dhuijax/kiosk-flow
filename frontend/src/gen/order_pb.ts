@@ -312,6 +312,21 @@ export class Order extends Message<Order> {
   customerName = "";
 
   /**
+   * @generated from field: string customer_id = 16;
+   */
+  customerId = "";
+
+  /**
+   * @generated from field: string cashier_name = 17;
+   */
+  cashierName = "";
+
+  /**
+   * @generated from field: string guest_id = 18;
+   */
+  guestId = "";
+
+  /**
    * @generated from field: common.Money subtotal = 7;
    */
   subtotal?: Money;
@@ -366,6 +381,9 @@ export class Order extends Message<Order> {
     { no: 4, name: "order_number", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 5, name: "status", kind: "enum", T: proto3.getEnumType(OrderStatus) },
     { no: 6, name: "customer_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 16, name: "customer_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 17, name: "cashier_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 18, name: "guest_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 7, name: "subtotal", kind: "message", T: Money },
     { no: 8, name: "tax_amount", kind: "message", T: Money },
     { no: 9, name: "discount_amount", kind: "message", T: Money },
@@ -413,6 +431,11 @@ export class CreateOrderRequest extends Message<CreateOrderRequest> {
   customerName = "";
 
   /**
+   * @generated from field: string customer_id = 6;
+   */
+  customerId = "";
+
+  /**
    * @generated from field: string note = 4;
    */
   note = "";
@@ -433,6 +456,7 @@ export class CreateOrderRequest extends Message<CreateOrderRequest> {
     { no: 1, name: "branch_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "table_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "customer_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "customer_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "note", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 5, name: "items", kind: "message", T: OrderItemRequest, repeated: true },
   ]);

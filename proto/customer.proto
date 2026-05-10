@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package customer;
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+service CustomerService {
+  rpc RegisterCustomer (RegisterCustomerRequest) returns (CustomerResponse);
+  rpc GetCustomer (GetCustomerRequest) returns (CustomerResponse);
+  rpc FindCustomerByPhone (FindCustomerByPhoneRequest) returns (CustomerResponse);
+  rpc ListCustomers (ListCustomersRequest) returns (ListCustomersResponse);
+  rpc UpdateCustomer (UpdateCustomerRequest) returns (CustomerResponse);
+  rpc GetTransactionHistory (GetTransactionHistoryRequest) returns (TransactionHistoryResponse);
+}
+
+message Customer {
+  string id = 1;
+  string phone = 2;
+  string name = 3;
+  int32 points = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message RegisterCustomerRequest {
+  string phone = 1;
+  string name = 2;
+}
+
+message GetCustomerRequest {
+  string id = 1;
+}
+
+message FindCustomerByPhoneRequest {
+  string phone = 1;
+}
+
+message ListCustomersRequest {
+  string search_query = 1;
+  common.PaginationRequest pagination = 2;
+}
+
+message ListCustomersResponse {
+  repeated Customer customers = 1;
+  common.PaginationResponse pagination = 2;
+}
+
+message UpdateCustomerRequest {
+  string id = 1;
+  optional string name = 2;
+  optional string phone = 3;
+}
+
+message CustomerResponse {
+  Customer customer = 1;
+}
+
+message GetTransactionHistoryRequest {
+  string customer_id = 1;
+  google.protobuf.Timestamp start_date = 2;
+}
+
+message Transaction {
+  string id = 1;
+  string order_number = 2;
+  common.Money total = 3;
+  google.protobuf.Timestamp created_at = 4;
+  string cashier_name = 5;
+}
+
+message TransactionHistoryResponse {
+  repeated Transaction transactions = 1;
+}

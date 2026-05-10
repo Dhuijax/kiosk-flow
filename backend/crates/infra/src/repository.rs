@@ -794,6 +794,25 @@ impl TableRepository {
         Ok(created)
     }
 
+    pub async fn find_by_id(&self, tenant_id: &Uuid, id: &Uuid) -> Result<Option<Table>> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        let table = sqlx::query_as!(
+            Table,
+            r#"
+            SELECT id, tenant_id, branch_id, floor_plan_id, name, capacity, position_x, position_y, status as "status: _", current_order_id, created_at as "created_at!", updated_at as "updated_at!"
+            FROM tables
+            WHERE id = $1
+            "#,
+            id
+        )
+        .fetch_optional(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(table)
+    }
+
     pub async fn list_by_floor_plan(&self, tenant_id: &Uuid, floor_plan_id: &Uuid) -> Result<Vec<Table>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
@@ -1261,9 +1280,9 @@ impl PaymentRepository {
         // 1. Create Payment
         let created: Payment = sqlx::query_as(
             r#"
-            INSERT INTO payments (id, tenant_id, branch_id, order_id, method, amount, received_amount, change_amount, transaction_ref, status, paid_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-            RETURNING id, tenant_id, branch_id, order_id, method as "method: _", amount, received_amount, change_amount, transaction_ref, status as "status: _", paid_at
+            INSERT INTO payments (id, tenant_id, branch_id, order_id, method, amount, received_amount, change_amount, transaction_ref, status, paid_at, created_by)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            RETURNING id, tenant_id, branch_id, order_id, method as "method: _", amount, received_amount, change_amount, transaction_ref, status as "status: _", paid_at, created_by
             "#
         )
         .bind(payment.id)
@@ -1277,6 +1296,7 @@ impl PaymentRepository {
         .bind(&payment.transaction_ref)
         .bind(&payment.status)
         .bind(payment.paid_at)
+        .bind(payment.created_by)
         .fetch_one(&mut *tx)
         .await?;
 
@@ -1298,9 +1318,9 @@ impl PaymentRepository {
 
         let created: Payment = sqlx::query_as(
             r#"
-            INSERT INTO payments (id, tenant_id, branch_id, order_id, method, amount, received_amount, change_amount, transaction_ref, status, paid_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-            RETURNING id, tenant_id, branch_id, order_id, method as "method: _", amount, received_amount, change_amount, transaction_ref, status as "status: _", paid_at
+            INSERT INTO payments (id, tenant_id, branch_id, order_id, method, amount, received_amount, change_amount, transaction_ref, status, paid_at, created_by)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            RETURNING id, tenant_id, branch_id, order_id, method as "method: _", amount, received_amount, change_amount, transaction_ref, status as "status: _", paid_at, created_by
             "#
         )
         .bind(payment.id)
@@ -1314,6 +1334,7 @@ impl PaymentRepository {
         .bind(&payment.transaction_ref)
         .bind(&payment.status)
         .bind(payment.paid_at)
+        .bind(payment.created_by)
         .fetch_one(&mut *tx)
         .await?;
 
@@ -1326,7 +1347,7 @@ impl PaymentRepository {
 
         let payment: Option<Payment> = sqlx::query_as(
             r#"
-            SELECT id, tenant_id, branch_id, order_id, method as "method: _", amount, received_amount, change_amount, transaction_ref, status as "status: _", paid_at
+            SELECT id, tenant_id, branch_id, order_id, method as "method: _", amount, received_amount, change_amount, transaction_ref, status as "status: _", paid_at, created_by
             FROM payments WHERE id = $1
             "#
         )
@@ -1343,7 +1364,7 @@ impl PaymentRepository {
 
         let payment: Option<Payment> = sqlx::query_as(
             r#"
-            SELECT id, tenant_id, branch_id, order_id, method as "method: _", amount, received_amount, change_amount, transaction_ref, status as "status: _", paid_at
+            SELECT id, tenant_id, branch_id, order_id, method as "method: _", amount, received_amount, change_amount, transaction_ref, status as "status: _", paid_at, created_by
             FROM payments WHERE order_id = $1
             "#
         )
@@ -1360,7 +1381,7 @@ impl PaymentRepository {
 
         let payments: Vec<Payment> = sqlx::query_as(
             r#"
-            SELECT id, tenant_id, branch_id, order_id, method as "method: _", amount, received_amount, change_amount, transaction_ref, status as "status: _", paid_at
+            SELECT id, tenant_id, branch_id, order_id, method as "method: _", amount, received_amount, change_amount, transaction_ref, status as "status: _", paid_at, created_by
             FROM payments 
             WHERE branch_id = $1
             ORDER BY paid_at DESC

@@ -34,5 +34,6 @@ pub struct Payment {
     pub change_amount: BigDecimal,
     pub transaction_ref: Option<String>,
     pub status: PaymentStatus,
+    pub created_by: Uuid,
     pub paid_at: DateTime<Utc>,
 }

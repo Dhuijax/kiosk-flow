@@ -2,9 +2,8 @@ import psycopg2
 import os
 import sys
 
-# URL từ file .env
 DATABASE_URL = "postgresql://neondb_owner:npg_hT4PreflZx7v@ep-mute-haze-aot6awnb.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
-MIGRATION_FILE = "migrations/0007_inventory_service.sql"
+MIGRATION_FILE = "migrations/0009_add_payment_created_by.sql"
 
 def run_migration():
     try:

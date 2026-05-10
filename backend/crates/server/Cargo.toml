@@ -20,3 +20,4 @@ tonic-reflection = { workspace = true }
 domain = { path = "../domain" }
 uuid = { workspace = true }
 chrono = { workspace = true }
+rand = { workspace = true }

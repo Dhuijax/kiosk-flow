@@ -22,11 +22,13 @@ use services::payment::PaymentServiceImpl;
 use services::report::ReportServiceImpl;
 use services::status::StatusServiceImpl;
 use proto_gen::status::status_service_server::StatusServiceServer;
+use proto_gen::customer::customer_service_server::CustomerServiceServer;
+use services::customer::CustomerServiceImpl;
 
 use infra::middleware::get_auth_interceptor;
 
 use infra::db::create_pool;
-use infra::repository::{UserRepository, TenantRepository, CategoryRepository, ProductRepository, ToppingRepository, TableRepository, FloorPlanRepository, OrderRepository, PaymentRepository, InventoryRepository, ReportRepository};
+use infra::repository::{UserRepository, TenantRepository, CategoryRepository, ProductRepository, ToppingRepository, TableRepository, FloorPlanRepository, OrderRepository, PaymentRepository, InventoryRepository, ReportRepository, CustomerRepository};
 use infra::security::SecurityService;
 use std::sync::Arc;
 use dotenvy::dotenv;
@@ -63,6 +65,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let payment_repo = Arc::new(PaymentRepository::new(pool.clone()));
     let inventory_repo = Arc::new(InventoryRepository::new(pool.clone()));
     let report_repo = Arc::new(ReportRepository::new(pool.clone()));
+    let customer_repo = Arc::new(CustomerRepository::new(pool.clone()));
 
     // 3. Initialize Services
     let auth_service = AuthServiceImpl::new(user_repo.clone(), tenant_repo.clone(), security.clone());
@@ -71,9 +74,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let category_service = CategoryServiceImpl::new(category_repo.clone());
     let product_service = ProductServiceImpl::new(product_repo.clone(), topping_repo.clone());
     let table_service = TableServiceImpl::new(table_repo.clone(), floor_plan_repo.clone());
-    let order_service = OrderServiceImpl::new(order_repo.clone(), product_repo.clone(), topping_repo.clone(), inventory_repo.clone(), redis_manager.clone());
-    let payment_service = PaymentServiceImpl::new(payment_repo.clone(), order_repo.clone());
+    let order_service = OrderServiceImpl::new(order_repo.clone(), product_repo.clone(), topping_repo.clone(), inventory_repo.clone(), table_repo.clone(), redis_manager.clone());
+    let payment_service = PaymentServiceImpl::new(payment_repo.clone(), order_repo.clone(), customer_repo.clone(), user_repo.clone());
     let report_service = ReportServiceImpl::new(report_repo.clone());
+    let customer_service = CustomerServiceImpl::new(customer_repo.clone(), order_repo.clone());
     let status_service = StatusServiceImpl::new();
 
     let auth_interceptor = get_auth_interceptor(config.jwt_secret.clone());
@@ -86,7 +90,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let table_server = TableServiceServer::with_interceptor(table_service, auth_interceptor.clone());
     let order_server = OrderServiceServer::with_interceptor(order_service, auth_interceptor.clone());
     let payment_server = PaymentServiceServer::with_interceptor(payment_service, auth_interceptor.clone());
-    let report_server = ReportServiceServer::with_interceptor(report_service, auth_interceptor);
+    let report_server = ReportServiceServer::with_interceptor(report_service, auth_interceptor.clone());
+    let customer_server = CustomerServiceServer::with_interceptor(customer_service, auth_interceptor.clone());
     let status_server = StatusServiceServer::new(status_service);
 
     // 4. Setup gRPC Reflection
@@ -141,6 +146,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let order_server = tonic_web::enable(order_server);
     let payment_server = tonic_web::enable(payment_server);
     let report_server = tonic_web::enable(report_server);
+    let customer_server = tonic_web::enable(customer_server);
     let status_server = tonic_web::enable(status_server);
 
     router
@@ -154,6 +160,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(order_server)
         .add_service(payment_server)
         .add_service(report_server)
+        .add_service(customer_server)
         .add_service(status_server)
         .serve(addr)
         .await?;

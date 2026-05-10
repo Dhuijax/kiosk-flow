@@ -1850,6 +1850,7 @@ dependencies = [
  "http",
  "infra",
  "proto-gen",
+ "rand",
  "services",
  "sqlx",
  "tokio",

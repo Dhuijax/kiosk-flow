@@ -43,7 +43,7 @@ impl PaymentServiceImpl {
 #[tonic::async_trait]
 impl PaymentService for PaymentServiceImpl {
     async fn process_payment(&self, request: Request<ProcessPaymentRequest>) -> Result<Response<PaymentResponse>, Status> {
-        let (tenant_id, _) = self.get_context(&request)?;
+        let (tenant_id, user_id) = self.get_context(&request)?;
         let req = request.into_inner();
 
         let order_id = Uuid::parse_str(&req.order_id).map_err(|_| Status::invalid_argument("Invalid order_id"))?;
@@ -86,6 +86,7 @@ impl PaymentService for PaymentServiceImpl {
             change_amount,
             transaction_ref: Some(req.transaction_ref),
             status: DomainPaymentStatus::Completed,
+            created_by: user_id,
             paid_at: Utc::now(),
         };
 

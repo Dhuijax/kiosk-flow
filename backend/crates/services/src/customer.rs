@@ -94,7 +94,8 @@ impl CustomerService for CustomerServiceImpl {
         let tenant_id = self.get_context(&request)?;
         let req = request.into_inner();
 
-        let customers = self.customer_repo.list(&tenant_id, Some(req.search_query)).await
+        let search = if req.search_query.trim().is_empty() { None } else { Some(req.search_query) };
+        let customers = self.customer_repo.list(&tenant_id, search).await
             .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(ListCustomersResponse {

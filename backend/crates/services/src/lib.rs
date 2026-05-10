@@ -10,3 +10,4 @@ pub mod product;
 pub mod table;
 pub mod payment;
 pub mod report;
+pub mod customer;

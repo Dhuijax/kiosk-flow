@@ -42,4 +42,8 @@ pub mod status {
     tonic::include_proto!("status");
 }
 
+pub mod customer {
+    tonic::include_proto!("customer");
+}
+
 pub const FILE_DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("kioskflow_descriptor");

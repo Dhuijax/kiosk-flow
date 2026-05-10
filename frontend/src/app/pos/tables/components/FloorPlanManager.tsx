@@ -101,7 +101,7 @@ export default function FloorPlanManager() {
       {/* Header with Area Selector and Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-surface border border-foreground/10 rounded-3xl shadow-sm">
         <div className="flex items-center gap-4 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-          <div className="p-2.5 bg-primary/10 border-2 border-primary/20 rounded-xl text-primary">
+          <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-xl text-primary">
             <MapIcon size={20} />
           </div>
           <div className="whitespace-nowrap mr-2">

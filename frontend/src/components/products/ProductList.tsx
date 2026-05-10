@@ -19,14 +19,15 @@ import { useAuth } from '@/lib/auth/AuthContext';
 interface ProductListProps {
   selectedCategoryId: string | null;
   onEdit: (product: Product) => void;
+  viewMode?: 'list' | 'grid';
 }
 
-export default function ProductList({ selectedCategoryId, onEdit }: ProductListProps) {
+export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'list' }: ProductListProps) {
   const { token, tenantId } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(viewMode === 'grid' ? 12 : 10);
   const [totalItems, setTotalItems] = useState(0);
 
   const fetchProducts = useCallback(async () => {
@@ -104,40 +105,79 @@ export default function ProductList({ selectedCategoryId, onEdit }: ProductListP
         </div>
       </div>
 
-      {/* Table Area */}
+      {/* Content Area */}
       <div className="ai-card p-0 overflow-hidden flex-1 flex flex-col">
-        <div className="overflow-x-auto flex-1">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-foreground/5 text-foreground/40 text-[10px] font-black uppercase tracking-[0.2em]">
-                <th className="px-8 py-6">Món ăn</th>
-                <th className="px-8 py-6">Mã SKU</th>
-                <th className="px-8 py-6">Giá & Vốn</th>
-                <th className="px-8 py-6 text-center">Trạng thái</th>
-                <th className="px-8 py-6 text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y-4 divide-foreground/5">
-              {loading && products.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-8 py-32 text-center">
-                    <div className="flex flex-col items-center gap-6">
-                      <div className="w-16 h-16 border-8 border-interaction border-t-transparent rounded-full animate-spin"></div>
-                      <p className="text-xl font-black uppercase italic tracking-tighter opacity-20">Đang truy xuất dữ liệu...</p>
+        {loading && products.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center py-32 gap-6">
+            <div className="w-16 h-16 border-8 border-interaction border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-xl font-black uppercase italic tracking-tighter opacity-20">Đang truy xuất dữ liệu...</p>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center py-32 gap-6 opacity-20">
+            <Package className="w-20 h-20" />
+            <p className="text-xl font-black uppercase italic tracking-tighter">Chưa có món nào được niêm yết</p>
+          </div>
+        ) : viewMode === 'grid' ? (
+          <div className="flex-1 overflow-y-auto p-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {products.map((product) => (
+                <div key={product.id} className="bg-background border border-foreground/10 rounded-3xl p-6 group hover:border-interaction transition-all shadow-sm flex flex-col gap-4 relative">
+                  <div className="w-full aspect-square rounded-2xl bg-surface border border-foreground/5 overflow-hidden relative shadow-inner">
+                    {product.imageUrl ? (
+                      <Image src={product.imageUrl} alt={product.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center opacity-10">
+                        <Package className="w-16 h-16" />
+                      </div>
+                    )}
+                    <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100">
+                      <button 
+                        onClick={() => onEdit(product)}
+                        className="w-10 h-10 bg-white border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white shadow-md transition-all"
+                      >
+                        <Edit className="w-4 h-4 stroke-[3]" />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteProduct(product.id, product.name)}
+                        className="w-10 h-10 bg-white border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white shadow-md transition-all"
+                      >
+                        <Trash2 className="w-4 h-4 stroke-[3]" />
+                      </button>
                     </div>
-                  </td>
-                </tr>
-              ) : products.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-8 py-32 text-center">
-                    <div className="flex flex-col items-center gap-6 opacity-20">
-                      <Package className="w-20 h-20" />
-                      <p className="text-xl font-black uppercase italic tracking-tighter">Chưa có món nào được niêm yết</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-lg font-black text-foreground uppercase italic tracking-tighter leading-tight group-hover:text-interaction transition-colors">{product.name}</p>
+                    <p className="text-[10px] text-foreground/40 font-black uppercase tracking-widest">{product.sku || 'NO SKU'}</p>
+                  </div>
+                  <div className="mt-auto flex items-end justify-between border-t border-foreground/5 pt-4">
+                    <div>
+                      <p className="text-2xl font-black text-primary italic tracking-tighter leading-none">{formatCurrency(product.price?.units)}</p>
+                      <p className="text-[10px] text-foreground/40 font-black uppercase tracking-widest italic mt-1">{product.unit || 'PHẦN'}</p>
                     </div>
-                  </td>
+                    {product.isActive ? (
+                      <span className="w-3 h-3 rounded-full bg-interaction shadow-[0_0_10px_rgba(59,130,246,0.5)]" title="Đang bán" />
+                    ) : (
+                      <span className="w-3 h-3 rounded-full bg-foreground/10" title="Tạm ẩn" />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto flex-1">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-foreground/5 text-foreground/40 text-[10px] font-black uppercase tracking-[0.2em]">
+                  <th className="px-8 py-6">Món ăn</th>
+                  <th className="px-8 py-6">Mã SKU</th>
+                  <th className="px-8 py-6">Giá & Vốn</th>
+                  <th className="px-8 py-6 text-center">Trạng thái</th>
+                  <th className="px-8 py-6 text-right">Thao tác</th>
                 </tr>
-              ) : (
-                products.map((product) => (
+              </thead>
+              <tbody className="divide-y-4 divide-foreground/5">
+                {products.map((product) => (
                   <tr key={product.id} className="hover:bg-foreground/5 transition-all group cursor-pointer">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-6">
@@ -155,7 +195,7 @@ export default function ProductList({ selectedCategoryId, onEdit }: ProductListP
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <span className="text-xs font-black italic tracking-tighter text-foreground/40 bg-foreground/5 px-4 py-2 rounded-xl border-2 border-foreground/10 group-hover:border-foreground/40 transition-all">
+                      <span className="text-xs font-black italic tracking-tighter text-foreground/40 bg-foreground/5 px-4 py-2 rounded-xl border border-foreground/10 group-hover:border-foreground/40 transition-all">
                         {product.sku || 'CHƯA CÓ'}
                       </span>
                     </td>
@@ -166,11 +206,11 @@ export default function ProductList({ selectedCategoryId, onEdit }: ProductListP
                     <td className="px-8 py-6">
                       <div className="flex justify-center">
                         {product.isActive ? (
-                          <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-interaction text-white border border-foreground uppercase italic tracking-tighter shadow-sm">
+                          <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-interaction text-white border border-foreground/10 uppercase italic tracking-tighter shadow-sm">
                             Đang bán
                           </span>
                         ) : (
-                          <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-foreground/10 text-foreground/40 border-2 border-foreground/10 uppercase italic tracking-tighter">
+                          <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-foreground/10 text-foreground/40 border border-foreground/10 uppercase italic tracking-tighter">
                             Tạm ẩn
                           </span>
                         )}
@@ -196,11 +236,11 @@ export default function ProductList({ selectedCategoryId, onEdit }: ProductListP
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Footer / Pagination */}
         <div className="px-12 py-8 bg-foreground/5 border-t border-foreground/10 flex items-center justify-between">

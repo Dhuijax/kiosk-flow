@@ -9,3 +9,4 @@ target/
 
 # Generated Tailwind CSS
 frontend/src/app/tailwind.css
+/docs

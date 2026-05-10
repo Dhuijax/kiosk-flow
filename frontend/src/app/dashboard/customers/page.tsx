@@ -17,6 +17,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import AddCustomerModal from '@/components/customers/AddCustomerModal';
 
 const MOCK_CUSTOMERS = [
   {
@@ -76,6 +77,7 @@ const getTierColor = (tier: string) => {
 
 export default function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -91,7 +93,10 @@ export default function CustomersPage() {
           </h1>
           <p className="text-foreground/40 font-bold italic text-lg">Quản lý lòng trung thành và thấu hiểu hành vi khách hàng.</p>
         </div>
-        <button className="btn-dynamic px-10 py-5 text-xl">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="btn-dynamic px-10 py-5 text-xl"
+        >
           <Plus className="w-6 h-6 stroke-[4]" />
           <span>THÊM THÀNH VIÊN</span>
         </button>
@@ -233,6 +238,14 @@ export default function CustomersPage() {
           GỬI CHIẾN DỊCH NGAY
         </button>
       </div>
+
+      <AddCustomerModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => {
+          // Re-fetch or refresh mock data
+        }}
+      />
     </div>
   );
 }

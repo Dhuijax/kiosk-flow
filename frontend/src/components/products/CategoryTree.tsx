@@ -63,9 +63,9 @@ export default function CategoryTree({ onSelect, selectedId }: CategoryTreeProps
             <li key={category.id}>
               <div 
                 className={`
-                  flex items-center justify-between group px-4 py-3 rounded-xl cursor-pointer transition-all border-2
+                  flex items-center justify-between group px-4 py-3 rounded-xl cursor-pointer transition-all border
                   ${isSelected 
-                    ? 'bg-interaction text-white border-foreground shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]' 
+                    ? 'bg-interaction text-white border-interaction shadow-md scale-[1.02]' 
                     : 'bg-surface border-foreground/10 text-foreground/40 hover:border-foreground/40 hover:text-foreground'}
                 `}
                 onClick={() => onSelect(isSelected ? null : category.id)}
@@ -117,7 +117,7 @@ export default function CategoryTree({ onSelect, selectedId }: CategoryTreeProps
             setEditingCategory(undefined);
             setIsModalOpen(true);
           }}
-          className="w-10 h-10 bg-primary text-white border-2 border-foreground rounded-lg flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all"
+          className="w-10 h-10 bg-primary text-white border border-foreground/10 rounded-lg flex items-center justify-center shadow-sm hover:scale-105 hover:shadow-md transition-all"
         >
           <Plus className="w-6 h-6 stroke-[3]" />
         </button>
@@ -137,9 +137,9 @@ export default function CategoryTree({ onSelect, selectedId }: CategoryTreeProps
           <div className="space-y-3">
             <div 
               className={`
-                flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all border-2
+                flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all border
                 ${selectedId === null 
-                  ? 'bg-interaction text-white border-foreground shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]' 
+                  ? 'bg-interaction text-white border-interaction shadow-md scale-[1.02]' 
                   : 'bg-surface border-foreground/10 text-foreground/40 hover:border-foreground/40 hover:text-foreground'}
               `}
               onClick={() => onSelect(null)}

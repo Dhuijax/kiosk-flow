@@ -11,6 +11,7 @@ export default function ProductsPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleEditProduct = (product: Product) => {
@@ -44,10 +45,20 @@ export default function ProductsPage() {
         
         <div className="flex items-center gap-6 bg-surface p-4 border border-foreground/10 rounded-3xl shadow-sm">
           <div className="flex bg-background p-2 rounded-2xl border border-foreground/10">
-            <button className="w-12 h-12 bg-foreground text-background rounded-xl flex items-center justify-center shadow-sm transition-all">
+            <button 
+              onClick={() => setViewMode('list')}
+              className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-all ${
+                viewMode === 'list' ? 'bg-foreground text-background' : 'text-foreground/20 hover:text-foreground'
+              }`}
+            >
               <List className="w-6 h-6 stroke-[3]" />
             </button>
-            <button className="w-12 h-12 text-foreground/20 hover:text-foreground rounded-xl flex items-center justify-center transition-all">
+            <button 
+              onClick={() => setViewMode('grid')}
+              className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                viewMode === 'grid' ? 'bg-foreground text-background' : 'text-foreground/20 hover:text-foreground'
+              }`}
+            >
               <LayoutGrid className="w-6 h-6 stroke-[3]" />
             </button>
           </div>
@@ -77,6 +88,7 @@ export default function ProductsPage() {
             key={`${refreshTrigger}-${selectedCategoryId}`}
             selectedCategoryId={selectedCategoryId} 
             onEdit={handleEditProduct}
+            viewMode={viewMode}
           />
         </div>
       </div>

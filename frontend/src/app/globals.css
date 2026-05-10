@@ -9,7 +9,7 @@
   --color-surface: #ffffff;
   --color-muted: #e0dcd0;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui;
+  --font-sans: "Tahoma", sans-serif;
   --font-mono: "Roboto Mono", monospace;
 
   --radius-xl: 1.5rem;

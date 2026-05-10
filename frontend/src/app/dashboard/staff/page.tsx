@@ -27,6 +27,7 @@ export default function StaffPage() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<User | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
 
   const fetchStaff = useCallback(async (showLoading = true) => {
@@ -43,6 +44,16 @@ export default function StaffPage() {
       setLoading(false);
     }
   }, [token, tenantId]);
+
+  const handleEditStaff = (member: User) => {
+    setEditingStaff(member);
+    setIsModalOpen(true);
+  };
+
+  const handleAddStaff = () => {
+    setEditingStaff(undefined);
+    setIsModalOpen(true);
+  };
 
   useEffect(() => {
     if (token) queueMicrotask(() => fetchStaff(false));
@@ -103,7 +114,7 @@ export default function StaffPage() {
         </div>
         
         <button 
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleAddStaff}
           className="btn-dynamic px-8 py-4 group"
         >
           <UserPlus className="w-5 h-5 group-hover:rotate-12 transition-transform" />
@@ -165,7 +176,10 @@ export default function StaffPage() {
                 </div>
                 
                 <div className="flex gap-2">
-                  <button className="w-10 h-10 bg-background border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-sm">
+                  <button 
+                    onClick={() => handleEditStaff(member)}
+                    className="w-10 h-10 bg-background border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-sm"
+                  >
                     <Edit size={18} />
                   </button>
                   <button 
@@ -209,8 +223,12 @@ export default function StaffPage() {
 
       <AddStaffModal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingStaff(undefined);
+        }} 
         onSuccess={fetchStaff}
+        initialData={editingStaff}
       />
     </div>
   );

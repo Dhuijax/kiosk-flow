@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
-import { X, Save, AlertCircle } from 'lucide-react';
-import { useInventory } from '@/hooks/useInventory';
-import { UpdateStockRequest } from '@/gen/inventory_pb';
+'use client';
+
+import { useState } from 'react';
+import { X, RefreshCw, AlertCircle, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { getAuthenticatedClient } from '@/lib/grpc/client';
+import { InventoryService } from '@/gen/inventory_connect';
 
 interface StockAdjustmentModalProps {
   isOpen: boolean;
@@ -16,132 +20,149 @@ interface StockAdjustmentModalProps {
 }
 
 const REASON_OPTIONS = [
-  { value: 'Kiểm kho định kỳ', label: 'Kiểm kho định kỳ' },
-  { value: 'Hàng hỏng/Hết hạn', label: 'Hàng hỏng/Hết hạn' },
-  { value: 'Thất thoát', label: 'Thất thoát' },
-  { value: 'Hàng mẫu/Tặng', label: 'Hàng mẫu/Tặng' },
-  { value: 'Nhập hàng sai', label: 'Nhập hàng sai số lượng' },
-  { value: 'Khác', label: 'Lý do khác' },
+  { value: 'RESTOCK', label: 'Nhập hàng mới' },
+  { value: 'DAMAGED', label: 'Hàng hư hỏng' },
+  { value: 'EXPIRED', label: 'Hết hạn sử dụng' },
+  { value: 'LOST', label: 'Thất thoát' },
+  { value: 'CORRECTION', label: 'Điều chỉnh kiểm kho' },
+  { value: 'SALE_RETURN', label: 'Khách trả hàng' },
 ];
 
 export default function StockAdjustmentModal({ isOpen, onClose, onSuccess, product }: StockAdjustmentModalProps) {
-  const { updateStock, loading, error } = useInventory();
-  const [changeAmount, setChangeAmount] = useState<string>('');
-  const [reason, setReason] = useState(REASON_OPTIONS[0].value);
+  const { token, tenantId } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [changeAmount, setChangeAmount] = useState('');
+  const [reason, setReason] = useState('RESTOCK');
   const [note, setNote] = useState('');
 
   if (!isOpen || !product) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!token || !tenantId) return;
+
     const amount = parseFloat(changeAmount);
-    if (isNaN(amount) || amount === 0) return;
+    if (isNaN(amount) || amount === 0) {
+      setError('Vui lòng nhập số lượng hợp lệ');
+      return;
+    }
 
-    const request = new UpdateStockRequest({
-      productId: product.id,
-      branchId: product.branchId,
-      quantityChange: amount,
-      type: 'adjustment',
-      note: `[${reason}] ${note}`.trim(),
-    });
+    setLoading(true);
+    setError('');
 
-    const result = await updateStock(request);
-    if (result) {
+    try {
+      const client = getAuthenticatedClient(InventoryService, token, tenantId);
+      await client.updateStock({
+        productId: product.id,
+        branchId: product.branchId,
+        quantityChange: amount,
+        type: reason.toLowerCase(),
+        note: note,
+      });
+
       onSuccess();
       onClose();
-      // Reset form
       setChangeAmount('');
       setNote('');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi điều chỉnh kho');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-sm">
-      <div className="glass w-full max-w-md rounded-3xl border border-slate-700/50 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="px-6 py-4 border-b border-slate-800/50 flex items-center justify-between bg-slate-900/50">
-          <h2 className="text-xl font-bold text-white">Điều chỉnh tồn kho</h2>
-          <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 transition-colors">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <div>
-            <p className="text-slate-400 text-sm mb-1">Sản phẩm</p>
-            <p className="text-white font-semibold">{product.name}</p>
-            <p className="text-blue-soft text-xs">Hiện tại: <span className="font-mono">{product.currentQuantity}</span></p>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Số lượng thay đổi (+/-)</label>
-            <input 
-              type="number" 
-              step="0.001"
-              required
-              value={changeAmount}
-              onChange={(e) => setChangeAmount(e.target.value)}
-              placeholder="VD: -5 hoặc 10"
-              className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl outline-none focus:border-blue-electric focus:ring-1 focus:ring-blue-electric/20 transition-all font-mono"
-            />
-            <p className="text-[10px] text-slate-500 italic">Nhập số âm để giảm kho, số dương để tăng kho.</p>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Lý do điều chỉnh</label>
-            <select 
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl outline-none focus:border-blue-electric transition-all text-white appearance-none"
-            >
-              {REASON_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value} className="bg-slate-900">{opt.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Ghi chú thêm</label>
-            <textarea 
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={2}
-              className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl outline-none focus:border-blue-electric transition-all text-sm"
-              placeholder="Chi tiết về lý do điều chỉnh..."
-            />
-          </div>
-
-          {error && (
-            <div className="flex items-center gap-2 text-red-400 text-xs bg-red-500/10 p-3 rounded-lg border border-red-500/20">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{error}</span>
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-background/80 backdrop-blur-xl">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0"
+          onClick={onClose}
+        />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="ai-card w-full max-w-md flex flex-col p-0 shadow-2xl bg-surface border border-foreground/10 rounded-[2rem] overflow-hidden"
+        >
+          <div className="p-8 border-b border-foreground/5 flex items-center justify-between bg-foreground/5">
+            <div className="flex items-center gap-3">
+              <RefreshCw className="w-5 h-5 text-interaction stroke-[3]" />
+              <h2 className="text-xl font-black text-foreground uppercase italic tracking-tighter leading-tight">Điều chỉnh tồn kho</h2>
             </div>
-          )}
-
-          <div className="flex gap-3 pt-2">
-            <button 
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-3 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-xl transition-colors"
-            >
-              Hủy
+            <button onClick={onClose} className="w-12 h-12 bg-background border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm">
+              <X className="w-6 h-6" />
             </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-8 space-y-8">
+            <div className="p-6 bg-foreground/5 rounded-2xl border border-foreground/5">
+              <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest mb-1 italic">Sản phẩm</p>
+              <p className="text-xl font-black text-foreground uppercase italic tracking-tighter">{product.name}</p>
+              <p className="text-interaction text-[10px] font-black uppercase tracking-widest mt-2">Hiện tại: <span className="text-sm italic">{product.currentQuantity}</span></p>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Số lượng thay đổi (+/-)</label>
+              <input 
+                type="number" 
+                step="0.001"
+                required
+                value={changeAmount}
+                onChange={(e) => setChangeAmount(e.target.value)}
+                placeholder="VD: -5 HOẶC 10"
+                className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-xl italic tracking-tighter shadow-sm"
+              />
+              <p className="text-[10px] text-foreground/20 italic font-bold uppercase tracking-wider">Nhập số âm để giảm kho, số dương để tăng kho.</p>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Lý do điều chỉnh</label>
+              <div className="relative">
+                <select 
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all appearance-none font-bold text-sm uppercase italic tracking-tighter shadow-sm"
+                >
+                  {REASON_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label.toUpperCase()}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 pointer-events-none" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Ghi chú thêm</label>
+              <textarea 
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={3}
+                className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-xs uppercase italic shadow-sm resize-none"
+                placeholder="CHI TIẾT VỀ LÝ DO ĐIỀU CHỈNH..."
+              />
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-3 text-red-600 text-[10px] font-black uppercase italic tracking-tighter bg-red-500/10 p-4 rounded-2xl border border-red-500/10">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
             <button 
               type="submit"
-              disabled={loading || !changeAmount || parseFloat(changeAmount) === 0}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-electric hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-all shadow-lg shadow-blue-500/20"
+              disabled={loading}
+              className="btn-dynamic w-full py-5 text-lg"
             >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>Xác nhận</span>
-                </>
-              )}
+              {loading ? <RefreshCw className="w-6 h-6 animate-spin" /> : 'XÁC NHẬN ĐIỀU CHỈNH'}
             </button>
-          </div>
-        </form>
+          </form>
+        </motion.div>
       </div>
-    </div>
+    </AnimatePresence>
   );
 }

@@ -3,7 +3,7 @@ import CheckoutClient from './CheckoutClient';
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={<div className="h-full bg-navy-950" />}>
+    <Suspense fallback={<div className="h-full bg-background" />}>
       <CheckoutClient />
     </Suspense>
   );

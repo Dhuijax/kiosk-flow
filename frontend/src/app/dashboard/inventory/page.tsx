@@ -96,6 +96,36 @@ export default function InventoryPage() {
     };
   }, [stockItems]);
 
+  const handleExportCSV = useCallback(() => {
+    if (filteredData.length === 0) return;
+
+    const headers = ['Mặt hàng', 'SKU', 'Số lượng', 'Đơn vị', 'Định mức', 'Trạng thái'];
+    const rows = filteredData.map(item => {
+      const product = products[item.productId];
+      const status = item.quantity <= 0 ? 'Hết hàng' : item.quantity <= item.minQuantity ? 'Sắp hết' : 'An toàn';
+      return [
+        `"${product?.name || 'Unknown'}"`,
+        `"${product?.sku || 'N/A'}"`,
+        item.quantity,
+        `"${product?.unit || 'MÓN'}"`,
+        item.minQuantity,
+        `"${status}"`
+      ];
+    });
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `bao_cao_kho_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [filteredData, products]);
+
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header */}
@@ -117,7 +147,10 @@ export default function InventoryPage() {
           >
             <RefreshCw className={`w-6 h-6 stroke-[3] ${loadingStock ? 'animate-spin' : ''}`} />
           </button>
-          <button className="btn-dynamic px-8 py-3 text-sm">
+          <button 
+            onClick={handleExportCSV}
+            className="btn-dynamic px-8 py-3 text-sm"
+          >
             <Download className="w-5 h-5" />
             <span>XUẤT BÁO CÁO</span>
           </button>
@@ -156,7 +189,15 @@ export default function InventoryPage() {
             <AlertTriangle className="w-5 h-5 stroke-[3]" />
             <span>SẮP HẾT</span>
           </button>
-          <button className="w-14 h-14 bg-surface border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-sm">
+          <button 
+            onClick={() => {
+              // Quick filter logic: reset all filters
+              setSearchQuery('');
+              setLowStockOnly(false);
+            }}
+            className="w-14 h-14 bg-surface border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-sm"
+            title="Xóa bộ lọc"
+          >
             <Filter className="w-6 h-6 stroke-[3]" />
           </button>
         </div>

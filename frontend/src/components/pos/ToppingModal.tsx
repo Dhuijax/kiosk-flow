@@ -39,7 +39,7 @@ export default function ToppingModal({ product, isOpen, onClose, onConfirm }: To
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 md:p-12 bg-navy-950/40 backdrop-blur-md">
+      <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 md:p-12 bg-background/80 backdrop-blur-xl">
         <motion.div 
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}

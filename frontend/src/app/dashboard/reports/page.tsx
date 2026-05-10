@@ -54,6 +54,34 @@ const CATEGORY_DATA = [
 export default function ReportsPage() {
   const [period, setPeriod] = useState<'DAILY' | 'WEEKLY' | 'MONTHLY'>('WEEKLY');
 
+  const handleExportCSV = () => {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    
+    // Revenue Data Section
+    csvContent += "REVENUE TREND\nDay,Value\n";
+    REVENUE_DATA.forEach(row => {
+      csvContent += `${row.name},${row.value}\n`;
+    });
+    
+    csvContent += "\nTOP PRODUCTS\nProduct,Sales\n";
+    TOP_PRODUCTS.forEach(row => {
+      csvContent += `${row.name},${row.sales}\n`;
+    });
+    
+    csvContent += "\nCATEGORY MIX\nCategory,Percentage\n";
+    CATEGORY_DATA.forEach(row => {
+      csvContent += `${row.name},${row.value}%\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Bao_cao_KioskFlow_${period.toLowerCase()}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-12 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header */}
@@ -83,7 +111,10 @@ export default function ReportsPage() {
               </button>
             ))}
           </div>
-          <button className="btn-dynamic px-6 py-4 bg-accent text-foreground">
+          <button 
+            onClick={handleExportCSV}
+            className="btn-dynamic px-6 py-4 bg-accent text-foreground"
+          >
             <Download size={20} className="stroke-[3]" />
             <span className="hidden sm:inline">XUẤT FILE</span>
           </button>
@@ -283,7 +314,10 @@ export default function ReportsPage() {
               ))}
             </div>
 
-            <button className="w-full py-6 bg-primary text-white rounded-3xl font-black text-xl uppercase italic tracking-tighter shadow-sm hover:bg-interaction hover:text-white transition-all">
+            <button 
+              onClick={() => alert('Chức năng Dự báo doanh thu bằng AI đang được phát triển và sẽ ra mắt trong bản cập nhật tiếp theo!')}
+              className="w-full py-6 bg-primary text-white rounded-3xl font-black text-xl uppercase italic tracking-tighter shadow-sm hover:bg-interaction hover:text-white transition-all active:scale-95"
+            >
               XEM CHI TIẾT DỰ BÁO DOANH THU
             </button>
           </div>

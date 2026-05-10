@@ -22,14 +22,15 @@ ADD COLUMN IF NOT EXISTS cashier_name VARCHAR(255),
 ADD COLUMN IF NOT EXISTS guest_id VARCHAR(64);
 
 -- 3. Create Indices
-CREATE INDEX idx_customers_tenant ON customers(tenant_id);
-CREATE INDEX idx_customers_phone ON customers(phone);
-CREATE INDEX idx_orders_customer ON orders(customer_id);
+CREATE INDEX IF NOT EXISTS idx_customers_tenant ON customers(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
+CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);
 
 -- 4. Enable Row Level Security (RLS)
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 
 -- 5. RLS Policies
+DROP POLICY IF EXISTS tenant_isolation_customers ON customers;
 CREATE POLICY tenant_isolation_customers ON customers
     USING (tenant_id = current_setting('app.current_tenant')::uuid);
 

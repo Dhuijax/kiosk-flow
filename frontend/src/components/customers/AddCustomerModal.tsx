@@ -31,6 +31,8 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
 
   if (!isOpen) return null;
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!tenantId) return;
 
     setLoading(true);
@@ -50,9 +52,10 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
         setShowSuccess(false);
         setFormData({ fullName: '', email: '', phone: '', notes: '' });
       }, 1500);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to register customer:', err);
-      setError(err.message || 'Có lỗi xảy ra khi đăng ký khách hàng.');
+      const message = err instanceof Error ? err.message : 'Có lỗi xảy ra khi đăng ký khách hàng.';
+      setError(message);
     } finally {
       setLoading(false);
     }

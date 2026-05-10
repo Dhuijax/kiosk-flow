@@ -11,7 +11,6 @@ import {
   ChevronRight, 
   Filter,
   MoreVertical,
-  Mail,
   Phone,
   Calendar,
   Sparkles

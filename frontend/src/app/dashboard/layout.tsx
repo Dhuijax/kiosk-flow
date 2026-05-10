@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 
 import StatusBadge from '@/components/ui/StatusBadge';
+import { cn } from '@/lib/utils';
 
 const navigation = [
   { name: 'Tổng quan', href: '/dashboard', icon: LayoutDashboard },

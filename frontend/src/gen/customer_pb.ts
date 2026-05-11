@@ -364,6 +364,80 @@ export class CustomerResponse extends Message<CustomerResponse> {
 }
 
 /**
+ * @generated from message customer.DeleteCustomerRequest
+ */
+export class DeleteCustomerRequest extends Message<DeleteCustomerRequest> {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id = "";
+
+  constructor(data?: PartialMessage<DeleteCustomerRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "customer.DeleteCustomerRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): DeleteCustomerRequest {
+    return new DeleteCustomerRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): DeleteCustomerRequest {
+    return new DeleteCustomerRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): DeleteCustomerRequest {
+    return new DeleteCustomerRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: DeleteCustomerRequest | PlainMessage<DeleteCustomerRequest> | undefined, b: DeleteCustomerRequest | PlainMessage<DeleteCustomerRequest> | undefined): boolean {
+    return proto3.util.equals(DeleteCustomerRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message customer.DeleteCustomerResponse
+ */
+export class DeleteCustomerResponse extends Message<DeleteCustomerResponse> {
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success = false;
+
+  constructor(data?: PartialMessage<DeleteCustomerResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "customer.DeleteCustomerResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "success", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): DeleteCustomerResponse {
+    return new DeleteCustomerResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): DeleteCustomerResponse {
+    return new DeleteCustomerResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): DeleteCustomerResponse {
+    return new DeleteCustomerResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: DeleteCustomerResponse | PlainMessage<DeleteCustomerResponse> | undefined, b: DeleteCustomerResponse | PlainMessage<DeleteCustomerResponse> | undefined): boolean {
+    return proto3.util.equals(DeleteCustomerResponse, a, b);
+  }
+}
+
+/**
  * @generated from message customer.GetTransactionHistoryRequest
  */
 export class GetTransactionHistoryRequest extends Message<GetTransactionHistoryRequest> {

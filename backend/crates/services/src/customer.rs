@@ -6,6 +6,7 @@ use proto_gen::customer::{
     customer_service_server::CustomerService,
     RegisterCustomerRequest, GetCustomerRequest, FindCustomerByPhoneRequest,
     ListCustomersRequest, ListCustomersResponse, UpdateCustomerRequest,
+    DeleteCustomerRequest, DeleteCustomerResponse,
     CustomerResponse, GetTransactionHistoryRequest, TransactionHistoryResponse,
     Customer as ProtoCustomer, Transaction as ProtoTransaction
 };
@@ -110,8 +111,28 @@ impl CustomerService for CustomerServiceImpl {
 
     async fn update_customer(&self, request: Request<UpdateCustomerRequest>) -> Result<Response<CustomerResponse>, Status> {
         let tenant_id = self.get_context(&request)?;
-        // TODO: Implement update logic in repository
-        Err(Status::unimplemented("Update not yet implemented in repository"))
+        let req = request.into_inner();
+        let id = Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid id"))?;
+
+        let updated = self.customer_repo.update(&tenant_id, &id, req.name, req.phone).await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        Ok(Response::new(CustomerResponse {
+            customer: Some(map_domain_to_proto(updated)),
+        }))
+    }
+
+    async fn delete_customer(&self, request: Request<DeleteCustomerRequest>) -> Result<Response<DeleteCustomerResponse>, Status> {
+        let tenant_id = self.get_context(&request)?;
+        let req = request.into_inner();
+        let id = Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid id"))?;
+
+        self.customer_repo.delete(&tenant_id, &id).await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        Ok(Response::new(DeleteCustomerResponse {
+            success: true,
+        }))
     }
 
     async fn get_transaction_history(&self, request: Request<GetTransactionHistoryRequest>) -> Result<Response<TransactionHistoryResponse>, Status> {

@@ -8,14 +8,17 @@ import Portal from '@/components/ui/Portal';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { CustomerService } from '@/gen/customer_connect';
+import { Customer } from '@/gen/customer_pb';
+import { useEffect } from 'react';
 
 interface AddCustomerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  editingCustomer?: Customer | null;
 }
 
-export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCustomerModalProps) {
+export default function AddCustomerModal({ isOpen, onClose, onSuccess, editingCustomer }: AddCustomerModalProps) {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   
@@ -29,6 +32,19 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
   const { tenantId, token } = useAuth();
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (editingCustomer) {
+      setFormData({
+        fullName: editingCustomer.name || '',
+        phone: editingCustomer.phone || '',
+        email: '',
+        notes: '',
+      });
+    } else {
+      setFormData({ fullName: '', email: '', phone: '', notes: '' });
+    }
+  }, [editingCustomer, isOpen]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,10 +56,19 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
 
     try {
       const client = getAuthenticatedClient(CustomerService, tenantId, token || undefined);
-      await client.registerCustomer({
-        name: formData.fullName,
-        phone: formData.phone,
-      });
+      
+      if (editingCustomer) {
+        await client.updateCustomer({
+          id: editingCustomer.id,
+          name: formData.fullName,
+          phone: formData.phone,
+        });
+      } else {
+        await client.registerCustomer({
+          name: formData.fullName,
+          phone: formData.phone,
+        });
+      }
 
       setShowSuccess(true);
       setTimeout(() => {
@@ -96,8 +121,12 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
                       <UserPlus size={24} />
                     </div>
                     <div>
-                      <h2 className="text-3xl font-black uppercase italic tracking-tighter text-foreground">Thêm thành viên</h2>
-                      <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Mở rộng mạng lưới khách hàng thân thiết</p>
+                      <h2 className="text-3xl font-black uppercase italic tracking-tighter text-foreground">
+                        {editingCustomer ? 'Cập nhật thành viên' : 'Thêm thành viên'}
+                      </h2>
+                      <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                        {editingCustomer ? 'Thay đổi thông tin khách hàng thân thiết' : 'Mở rộng mạng lưới khách hàng thân thiết'}
+                      </p>
                     </div>
                   </div>
                   <button onClick={onClose} className="p-3 hover:bg-foreground/5 rounded-2xl transition-colors">
@@ -170,7 +199,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
                   >
                     Hủy bỏ
                   </button>
-                  <button 
+                    <button 
                     onClick={handleSubmit}
                     disabled={loading}
                     className="btn-dynamic px-12 py-5 text-xl group min-w-[240px]"
@@ -179,7 +208,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
                       <Loader2 className="w-6 h-6 animate-spin" />
                     ) : (
                       <>
-                        <span>ĐĂNG KÝ THÀNH VIÊN</span>
+                        <span>{editingCustomer ? 'CẬP NHẬT THÔNG TIN' : 'ĐĂNG KÝ THÀNH VIÊN'}</span>
                         <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
                       </>
                     )}

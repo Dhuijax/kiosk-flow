@@ -1679,4 +1679,45 @@ impl CustomerRepository {
         tx.commit().await?;
         Ok(updated)
     }
+
+    pub async fn update(&self, tenant_id: &Uuid, id: &Uuid, name: Option<String>, phone: Option<String>) -> Result<Customer> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        let updated = sqlx::query_as!(
+            Customer,
+            r#"
+            UPDATE customers
+            SET name = COALESCE($1, name),
+                phone = COALESCE($2, phone),
+                updated_at = NOW()
+            WHERE id = $3
+            RETURNING id, tenant_id, phone, name, points, created_at as "created_at!", updated_at as "updated_at!"
+            "#,
+            name,
+            phone,
+            id
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(updated)
+    }
+
+    pub async fn delete(&self, tenant_id: &Uuid, id: &Uuid) -> Result<()> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        sqlx::query!(
+            r#"
+            DELETE FROM customers
+            WHERE id = $1
+            "#,
+            id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(())
+    }
 }

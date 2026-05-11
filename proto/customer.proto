@@ -11,6 +11,7 @@ service CustomerService {
   rpc FindCustomerByPhone (FindCustomerByPhoneRequest) returns (CustomerResponse);
   rpc ListCustomers (ListCustomersRequest) returns (ListCustomersResponse);
   rpc UpdateCustomer (UpdateCustomerRequest) returns (CustomerResponse);
+  rpc DeleteCustomer (DeleteCustomerRequest) returns (DeleteCustomerResponse);
   rpc GetTransactionHistory (GetTransactionHistoryRequest) returns (TransactionHistoryResponse);
 }
 
@@ -54,6 +55,14 @@ message UpdateCustomerRequest {
 
 message CustomerResponse {
   Customer customer = 1;
+}
+
+message DeleteCustomerRequest {
+  string id = 1;
+}
+
+message DeleteCustomerResponse {
+  bool success = 1;
 }
 
 message GetTransactionHistoryRequest {

@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CustomerResponse, FindCustomerByPhoneRequest, GetCustomerRequest, GetTransactionHistoryRequest, ListCustomersRequest, ListCustomersResponse, RegisterCustomerRequest, TransactionHistoryResponse, UpdateCustomerRequest } from "./customer_pb";
+import { CustomerResponse, DeleteCustomerRequest, DeleteCustomerResponse, FindCustomerByPhoneRequest, GetCustomerRequest, GetTransactionHistoryRequest, ListCustomersRequest, ListCustomersResponse, RegisterCustomerRequest, TransactionHistoryResponse, UpdateCustomerRequest } from "./customer_pb";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -55,6 +55,15 @@ export const CustomerService = {
       name: "UpdateCustomer",
       I: UpdateCustomerRequest,
       O: CustomerResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc customer.CustomerService.DeleteCustomer
+     */
+    deleteCustomer: {
+      name: "DeleteCustomer",
+      I: DeleteCustomerRequest,
+      O: DeleteCustomerResponse,
       kind: MethodKind.Unary,
     },
     /**

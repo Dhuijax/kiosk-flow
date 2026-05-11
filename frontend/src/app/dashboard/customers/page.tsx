@@ -23,6 +23,9 @@ import { CustomerService } from '@/gen/customer_connect';
 import { Customer } from '@/gen/customer_pb';
 import { useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
+import Dropdown from '@/components/ui/Dropdown';
+import CustomerDetailModal from '@/components/customers/CustomerDetailModal';
+import { Trash2, Edit2, Info } from 'lucide-react';
 
 const getTier = (points: number) => {
   if (points >= 5000) return 'PLATINUM';
@@ -43,6 +46,8 @@ const getTierColor = (tier: string) => {
 export default function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const { tenantId, token } = useAuth();
@@ -62,6 +67,28 @@ export default function CustomersPage() {
       setLoading(false);
     }
   }, [tenantId, token, searchQuery]);
+
+  const handleDelete = async (id: string) => {
+    if (!tenantId || !window.confirm('BẠN CÓ CHẮC CHẮN MUỐN XÓA KHÁCH HÀNG NÀY?')) return;
+    try {
+      const client = getAuthenticatedClient(CustomerService, tenantId, token || undefined);
+      await client.deleteCustomer({ id });
+      fetchCustomers();
+    } catch (err) {
+      console.error('Failed to delete customer:', err);
+      alert('Không thể xóa khách hàng. Vui lòng thử lại sau.');
+    }
+  };
+
+  const handleEdit = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsModalOpen(true);
+  };
+
+  const handleViewDetail = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsDetailOpen(true);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -85,7 +112,10 @@ export default function CustomersPage() {
           <p className="text-foreground/40 font-bold italic text-lg">Quản lý lòng trung thành và thấu hiểu hành vi khách hàng.</p>
         </div>
         <button 
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setSelectedCustomer(null);
+            setIsModalOpen(true);
+          }}
           className="btn-dynamic px-10 py-5 text-xl"
         >
           <Plus className="w-6 h-6 stroke-[4]" />
@@ -194,12 +224,18 @@ export default function CustomersPage() {
                         <span className="flex items-center gap-2"><Phone size={14} className="text-primary" /> {customer.phone}</span>
                       </div>
                     </div>
-                    <button 
-                      onClick={() => console.log('More options for:', customer.name)}
-                      className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-foreground/5 transition-colors"
-                    >
-                      <MoreVertical size={20} className="text-foreground/40" />
-                    </button>
+                    <Dropdown 
+                      trigger={
+                        <button className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-foreground/5 transition-colors">
+                          <MoreVertical size={20} className="text-foreground/40" />
+                        </button>
+                      }
+                      items={[
+                        { label: 'Chi tiết', icon: <Info size={14} />, onClick: () => handleViewDetail(customer) },
+                        { label: 'Sửa', icon: <Edit2 size={14} />, onClick: () => handleEdit(customer) },
+                        { label: 'Xóa', icon: <Trash2 size={14} />, variant: 'danger', onClick: () => handleDelete(customer.id) },
+                      ]}
+                    />
                   </div>
 
                   {/* Stats Bar */}
@@ -225,7 +261,7 @@ export default function CustomersPage() {
                       <span>Tham gia: {customer.createdAt ? format(new Date(Number(customer.createdAt.seconds) * 1000), 'dd/MM/yyyy') : '-'}</span>
                     </div>
                     <button 
-                      onClick={() => console.log('View details for:', customer.name)}
+                      onClick={() => handleViewDetail(customer)}
                       className="flex items-center gap-2 text-interaction font-black uppercase text-xs italic tracking-tighter group-hover:translate-x-2 transition-transform"
                     >
                       Chi tiết 
@@ -256,10 +292,23 @@ export default function CustomersPage() {
 
       <AddCustomerModal 
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedCustomer(null);
+        }}
         onSuccess={() => {
           fetchCustomers();
         }}
+        editingCustomer={selectedCustomer}
+      />
+
+      <CustomerDetailModal 
+        isOpen={isDetailOpen}
+        onClose={() => {
+          setIsDetailOpen(false);
+          setSelectedCustomer(null);
+        }}
+        customer={selectedCustomer}
       />
     </div>
   );

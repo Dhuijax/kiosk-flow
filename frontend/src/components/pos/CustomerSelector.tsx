@@ -7,6 +7,7 @@ import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { CustomerService } from '@/gen/customer_connect';
 import { Customer } from '@/gen/customer_pb';
 import { motion, AnimatePresence } from 'framer-motion';
+import AddCustomerModal from '@/components/customers/AddCustomerModal';
 
 interface CustomerSelectorProps {
   onSelect: (customer: Customer | null) => void;
@@ -18,6 +19,7 @@ export default function CustomerSelector({ onSelect, selectedCustomer }: Custome
   const [searchQuery, setSearchQuery] = useState('');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const { tenantId, token } = useAuth();
 
   const fetchCustomers = useCallback(async (query: string) => {
@@ -168,7 +170,10 @@ export default function CustomerSelector({ onSelect, selectedCustomer }: Custome
                         <p className="text-xl font-black uppercase italic tracking-tighter text-foreground/40">Không tìm thấy kết quả</p>
                         <p className="text-xs font-bold opacity-30 uppercase tracking-widest mt-1">Vui lòng kiểm tra lại số điện thoại</p>
                       </div>
-                      <button className="flex items-center gap-3 px-8 py-4 bg-interaction text-white rounded-2xl font-black uppercase italic tracking-tighter hover:scale-105 transition-transform shadow-lg">
+                      <button 
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="flex items-center gap-3 px-8 py-4 bg-interaction text-white rounded-2xl font-black uppercase italic tracking-tighter hover:scale-105 transition-transform shadow-lg"
+                      >
                         <UserPlus size={20} />
                         ĐĂNG KÝ MỚI
                       </button>
@@ -180,6 +185,15 @@ export default function CustomerSelector({ onSelect, selectedCustomer }: Custome
           </>
         )}
       </AnimatePresence>
+
+      <AddCustomerModal 
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => {
+          setIsAddModalOpen(false);
+          if (searchQuery) fetchCustomers(searchQuery);
+        }}
+      />
     </div>
   );
 }

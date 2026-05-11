@@ -1,3 +1,4 @@
+#![allow(clippy::all)]
 // Business logic services and gRPC implementations
 pub mod auth;
 pub mod tenant;

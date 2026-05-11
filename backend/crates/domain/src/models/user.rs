@@ -12,15 +12,16 @@ pub enum UserRole {
     Chef,
 }
 
-impl ToString for UserRole {
-    fn to_string(&self) -> String {
-        match self {
-            UserRole::Owner => "owner".to_string(),
-            UserRole::Manager => "manager".to_string(),
-            UserRole::Cashier => "cashier".to_string(),
-            UserRole::Waiter => "waiter".to_string(),
-            UserRole::Chef => "chef".to_string(),
-        }
+impl std::fmt::Display for UserRole {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            UserRole::Owner => "owner",
+            UserRole::Manager => "manager",
+            UserRole::Cashier => "cashier",
+            UserRole::Waiter => "waiter",
+            UserRole::Chef => "chef",
+        };
+        write!(f, "{}", s)
     }
 }
 

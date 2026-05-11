@@ -1,3 +1,5 @@
+#![allow(clippy::result_large_err)]
+#![allow(clippy::too_many_arguments)]
 use tonic::transport::Server;
 use http::header::{HeaderName, HeaderValue};
 use std::net::SocketAddr;
@@ -100,7 +102,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 4. Setup gRPC Reflection
     let ext_descriptor_set = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(proto_gen::FILE_DESCRIPTOR_SET)
-        .build()?;
+        .build_v1()?;
 
     // 5. CORS configuration
     let allowed_origins = std::env::var("ALLOWED_ORIGINS")

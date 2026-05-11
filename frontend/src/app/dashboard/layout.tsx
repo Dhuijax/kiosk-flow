@@ -15,7 +15,8 @@ import {
   Sparkles,
   ChevronRight,
   Heart,
-  TrendingUp
+  TrendingUp,
+  Receipt
 } from 'lucide-react';
 
 import StatusBadge from '@/components/ui/StatusBadge';
@@ -24,10 +25,12 @@ import { cn } from '@/lib/utils';
 const navigation = [
   { name: 'Tổng quan', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Bán hàng', href: '/pos/order', icon: Store },
+  { name: 'Đơn hàng', href: '/dashboard/orders', icon: Receipt },
   { name: 'Khách hàng', href: '/dashboard/customers', icon: Heart },
   { name: 'Báo cáo', href: '/dashboard/reports', icon: TrendingUp },
   { name: 'Nhân viên', href: '/dashboard/staff', icon: Users },
   { name: 'Sản phẩm', href: '/dashboard/products', icon: Package },
+  { name: 'Kho hàng', href: '/dashboard/inventory', icon: Package },
   { name: 'Cấu hình', href: '/dashboard/settings', icon: Settings, status: 'demo' as const },
 ];
 

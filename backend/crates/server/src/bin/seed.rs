@@ -10,7 +10,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
     let pool = create_pool().await?;
 
-    println!("🚀 Seeding Employees and Customers for Demo...");
+    println!("🚀 Seeding Data for Demo...");
 
     let tenant_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001")?;
     
@@ -22,30 +22,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let branch_ids: Vec<Uuid> = branches.into_iter().map(|r| r.get(0)).collect();
     
     if branch_ids.is_empty() {
-        println!("❌ No branches found. Please run the full seeder first.");
+        println!("❌ No branches found. Please run the full seeder first to create products and branches.");
         return Ok(());
     }
 
     // 3. Seed Employees (50)
     seed_employees(&pool, tenant_id, &branch_ids, 50).await?;
 
-    // 4. Seed Customers (50) - Already done but can ensure
+    // 4. Seed Customers (50)
     seed_customers(&pool, tenant_id, 50).await?;
 
-    println!("\n✅ Staff and Customers seeded successfully!");
+    // 5. Seed Inventory
+    seed_inventory(&pool, tenant_id, &branch_ids).await?;
+
+    // 6. Seed Orders
+    seed_orders(&pool, tenant_id, &branch_ids).await?;
+
+    println!("\n✅ All data seeded successfully!");
     Ok(())
 }
 
 async fn ensure_tenant_and_admin(pool: &Pool<Postgres>, tenant_id: Uuid) -> anyhow::Result<()> {
     let exists = sqlx::query("SELECT id FROM tenants WHERE id = $1").bind(tenant_id).fetch_optional(pool).await?;
     if exists.is_none() {
-        sqlx::query("INSERT INTO tenants (id, name, subdomain) VALUES ($1, $2, $3)").bind(tenant_id).bind("Demo Store").bind("demo").execute(pool).await?;
+        sqlx::query("INSERT INTO tenants (id, name, slug) VALUES ($1, $2, $3)").bind(tenant_id).bind("Demo Store").bind("demo").execute(pool).await?;
     }
     let email = "admin@demo.com";
     let user_exists = sqlx::query("SELECT id FROM users WHERE email = $1 AND tenant_id = $2").bind(email).bind(tenant_id).fetch_optional(pool).await?;
     if user_exists.is_none() {
         let hash = SecurityService::hash_password("password123")?;
-        sqlx::query("INSERT INTO users (id, tenant_id, email, password_hash, full_name, role) VALUES ($1, $2, $3, $4, $5, 'owner')")
+        sqlx::query("INSERT INTO users (id, tenant_id, email, password_hash, full_name, role, is_active) VALUES ($1, $2, $3, $4, $5, 'owner', true)")
             .bind(Uuid::new_v4()).bind(tenant_id).bind(email).bind(hash).bind("Demo Admin").execute(pool).await?;
     }
     Ok(())
@@ -123,5 +129,180 @@ async fn seed_customers(pool: &Pool<Postgres>, tenant_id: Uuid, count: usize) ->
             .execute(pool)
             .await?;
     }
+    Ok(())
+}
+
+async fn seed_inventory(pool: &Pool<Postgres>, tenant_id: Uuid, branch_ids: &[Uuid]) -> anyhow::Result<()> {
+    let products = sqlx::query("SELECT id FROM products WHERE tenant_id = $1").bind(tenant_id).fetch_all(pool).await?;
+    let product_ids: Vec<Uuid> = products.into_iter().map(|r| r.get(0)).collect();
+
+    if product_ids.is_empty() {
+        println!("  - Cannot seed inventory: no products found.");
+        return Ok(());
+    }
+
+    let current_count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM inventory WHERE tenant_id = $1")
+        .bind(tenant_id)
+        .fetch_one(pool)
+        .await?;
+
+    if current_count.0 >= (product_ids.len() * branch_ids.len()) as i64 {
+        println!("  - Inventory already seeded.");
+        return Ok(());
+    }
+
+    println!("  - Seeding inventory...");
+    let mut rng = rand::thread_rng();
+
+    for branch_id in branch_ids {
+        for product_id in &product_ids {
+            let quantity = rng.gen_range(5..150) as i64;
+            let min_quantity = rng.gen_range(10..30) as i64;
+            
+            let res = sqlx::query(
+                "INSERT INTO inventory (id, tenant_id, branch_id, product_id, quantity, min_quantity) 
+                 VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (tenant_id, branch_id, product_id) DO NOTHING"
+            )
+            .bind(Uuid::new_v4())
+            .bind(tenant_id)
+            .bind(branch_id)
+            .bind(product_id)
+            .bind(BigDecimal::from(quantity))
+            .bind(BigDecimal::from(min_quantity))
+            .execute(pool)
+            .await?;
+
+            if res.rows_affected() > 0 {
+                // Add initial transaction
+                sqlx::query(
+                    "INSERT INTO inventory_transactions (id, tenant_id, branch_id, product_id, type, quantity_change, note) 
+                     VALUES ($1, $2, $3, $4, 'adjustment', $5, 'Initial seeding')"
+                )
+                .bind(Uuid::new_v4())
+                .bind(tenant_id)
+                .bind(branch_id)
+                .bind(product_id)
+                .bind(BigDecimal::from(quantity))
+                .execute(pool)
+                .await?;
+            }
+        }
+    }
+    Ok(())
+}
+
+async fn seed_orders(pool: &Pool<Postgres>, tenant_id: Uuid, branch_ids: &[Uuid]) -> anyhow::Result<()> {
+    let products = sqlx::query("SELECT id, name, price FROM products WHERE tenant_id = $1").bind(tenant_id).fetch_all(pool).await?;
+    if products.is_empty() {
+        println!("  - Cannot seed orders: no products found.");
+        return Ok(());
+    }
+
+    let customers = sqlx::query("SELECT id, name FROM customers WHERE tenant_id = $1").bind(tenant_id).fetch_all(pool).await?;
+    let users = sqlx::query("SELECT id, full_name FROM users WHERE tenant_id = $1").bind(tenant_id).fetch_all(pool).await?;
+
+    let current_count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM orders WHERE tenant_id = $1")
+        .bind(tenant_id)
+        .fetch_one(pool)
+        .await?;
+
+    if current_count.0 >= 20 {
+        println!("  - Orders already seeded ({} found)", current_count.0);
+        return Ok(());
+    }
+
+    println!("  - Seeding orders...");
+    let mut rng = rand::thread_rng();
+
+    for i in 1..=30 {
+        let branch_id = branch_ids[rng.gen_range(0..branch_ids.len())];
+        
+        let (customer_id, customer_name) = if customers.is_empty() {
+            (None, None)
+        } else {
+            let customer = &customers[rng.gen_range(0..customers.len())];
+            (Some(customer.get::<Uuid, _>(0)), Some(customer.get::<String, _>(1)))
+        };
+
+        let (user_id, cashier_name) = if users.is_empty() {
+            let admin_id: Uuid = sqlx::query("SELECT id FROM users WHERE email = 'admin@demo.com'").fetch_one(pool).await?.get(0);
+            (admin_id, "Admin".to_string())
+        } else {
+            let user = &users[rng.gen_range(0..users.len())];
+            (user.get::<Uuid, _>(0), user.get::<String, _>(1))
+        };
+
+        let order_id = Uuid::new_v4();
+        let order_number = format!("ORD-260511-{:04}", i);
+
+        // Generate items
+        let num_items = rng.gen_range(1..5);
+        let mut subtotal: i64 = 0;
+        
+        for _ in 0..num_items {
+            let product = &products[rng.gen_range(0..products.len())];
+            let product_id: Uuid = product.get(0);
+            let product_name: String = product.get(1);
+            let unit_price: BigDecimal = product.get(2);
+            let price_i64 = unit_price.to_string().parse::<f64>().unwrap_or(0.0) as i64;
+            
+            let qty = rng.gen_range(1..4);
+            let item_subtotal = price_i64 * qty as i64;
+            subtotal += item_subtotal;
+
+            sqlx::query(
+                "INSERT INTO order_items (id, order_id, tenant_id, product_id, product_name, unit_price, quantity, subtotal, status) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'served')"
+            )
+            .bind(Uuid::new_v4())
+            .bind(order_id)
+            .bind(tenant_id)
+            .bind(product_id)
+            .bind(product_name)
+            .bind(unit_price)
+            .bind(qty)
+            .bind(BigDecimal::from(item_subtotal))
+            .execute(pool)
+            .await?;
+        }
+
+        let tax = subtotal / 10;
+        let total = subtotal + tax;
+
+        sqlx::query(
+            "INSERT INTO orders (id, tenant_id, branch_id, order_number, status, customer_name, customer_id, cashier_name, subtotal, tax_amount, total, created_by) 
+             VALUES ($1, $2, $3, $4, 'completed', $5, $6, $7, $8, $9, $10, $11)"
+        )
+        .bind(order_id)
+        .bind(tenant_id)
+        .bind(branch_id)
+        .bind(order_number)
+        .bind(customer_name)
+        .bind(customer_id)
+        .bind(cashier_name)
+        .bind(BigDecimal::from(subtotal))
+        .bind(BigDecimal::from(tax))
+        .bind(BigDecimal::from(total))
+        .bind(user_id)
+        .execute(pool)
+        .await?;
+
+        // Payment
+        sqlx::query(
+            "INSERT INTO payments (id, tenant_id, branch_id, order_id, method, amount, received_amount, change_amount, status, created_by) 
+             VALUES ($1, $2, $3, $4, 'cash', $5, $6, $7, 'completed', $8)"
+        )
+        .bind(Uuid::new_v4())
+        .bind(tenant_id)
+        .bind(branch_id)
+        .bind(order_id)
+        .bind(BigDecimal::from(total))
+        .bind(BigDecimal::from(total))
+        .bind(BigDecimal::from(0))
+        .bind(user_id)
+        .execute(pool)
+        .await?;
+    }
+
     Ok(())
 }

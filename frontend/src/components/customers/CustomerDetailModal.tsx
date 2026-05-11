@@ -8,7 +8,6 @@ import {
   Calendar, 
   Receipt, 
   Clock,
-  User,
   Star,
   ChevronRight,
   Loader2

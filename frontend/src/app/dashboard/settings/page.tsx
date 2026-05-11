@@ -2,15 +2,14 @@
 
 import React, { useState } from 'react';
 import { 
-  Save, 
-  Bell, 
-  Shield, 
   Palette, 
   Store, 
   Smartphone, 
-  Loader2,
-  Sparkles
+  Sparkles,
+  Bell,
+  Shield
 } from 'lucide-react';
+import { useSettings } from '@/hooks/useSettings';
 import StoreSettings from '@/components/dashboard/settings/StoreSettings';
 import AppearanceSettings from '@/components/dashboard/settings/AppearanceSettings';
 import NotificationSettings from '@/components/dashboard/settings/NotificationSettings';
@@ -22,12 +21,7 @@ type SettingsTab = 'store' | 'appearance' | 'notifications' | 'security' | 'kios
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('store');
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = () => {
-    setSaving(true);
-    setTimeout(() => setSaving(false), 1500);
-  };
+  const { storeInfo, settings, loading, updateStore, updateTenantSettings } = useSettings();
 
   const navItems = [
     { id: 'store', name: 'Cửa hàng', icon: Store },
@@ -38,13 +32,40 @@ export default function SettingsPage() {
   ] as const;
 
   const renderContent = () => {
+    if (loading && !storeInfo && !settings) {
+      return (
+        <div className="ai-card p-12 flex flex-col items-center justify-center min-h-[400px] gap-4 text-center">
+          <div className="w-12 h-12 border-4 border-interaction border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-black uppercase italic tracking-tighter text-foreground/40 italic">Đang tải cấu hình hệ thống...</p>
+        </div>
+      );
+    }
+
     switch (activeTab) {
-      case 'store': return <StoreSettings />;
-      case 'appearance': return <AppearanceSettings />;
-      case 'notifications': return <NotificationSettings />;
-      case 'security': return <SecuritySettings />;
-      case 'kiosk': return <KioskSettings />;
-      default: return <StoreSettings />;
+      case 'store': 
+        return <StoreSettings 
+          key={`store-${storeInfo?.id || 'empty'}`} 
+          storeInfo={storeInfo} 
+          updateStore={updateStore} 
+        />;
+      case 'appearance': 
+        return <AppearanceSettings 
+          key={`appearance-${settings?.themeColor || 'empty'}`}
+          settings={settings} 
+          updateTenantSettings={updateTenantSettings} 
+        />;
+      case 'notifications': 
+        return <NotificationSettings />;
+      case 'security': 
+        return <SecuritySettings />;
+      case 'kiosk': 
+        return <KioskSettings 
+          key={`kiosk-${settings?.kioskTimeoutSeconds || 'empty'}`}
+          settings={settings} 
+          updateTenantSettings={updateTenantSettings} 
+        />;
+      default: 
+        return <StoreSettings storeInfo={storeInfo} updateStore={updateStore} />;
     }
   };
 
@@ -66,21 +87,11 @@ export default function SettingsPage() {
         </div>
         
         <div className="flex flex-col items-end gap-3">
-          <button 
-            onClick={handleSave}
-            disabled={saving}
-            className="btn-dynamic py-5 px-10 text-lg min-w-[240px] flex items-center justify-center"
-          >
-            {saving ? (
-              <Loader2 className="w-6 h-6 animate-spin" />
-            ) : (
-              <>
-                <Save className="w-6 h-6" />
-                <span>LƯU THAY ĐỔI</span>
-              </>
-            )}
-          </button>
-          <StatusBadge status="demo" />
+          <div className="flex items-center gap-2 px-4 py-2 bg-surface border border-foreground/10 rounded-full shadow-sm">
+            <div className="w-2 h-2 rounded-full bg-success animate-pulse"></div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40 italic">Hệ thống đang trực tuyến</span>
+          </div>
+          <StatusBadge status="live" />
         </div>
       </div>
 

@@ -6,7 +6,7 @@ use domain::models::table::{FloorPlan, Table, TableStatus};
 use domain::models::order::{Order, OrderItem, OrderItemTopping, OrderStatus};
 use domain::models::payment::Payment;
 use domain::models::inventory::{Inventory, InventoryTransaction, InventoryTransactionType};
-use domain::models::tenant::Tenant;
+use domain::models::tenant::{Tenant, TenantSettings, Branch};
 use domain::models::customer::Customer;
 use anyhow::Result;
 use uuid::Uuid;
@@ -1719,5 +1719,140 @@ impl CustomerRepository {
 
         tx.commit().await?;
         Ok(())
+    }
+}
+
+pub struct StoreRepository {
+    pool: PgPool,
+}
+
+impl StoreRepository {
+    pub fn new(pool: PgPool) -> Self {
+        Self { pool }
+    }
+
+    async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
+        let mut tx = self.pool.begin().await?;
+        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
+            .bind(tenant_id.to_string())
+            .execute(&mut *tx)
+            .await?;
+        Ok(tx)
+    }
+
+    pub async fn get_main_branch(&self, tenant_id: &Uuid) -> Result<Branch> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+        
+        let branch = sqlx::query_as!(
+            Branch,
+            r#"
+            SELECT id, tenant_id, name, address, phone, is_main as "is_main!", created_at as "created_at!"
+            FROM branches
+            WHERE tenant_id = $1 AND is_main = true
+            LIMIT 1
+            "#,
+            tenant_id
+        )
+        .fetch_optional(&mut *tx)
+        .await?;
+
+        let branch = match branch {
+            Some(b) => b,
+            None => {
+                sqlx::query_as!(
+                    Branch,
+                    r#"
+                    INSERT INTO branches (tenant_id, name, is_main)
+                    VALUES ($1, 'Main Branch', true)
+                    RETURNING id, tenant_id, name, address, phone, is_main as "is_main!", created_at as "created_at!"
+                    "#,
+                    tenant_id
+                ).fetch_one(&mut *tx).await?
+            }
+        };
+
+        tx.commit().await?;
+        Ok(branch)
+    }
+
+    pub async fn update_main_branch(&self, tenant_id: &Uuid, name: String, address: String, phone: String) -> Result<Branch> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        let updated = sqlx::query_as!(
+            Branch,
+            r#"
+            UPDATE branches
+            SET name = $1, address = $2, phone = $3
+            WHERE tenant_id = $4 AND is_main = true
+            RETURNING id, tenant_id, name, address, phone, is_main as "is_main!", created_at as "created_at!"
+            "#,
+            name,
+            address,
+            phone,
+            tenant_id
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(updated)
+    }
+
+    pub async fn get_settings(&self, tenant_id: &Uuid) -> Result<TenantSettings> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        let settings = sqlx::query_as!(
+            TenantSettings,
+            r#"
+            SELECT tenant_id, theme_color as "theme_color!", logo_url, kiosk_timeout_seconds as "kiosk_timeout_seconds!", language as "language!", currency as "currency!", updated_at as "updated_at!"
+            FROM tenant_settings
+            WHERE tenant_id = $1
+            "#,
+            tenant_id
+        )
+        .fetch_optional(&mut *tx)
+        .await?;
+
+        let settings = match settings {
+            Some(s) => s,
+            None => {
+                sqlx::query_as!(
+                    TenantSettings,
+                    r#"
+                    INSERT INTO tenant_settings (tenant_id)
+                    VALUES ($1)
+                    RETURNING tenant_id, theme_color as "theme_color!", logo_url, kiosk_timeout_seconds as "kiosk_timeout_seconds!", language as "language!", currency as "currency!", updated_at as "updated_at!"
+                    "#,
+                    tenant_id
+                ).fetch_one(&mut *tx).await?
+            }
+        };
+
+        tx.commit().await?;
+        Ok(settings)
+    }
+
+    pub async fn update_settings(&self, tenant_id: &Uuid, theme_color: String, kiosk_timeout: i32, language: String, currency: String) -> Result<TenantSettings> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        let updated = sqlx::query_as!(
+            TenantSettings,
+            r#"
+            UPDATE tenant_settings
+            SET theme_color = $1, kiosk_timeout_seconds = $2, language = $3, currency = $4, updated_at = NOW()
+            WHERE tenant_id = $5
+            RETURNING tenant_id, theme_color as "theme_color!", logo_url, kiosk_timeout_seconds as "kiosk_timeout_seconds!", language as "language!", currency as "currency!", updated_at as "updated_at!"
+            "#,
+            theme_color,
+            kiosk_timeout,
+            language,
+            currency,
+            tenant_id
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(updated)
     }
 }

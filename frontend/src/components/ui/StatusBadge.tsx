@@ -5,7 +5,7 @@ import { Sparkles, Construction } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StatusBadgeProps {
-  status: 'coming-soon' | 'demo' | 'beta';
+  status: 'coming-soon' | 'demo' | 'beta' | 'live';
   className?: string;
 }
 
@@ -24,6 +24,11 @@ const statusConfig = {
     label: 'BẢN BETA',
     icon: Sparkles,
     color: 'bg-interaction/10 text-interaction border-interaction/20',
+  },
+  'live': {
+    label: 'LIVE',
+    icon: Sparkles,
+    color: 'bg-green-500/10 text-green-500 border-green-500/20',
   },
 };
 

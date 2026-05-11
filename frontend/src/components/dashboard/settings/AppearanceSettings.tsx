@@ -1,21 +1,74 @@
 'use client';
 
-import React from 'react';
-import { Palette, Sparkles, Monitor, Smartphone } from 'lucide-react';
+import React, { useState } from 'react';
+import { Palette, Sparkles, Monitor, Smartphone, Loader2, CheckCircle2 } from 'lucide-react';
+import { AppearanceSettingsProps } from '@/hooks/useSettings';
+import { useTheme, ThemeName } from '@/lib/theme/ThemeContext';
 
-export default function AppearanceSettings() {
+export default function AppearanceSettings({ settings, updateTenantSettings }: AppearanceSettingsProps) {
+  const { currentTheme, setTheme } = useTheme();
+  const [activeTheme, setActiveTheme] = useState<ThemeName>(settings?.themeColor as ThemeName || currentTheme);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const themes: { name: ThemeName; color: string }[] = [
+    { name: 'Earth-Tones', color: 'bg-primary' },
+    { name: 'Teal-Mode', color: 'bg-interaction' },
+    { name: 'Amber-Sun', color: 'bg-accent' },
+    { name: 'Dark-Coffee', color: 'bg-foreground' },
+  ];
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await updateTenantSettings({
+        themeColor: activeTheme,
+        kioskTimeoutSeconds: settings?.kioskTimeoutSeconds || 60,
+        language: settings?.language || 'vi',
+        currency: settings?.currency || 'VND'
+      });
+      setTheme(activeTheme);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+
   return (
     <div className="ai-card p-12 space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
-      <div className="flex items-center gap-4 border-b border-foreground/10 pb-6">
-        <div className="w-12 h-12 bg-interaction rounded-xl flex items-center justify-center text-white shadow-sm">
-          <Palette className="w-6 h-6" />
+      <div className="flex items-center justify-between border-b border-foreground/10 pb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-interaction rounded-xl flex items-center justify-center text-white shadow-sm">
+            <Palette className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground">
+              Giao diện hệ thống
+            </h3>
+            <p className="text-xs font-bold text-foreground/40 uppercase tracking-widest">Tùy chỉnh phong cách hiển thị Dashboard</p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground">
-            Giao diện hệ thống
-          </h3>
-          <p className="text-xs font-bold text-foreground/40 uppercase tracking-widest">Tùy chỉnh phong cách hiển thị Dashboard</p>
-        </div>
+
+        <button 
+          onClick={handleSave}
+          disabled={isSaving}
+          className="btn-dynamic py-3 px-8 text-sm flex items-center gap-2"
+        >
+          {isSaving ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : saved ? (
+            <>
+              <CheckCircle2 className="w-4 h-4" />
+              <span>ĐÃ LƯU</span>
+            </>
+          ) : (
+            <span>LƯU GIAO DIỆN</span>
+          )}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -25,10 +78,15 @@ export default function AppearanceSettings() {
             Tông màu chủ đạo
           </h4>
           <div className="grid grid-cols-2 gap-4">
-            <ThemeOption name="Earth-Tones" active={true} color="bg-primary" />
-            <ThemeOption name="Teal-Mode" active={false} color="bg-interaction" />
-            <ThemeOption name="Amber-Sun" active={false} color="bg-accent" />
-            <ThemeOption name="Dark-Coffee" active={false} color="bg-foreground" />
+            {themes.map((t) => (
+              <ThemeOption 
+                key={t.name}
+                name={t.name} 
+                active={activeTheme === t.name} 
+                color={t.color} 
+                onClick={() => setActiveTheme(t.name)}
+              />
+            ))}
           </div>
         </div>
 
@@ -53,11 +111,14 @@ export default function AppearanceSettings() {
   );
 }
 
-function ThemeOption({ name, active, color }: { name: string, active: boolean, color: string }) {
+function ThemeOption({ name, active, color, onClick }: { name: string, active: boolean, color: string, onClick: () => void }) {
   return (
-    <button className={`p-4 border rounded-2xl flex items-center gap-4 transition-all ${
-      active ? 'border-interaction bg-surface shadow-md scale-[1.02]' : 'border-foreground/10 bg-surface/30 opacity-60 hover:opacity-100 shadow-sm'
-    }`}>
+    <button 
+      onClick={onClick}
+      className={`p-4 border rounded-2xl flex items-center gap-4 transition-all w-full ${
+        active ? 'border-interaction bg-surface shadow-md scale-[1.02]' : 'border-foreground/10 bg-surface/30 opacity-60 hover:opacity-100 shadow-sm'
+      }`}
+    >
       <div className={`w-8 h-8 rounded-lg ${color} shadow-sm`}></div>
       <span className="font-black uppercase italic tracking-tighter text-xs">{name}</span>
     </button>

@@ -22,27 +22,14 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editingCu
   const [showSuccess, setShowSuccess] = useState(false);
   
   const [formData, setFormData] = useState({
-    fullName: '',
+    fullName: editingCustomer?.name || '',
+    phone: editingCustomer?.phone || '',
     email: '',
-    phone: '',
     notes: '',
   });
 
   const { tenantId, token } = useAuth();
   const [error, setError] = useState<string | null>(null);
-
-  const [prevId, setPrevId] = useState<string | null>(null);
-  const currentId = isOpen ? (editingCustomer?.id || 'new') : null;
-
-  if (isOpen && currentId !== prevId) {
-    setPrevId(currentId);
-    setFormData({
-      fullName: editingCustomer?.name || '',
-      phone: editingCustomer?.phone || '',
-      email: '',
-      notes: '',
-    });
-  }
 
   if (!isOpen) return null;
 

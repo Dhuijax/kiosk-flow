@@ -7,8 +7,13 @@ service StoreService {
     rpc UpdateStore (UpdateStoreRequest) returns (Store);
 }
 
+service TenantSettingsService {
+    rpc GetSettings (GetSettingsRequest) returns (TenantSettings);
+    rpc UpdateSettings (UpdateSettingsRequest) returns (TenantSettings);
+}
+
 message GetStoreRequest {
-    string id = 1; // can be empty for current tenant store
+    string id = 1; 
 }
 
 message UpdateStoreRequest {
@@ -26,4 +31,22 @@ message Store {
     string phone = 5;
     string currency = 6;
     string tenant_id = 7;
+}
+
+message GetSettingsRequest {}
+
+message UpdateSettingsRequest {
+    string theme_color = 1;
+    int32 kiosk_timeout_seconds = 2;
+    string language = 3;
+    string currency = 4;
+}
+
+message TenantSettings {
+    string theme_color = 1;
+    string logo_url = 2;
+    int32 kiosk_timeout_seconds = 3;
+    string language = 4;
+    string currency = 5;
+    string updated_at = 6;
 }

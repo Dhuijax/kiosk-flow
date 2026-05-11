@@ -50,6 +50,7 @@ export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFilterActive, setIsFilterActive] = useState(false);
   const { tenantId, token } = useAuth();
 
   const fetchCustomers = useCallback(async () => {
@@ -166,7 +167,10 @@ export default function CustomersPage() {
             className="w-full pl-16 pr-6 py-5 bg-background border border-foreground/10 rounded-3xl outline-none focus:bg-white transition-all font-black text-lg uppercase italic tracking-tighter shadow-sm"
           />
         </div>
-        <button className="w-16 h-16 bg-surface border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-foreground hover:text-background transition-all shadow-sm active:scale-95">
+        <button 
+          onClick={() => setIsFilterActive(!isFilterActive)}
+          className={`w-16 h-16 bg-surface border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-foreground hover:text-background transition-all shadow-sm active:scale-95 ${isFilterActive ? 'bg-primary text-white border-primary' : ''}`}
+        >
           <Filter className="w-6 h-6 stroke-[3]" />
         </button>
       </div>
@@ -196,10 +200,12 @@ export default function CustomersPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className="group bg-surface border border-foreground/10 rounded-3xl p-10 flex flex-col md:flex-row gap-10 transition-all shadow-sm hover:shadow-md hover:scale-[1.01] relative overflow-hidden"
+                className="group bg-surface border border-foreground/10 rounded-3xl p-10 flex flex-col md:flex-row gap-10 transition-all shadow-sm hover:shadow-md hover:scale-[1.01] relative"
               >
-                {/* Background Accent */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-interaction/10 transition-colors" />
+                {/* Background Accent & Clipping */}
+                <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-interaction/10 transition-colors" />
+                </div>
 
                 {/* Profile Info */}
                 <div className="flex flex-col items-center gap-6 md:w-48 shrink-0">
@@ -291,6 +297,7 @@ export default function CustomersPage() {
       </div>
 
       <AddCustomerModal 
+        key={isModalOpen ? `edit-${selectedCustomer?.id || 'new'}` : 'closed'}
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
@@ -303,6 +310,7 @@ export default function CustomersPage() {
       />
 
       <CustomerDetailModal 
+        key={isDetailOpen ? `detail-${selectedCustomer?.id || 'detail'}` : 'closed'}
         isOpen={isDetailOpen}
         onClose={() => {
           setIsDetailOpen(false);

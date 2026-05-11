@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { GetStoreRequest, Store, UpdateStoreRequest } from "./store_pb";
+import { GetSettingsRequest, GetStoreRequest, Store, TenantSettings, UpdateSettingsRequest, UpdateStoreRequest } from "./store_pb";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -28,6 +28,33 @@ export const StoreService = {
       name: "UpdateStore",
       I: UpdateStoreRequest,
       O: Store,
+      kind: MethodKind.Unary,
+    },
+  }
+} as const;
+
+/**
+ * @generated from service store.TenantSettingsService
+ */
+export const TenantSettingsService = {
+  typeName: "store.TenantSettingsService",
+  methods: {
+    /**
+     * @generated from rpc store.TenantSettingsService.GetSettings
+     */
+    getSettings: {
+      name: "GetSettings",
+      I: GetSettingsRequest,
+      O: TenantSettings,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc store.TenantSettingsService.UpdateSettings
+     */
+    updateSettings: {
+      name: "UpdateSettings",
+      I: UpdateSettingsRequest,
+      O: TenantSettings,
       kind: MethodKind.Unary,
     },
   }

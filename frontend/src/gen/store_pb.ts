@@ -11,8 +11,6 @@ import { Message, proto3 } from "@bufbuild/protobuf";
  */
 export class GetStoreRequest extends Message<GetStoreRequest> {
   /**
-   * can be empty for current tenant store
-   *
    * @generated from field: string id = 1;
    */
   id = "";
@@ -170,6 +168,159 @@ export class Store extends Message<Store> {
 
   static equals(a: Store | PlainMessage<Store> | undefined, b: Store | PlainMessage<Store> | undefined): boolean {
     return proto3.util.equals(Store, a, b);
+  }
+}
+
+/**
+ * @generated from message store.GetSettingsRequest
+ */
+export class GetSettingsRequest extends Message<GetSettingsRequest> {
+  constructor(data?: PartialMessage<GetSettingsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "store.GetSettingsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetSettingsRequest {
+    return new GetSettingsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetSettingsRequest {
+    return new GetSettingsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetSettingsRequest {
+    return new GetSettingsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetSettingsRequest | PlainMessage<GetSettingsRequest> | undefined, b: GetSettingsRequest | PlainMessage<GetSettingsRequest> | undefined): boolean {
+    return proto3.util.equals(GetSettingsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message store.UpdateSettingsRequest
+ */
+export class UpdateSettingsRequest extends Message<UpdateSettingsRequest> {
+  /**
+   * @generated from field: string theme_color = 1;
+   */
+  themeColor = "";
+
+  /**
+   * @generated from field: int32 kiosk_timeout_seconds = 2;
+   */
+  kioskTimeoutSeconds = 0;
+
+  /**
+   * @generated from field: string language = 3;
+   */
+  language = "";
+
+  /**
+   * @generated from field: string currency = 4;
+   */
+  currency = "";
+
+  constructor(data?: PartialMessage<UpdateSettingsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "store.UpdateSettingsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "theme_color", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "kiosk_timeout_seconds", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "language", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "currency", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UpdateSettingsRequest {
+    return new UpdateSettingsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UpdateSettingsRequest {
+    return new UpdateSettingsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UpdateSettingsRequest {
+    return new UpdateSettingsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: UpdateSettingsRequest | PlainMessage<UpdateSettingsRequest> | undefined, b: UpdateSettingsRequest | PlainMessage<UpdateSettingsRequest> | undefined): boolean {
+    return proto3.util.equals(UpdateSettingsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message store.TenantSettings
+ */
+export class TenantSettings extends Message<TenantSettings> {
+  /**
+   * @generated from field: string theme_color = 1;
+   */
+  themeColor = "";
+
+  /**
+   * @generated from field: string logo_url = 2;
+   */
+  logoUrl = "";
+
+  /**
+   * @generated from field: int32 kiosk_timeout_seconds = 3;
+   */
+  kioskTimeoutSeconds = 0;
+
+  /**
+   * @generated from field: string language = 4;
+   */
+  language = "";
+
+  /**
+   * @generated from field: string currency = 5;
+   */
+  currency = "";
+
+  /**
+   * @generated from field: string updated_at = 6;
+   */
+  updatedAt = "";
+
+  constructor(data?: PartialMessage<TenantSettings>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "store.TenantSettings";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "theme_color", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "logo_url", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "kiosk_timeout_seconds", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 4, name: "language", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "currency", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "updated_at", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TenantSettings {
+    return new TenantSettings().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): TenantSettings {
+    return new TenantSettings().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): TenantSettings {
+    return new TenantSettings().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: TenantSettings | PlainMessage<TenantSettings> | undefined, b: TenantSettings | PlainMessage<TenantSettings> | undefined): boolean {
+    return proto3.util.equals(TenantSettings, a, b);
   }
 }
 

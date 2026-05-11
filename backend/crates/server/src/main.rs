@@ -3,11 +3,11 @@ use http::header::{HeaderName, HeaderValue};
 use std::net::SocketAddr;
 
 use proto_gen::auth::auth_service_server::AuthServiceServer;
-use proto_gen::store::store_service_server::StoreServiceServer;
+use proto_gen::store::{store_service_server::StoreServiceServer, tenant_settings_service_server::TenantSettingsServiceServer};
 use proto_gen::inventory::inventory_service_server::InventoryServiceServer;
 use proto_gen::product::product_service_server::ProductServiceServer;
 use services::auth::AuthServiceImpl;
-use services::store::StoreServiceImpl;
+use services::store::{StoreServiceImpl, TenantSettingsServiceImpl};
 use services::inventory::InventoryServiceImpl;
 use services::category::CategoryServiceImpl;
 use services::product::ProductServiceImpl;
@@ -28,7 +28,7 @@ use services::customer::CustomerServiceImpl;
 use infra::middleware::get_auth_interceptor;
 
 use infra::db::create_pool;
-use infra::repository::{UserRepository, TenantRepository, CategoryRepository, ProductRepository, ToppingRepository, TableRepository, FloorPlanRepository, OrderRepository, PaymentRepository, InventoryRepository, ReportRepository, CustomerRepository};
+use infra::repository::{UserRepository, TenantRepository, CategoryRepository, ProductRepository, ToppingRepository, TableRepository, FloorPlanRepository, OrderRepository, PaymentRepository, InventoryRepository, ReportRepository, CustomerRepository, StoreRepository};
 use infra::security::SecurityService;
 use std::sync::Arc;
 use dotenvy::dotenv;
@@ -66,10 +66,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let inventory_repo = Arc::new(InventoryRepository::new(pool.clone()));
     let report_repo = Arc::new(ReportRepository::new(pool.clone()));
     let customer_repo = Arc::new(CustomerRepository::new(pool.clone()));
+    let store_repo = Arc::new(StoreRepository::new(pool.clone()));
 
     // 3. Initialize Services
     let auth_service = AuthServiceImpl::new(user_repo.clone(), tenant_repo.clone(), security.clone());
-    let store_service = StoreServiceImpl::new();
+    let store_service = StoreServiceImpl::new(store_repo.clone());
+    let settings_service = TenantSettingsServiceImpl::new(store_repo.clone());
     let inventory_service = InventoryServiceImpl::new(inventory_repo.clone());
     let category_service = CategoryServiceImpl::new(category_repo.clone());
     let product_service = ProductServiceImpl::new(product_repo.clone(), topping_repo.clone());
@@ -84,6 +86,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     let auth_server = AuthServiceServer::with_interceptor(auth_service, auth_interceptor.clone());
     let store_server = StoreServiceServer::with_interceptor(store_service, auth_interceptor.clone());
+    let settings_server = TenantSettingsServiceServer::with_interceptor(settings_service, auth_interceptor.clone());
     let inventory_server = InventoryServiceServer::with_interceptor(inventory_service, auth_interceptor.clone());
     let category_server = CategoryServiceServer::with_interceptor(category_service, auth_interceptor.clone());
     let product_server = ProductServiceServer::with_interceptor(product_service, auth_interceptor.clone());
@@ -148,6 +151,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let report_server = tonic_web::enable(report_server);
     let customer_server = tonic_web::enable(customer_server);
     let status_server = tonic_web::enable(status_server);
+    let settings_server = tonic_web::enable(settings_server);
 
     router
         .add_service(ext_descriptor_set)
@@ -162,6 +166,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(report_server)
         .add_service(customer_server)
         .add_service(status_server)
+        .add_service(settings_server)
         .serve(addr)
         .await?;
 

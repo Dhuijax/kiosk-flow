@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { BranchService } from '@/gen/branch_connect';
@@ -15,7 +15,6 @@ import {
   CheckCircle2, 
   Store,
   Phone,
-  Calendar,
   Sparkles,
   ChevronRight,
   ShieldCheck
@@ -27,22 +26,28 @@ export default function BranchesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const fetchBranches = useCallback(async () => {
-    if (!tenantId || !token) return;
-    try {
-      const client = getAuthenticatedClient(BranchService, tenantId, token);
-      const res = await client.listBranches({});
-      setBranches(res.branches);
-    } catch (err) {
-      console.error('Failed to fetch branches:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, token]);
-
   useEffect(() => {
-    fetchBranches();
-  }, [fetchBranches]);
+    let isMounted = true;
+    
+    async function loadBranches() {
+      if (!tenantId || !token) return;
+      try {
+        const client = getAuthenticatedClient(BranchService, tenantId, token);
+        const res = await client.listBranches({});
+        if (isMounted) setBranches(res.branches);
+      } catch (err) {
+        console.error('Failed to fetch branches:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadBranches();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [tenantId, token]);
 
   const handleSwitchBranch = (id: string) => {
     setBranchId(id);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { BranchService } from '@/gen/branch_connect';
@@ -13,25 +13,30 @@ export default function BranchSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const fetchBranches = useCallback(async () => {
-    if (!tenantId || !token) return;
-    setLoading(true);
-    try {
-      const client = getAuthenticatedClient(BranchService, tenantId, token);
-      const res = await client.listBranches({});
-      setBranches(res.branches);
-    } catch (err) {
-      console.error('Failed to fetch branches for switcher:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, token]);
-
   useEffect(() => {
+    let isMounted = true;
+    
     if (isOpen && branches.length === 0) {
-      fetchBranches();
+      const loadBranches = async () => {
+        if (!tenantId || !token) return;
+        setLoading(true);
+        try {
+          const client = getAuthenticatedClient(BranchService, tenantId, token);
+          const res = await client.listBranches({});
+          if (isMounted) setBranches(res.branches);
+        } catch (err) {
+          console.error('Failed to fetch branches for switcher:', err);
+        } finally {
+          if (isMounted) setLoading(false);
+        }
+      };
+      loadBranches();
     }
-  }, [isOpen, branches.length, fetchBranches]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, branches.length, tenantId, token]);
 
   const activeBranch = branches.find(b => b.id === branchId) || branches.find(b => b.isMain);
 
@@ -65,7 +70,7 @@ export default function BranchSwitcher() {
             <div className="px-6 py-4 border-b border-foreground/5 flex items-center justify-between">
               <span className="text-xs font-black uppercase tracking-widest text-foreground/40 italic">Danh sách chi nhánh</span>
               <button 
-                onClick={fetchBranches}
+                onClick={() => setBranches([])} // Clear and trigger re-fetch via effect
                 className="p-2 hover:bg-foreground/5 rounded-lg transition-colors text-foreground/20 hover:text-interaction"
                 title="Làm mới"
               >

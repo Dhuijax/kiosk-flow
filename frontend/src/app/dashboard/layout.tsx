@@ -16,10 +16,12 @@ import {
   ChevronRight,
   Heart,
   TrendingUp,
-  Receipt
+  Receipt,
+  MapPin
 } from 'lucide-react';
 
 import StatusBadge from '@/components/ui/StatusBadge';
+import BranchSwitcher from '@/components/dashboard/BranchSwitcher';
 import { cn } from '@/lib/utils';
 
 const navigation = [
@@ -31,6 +33,7 @@ const navigation = [
   { name: 'Nhân viên', href: '/dashboard/staff', icon: Users },
   { name: 'Sản phẩm', href: '/dashboard/products', icon: Package },
   { name: 'Kho hàng', href: '/dashboard/inventory', icon: Package },
+  { name: 'Chi nhánh', href: '/dashboard/branches', icon: MapPin },
   { name: 'Cấu hình', href: '/dashboard/settings', icon: Settings, status: 'demo' as const },
 ];
 
@@ -103,15 +106,19 @@ export default function DashboardLayout({
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Top Navbar */}
-        <header className="h-24 border-b border-foreground/10 flex items-center justify-between px-12 bg-background/80 backdrop-blur-xl sticky top-0 z-50 shadow-sm">
-          <div className="flex items-center gap-4 bg-surface px-6 py-3 rounded-2xl border border-foreground/10 w-[480px] max-w-full group focus-within:border-interaction focus-within:shadow-md transition-all">
-            <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction" />
-            <input 
-              type="text" 
-              placeholder="TÌM KIẾM HÀNH ĐỘNG..." 
-              className="bg-transparent border-none outline-none text-sm font-black uppercase italic tracking-tighter w-full placeholder:text-foreground/20"
-              aria-label="Tìm kiếm nhanh"
-            />
+        <header className="h-24 border-b border-foreground/10 flex items-center justify-between px-12 bg-background/80 backdrop-blur-xl sticky top-0 z-50 shadow-sm gap-8">
+          <div className="flex items-center gap-6 flex-1 min-w-0">
+            <BranchSwitcher />
+            
+            <div className="flex items-center gap-4 bg-surface px-6 py-3 rounded-2xl border border-foreground/10 w-[400px] max-w-full group focus-within:border-interaction focus-within:shadow-md transition-all">
+              <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction" />
+              <input 
+                type="text" 
+                placeholder="TÌM KIẾM HÀNH ĐỘNG..." 
+                className="bg-transparent border-none outline-none text-sm font-black uppercase italic tracking-tighter w-full placeholder:text-foreground/20"
+                aria-label="Tìm kiếm nhanh"
+              />
+            </div>
           </div>
 
           <div className="flex items-center gap-8">

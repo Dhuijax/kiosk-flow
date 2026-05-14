@@ -1798,6 +1798,135 @@ impl StoreRepository {
         Ok(updated)
     }
 
+    pub async fn create_branch(&self, branch: &Branch) -> Result<Branch> {
+        let mut tx = self.tx_with_tenant(&branch.tenant_id).await?;
+
+        // If this is the main branch, unset any other main branch
+        if branch.is_main {
+            sqlx::query!(
+                "UPDATE branches SET is_main = false WHERE tenant_id = $1",
+                branch.tenant_id
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        let created = sqlx::query_as!(
+            Branch,
+            r#"
+            INSERT INTO branches (id, tenant_id, name, address, phone, is_main)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id, tenant_id, name, address, phone, is_main as "is_main!", created_at as "created_at!"
+            "#,
+            branch.id,
+            branch.tenant_id,
+            branch.name,
+            branch.address,
+            branch.phone,
+            branch.is_main
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(created)
+    }
+
+    pub async fn update_branch(&self, tenant_id: &Uuid, id: &Uuid, name: Option<String>, address: Option<String>, phone: Option<String>, is_main: Option<bool>) -> Result<Branch> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        if let Some(true) = is_main {
+            sqlx::query!(
+                "UPDATE branches SET is_main = false WHERE tenant_id = $1",
+                tenant_id
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        let updated = sqlx::query_as!(
+            Branch,
+            r#"
+            UPDATE branches
+            SET name = COALESCE($1, name),
+                address = COALESCE($2, address),
+                phone = COALESCE($3, phone),
+                is_main = COALESCE($4, is_main)
+            WHERE id = $5 AND tenant_id = $6
+            RETURNING id, tenant_id, name, address, phone, is_main as "is_main!", created_at as "created_at!"
+            "#,
+            name,
+            address,
+            phone,
+            is_main,
+            id,
+            tenant_id
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(updated)
+    }
+
+    pub async fn delete_branch(&self, tenant_id: &Uuid, id: &Uuid) -> Result<()> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        // Cannot delete the last branch or the main branch without reassignment
+        // For now, just a simple delete
+        sqlx::query!(
+            "DELETE FROM branches WHERE id = $1 AND tenant_id = $2",
+            id,
+            tenant_id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(())
+    }
+
+    pub async fn list_branches(&self, tenant_id: &Uuid) -> Result<Vec<Branch>> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        let branches = sqlx::query_as!(
+            Branch,
+            r#"
+            SELECT id, tenant_id, name, address, phone, is_main as "is_main!", created_at as "created_at!"
+            FROM branches
+            WHERE tenant_id = $1
+            ORDER BY is_main DESC, created_at ASC
+            "#,
+            tenant_id
+        )
+        .fetch_all(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(branches)
+    }
+
+    pub async fn get_branch(&self, tenant_id: &Uuid, id: &Uuid) -> Result<Option<Branch>> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        let branch = sqlx::query_as!(
+            Branch,
+            r#"
+            SELECT id, tenant_id, name, address, phone, is_main as "is_main!", created_at as "created_at!"
+            FROM branches
+            WHERE id = $1 AND tenant_id = $2
+            "#,
+            id,
+            tenant_id
+        )
+        .fetch_optional(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(branch)
+    }
+
+
     pub async fn get_settings(&self, tenant_id: &Uuid) -> Result<TenantSettings> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 

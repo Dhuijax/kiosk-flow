@@ -26,6 +26,8 @@ use services::status::StatusServiceImpl;
 use proto_gen::status::status_service_server::StatusServiceServer;
 use proto_gen::customer::customer_service_server::CustomerServiceServer;
 use services::customer::CustomerServiceImpl;
+use proto_gen::branch::branch_service_server::BranchServiceServer;
+use services::branch::BranchServiceImpl;
 
 use infra::middleware::get_auth_interceptor;
 
@@ -82,6 +84,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let payment_service = PaymentServiceImpl::new(payment_repo.clone(), order_repo.clone(), customer_repo.clone(), user_repo.clone());
     let report_service = ReportServiceImpl::new(report_repo.clone());
     let customer_service = CustomerServiceImpl::new(customer_repo.clone(), order_repo.clone());
+    let branch_service = BranchServiceImpl::new(store_repo.clone());
     let status_service = StatusServiceImpl::new();
 
     let auth_interceptor = get_auth_interceptor(config.jwt_secret.clone());
@@ -97,6 +100,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let payment_server = PaymentServiceServer::with_interceptor(payment_service, auth_interceptor.clone());
     let report_server = ReportServiceServer::with_interceptor(report_service, auth_interceptor.clone());
     let customer_server = CustomerServiceServer::with_interceptor(customer_service, auth_interceptor.clone());
+    let branch_server = BranchServiceServer::with_interceptor(branch_service, auth_interceptor.clone());
     let status_server = StatusServiceServer::new(status_service);
 
     // 4. Setup gRPC Reflection
@@ -154,6 +158,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let customer_server = tonic_web::enable(customer_server);
     let status_server = tonic_web::enable(status_server);
     let settings_server = tonic_web::enable(settings_server);
+    let branch_server = tonic_web::enable(branch_server);
 
     router
         .add_service(ext_descriptor_set)
@@ -169,6 +174,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(customer_server)
         .add_service(status_server)
         .add_service(settings_server)
+        .add_service(branch_server)
         .serve(addr)
         .await?;
 

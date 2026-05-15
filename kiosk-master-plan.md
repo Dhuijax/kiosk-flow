@@ -539,7 +539,7 @@ kiosk-flow/
 | S25 | `[x]` Completed | 2026-05-15 |
 | S26 | `[x]` Completed | 2026-05-15 |
 | S27 | `[x]` Completed | 2026-05-15 |
-| S28 | `[ ]` Pending | — |
+| S28 | `[x]` Completed | 2026-05-15 |
 | S29 | `[ ]` Pending | — |
 | S30 | `[ ]` Pending | — |
 | S31 | `[ ]` Pending | — |

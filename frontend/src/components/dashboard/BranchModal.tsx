@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Save, MapPin, Phone, Check, RefreshCw, Info } from 'lucide-react';
+import { X, Save, MapPin, Phone, RefreshCw, Info } from 'lucide-react';
 import { Branch } from '@/gen/branch_pb';
 import { BranchService } from '@/gen/branch_connect';
 import { getAuthenticatedClient } from '@/lib/grpc/client';

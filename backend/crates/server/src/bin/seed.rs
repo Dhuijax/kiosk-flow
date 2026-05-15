@@ -22,9 +22,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let branch_ids: Vec<Uuid> = branches.into_iter().map(|r| r.get(0)).collect();
     
     if branch_ids.is_empty() {
-        println!("❌ No branches found. Please run the full seeder first to create products and branches.");
+        println!("❌ No branches found.");
         return Ok(());
     }
+
+    // 2.5 Seed Products
+    seed_products(&pool, tenant_id).await?;
 
     // 3. Seed Employees (50)
     seed_employees(&pool, tenant_id, &branch_ids, 50).await?;
@@ -43,9 +46,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn ensure_tenant_and_admin(pool: &Pool<Postgres>, tenant_id: Uuid) -> anyhow::Result<()> {
+    sqlx::query("DELETE FROM tenants WHERE subdomain = 'demo' OR id = $1").bind(tenant_id).execute(pool).await?;
     let exists = sqlx::query("SELECT id FROM tenants WHERE id = $1").bind(tenant_id).fetch_optional(pool).await?;
     if exists.is_none() {
-        sqlx::query("INSERT INTO tenants (id, name, slug) VALUES ($1, $2, $3)").bind(tenant_id).bind("Demo Store").bind("demo").execute(pool).await?;
+        sqlx::query("INSERT INTO tenants (id, name, subdomain) VALUES ($1, $2, $3)").bind(tenant_id).bind("Demo Store").bind("demo").execute(pool).await?;
     }
     let email = "admin@demo.com";
     let user_exists = sqlx::query("SELECT id FROM users WHERE email = $1 AND tenant_id = $2").bind(email).bind(tenant_id).fetch_optional(pool).await?;
@@ -54,6 +58,43 @@ async fn ensure_tenant_and_admin(pool: &Pool<Postgres>, tenant_id: Uuid) -> anyh
         sqlx::query("INSERT INTO users (id, tenant_id, email, password_hash, full_name, role, is_active) VALUES ($1, $2, $3, $4, $5, 'owner', true)")
             .bind(Uuid::new_v4()).bind(tenant_id).bind(email).bind(hash).bind("Demo Admin").execute(pool).await?;
     }
+    Ok(())
+}
+
+async fn seed_products(pool: &Pool<Postgres>, tenant_id: Uuid) -> anyhow::Result<()> {
+    let exists = sqlx::query("SELECT id FROM products WHERE tenant_id = $1 LIMIT 1").bind(tenant_id).fetch_optional(pool).await?;
+    if exists.is_some() {
+        println!("  - Products already seeded.");
+        return Ok(());
+    }
+
+    println!("  - Seeding products...");
+    
+    // Create categories first
+    let categories = [
+        ("Cà phê", Uuid::new_v4()),
+        ("Trà sữa", Uuid::new_v4()),
+        ("Bánh ngọt", Uuid::new_v4()),
+    ];
+
+    for (name, id) in &categories {
+        sqlx::query("INSERT INTO categories (id, tenant_id, name) VALUES ($1, $2, $3)")
+            .bind(id).bind(tenant_id).bind(name).execute(pool).await?;
+    }
+
+    let products = [
+        ("Cà phê đen", "CF001", categories[0].1, 25000.0),
+        ("Cà phê sữa", "CF002", categories[0].1, 29000.0),
+        ("Trà sữa truyền thống", "TS001", categories[1].1, 35000.0),
+        ("Trà sữa matcha", "TS002", categories[1].1, 45000.0),
+        ("Croissant", "BN001", categories[2].1, 20000.0),
+    ];
+
+    for (name, sku, cat_id, price) in products {
+        sqlx::query("INSERT INTO products (id, tenant_id, category_id, sku, name, price, is_active) VALUES ($1, $2, $3, $4, $5, $6, true)")
+            .bind(Uuid::new_v4()).bind(tenant_id).bind(cat_id).bind(sku).bind(name).bind(BigDecimal::from(price as i64)).execute(pool).await?;
+    }
+
     Ok(())
 }
 

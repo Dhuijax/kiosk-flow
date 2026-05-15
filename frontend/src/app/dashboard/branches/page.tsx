@@ -156,7 +156,6 @@ export default function BranchesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredBranches.map((branch) => {
             const isCurrent = branchId === branch.id;
-            const statusColor = branch.isActive ? 'text-green-500' : 'text-red-500';
             
             return (
               <div 

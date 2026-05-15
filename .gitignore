@@ -10,3 +10,6 @@ target/
 # Generated Tailwind CSS
 frontend/src/app/tailwind.css
 /docs
+/frontend/e2e
+/frontend/playwright-report
+/frontend/test-results

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Filter, AlertCircle, CheckCircle, Mic, Sparkles } from 'lucide-react';
+import { Search, Filter, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 import CategoryTabs from '@/components/pos/CategoryTabs';
 import MenuGrid from '@/components/pos/MenuGrid';
 import OrderSummary from '@/components/pos/OrderSummary';

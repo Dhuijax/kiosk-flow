@@ -75,8 +75,9 @@ export default function InventoryPage() {
       const product = products[item.productId];
       if (!product) return false;
       
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           product.sku.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = 
+        (product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) || 
+        (product.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
       
       const isLow = item.quantity <= item.minQuantity;
       

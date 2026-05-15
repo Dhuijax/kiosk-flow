@@ -76,8 +76,8 @@ export default function StaffPage() {
   };
 
   const filteredStaff = staff.filter(member => 
-    member.fullName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    member.email.toLowerCase().includes(searchQuery.toLowerCase())
+    (member.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) || 
+    (member.email?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
   );
 
   return (

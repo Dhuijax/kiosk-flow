@@ -29,6 +29,7 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
   const [page, setPage] = useState(1);
   const [pageSize] = useState(viewMode === 'grid' ? 12 : 10);
   const [totalItems, setTotalItems] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchProducts = useCallback(async () => {
     if (!token || !tenantId) return;
@@ -42,6 +43,7 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
           pageSize,
         },
         categoryId: selectedCategoryId || undefined,
+        searchQuery: searchQuery || undefined,
       });
       setProducts(response.products);
       if (response.pagination) {
@@ -57,7 +59,7 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchProducts();
-    }, 0);
+    }, 300);
     return () => clearTimeout(timer);
   }, [fetchProducts]);
 
@@ -91,6 +93,8 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
           <input 
             type="text" 
             placeholder="TÌM KIẾM MÓN ĂN, MÃ SKU..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-16 pr-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic tracking-tighter"
           />
         </div>

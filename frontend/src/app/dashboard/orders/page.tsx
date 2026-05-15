@@ -50,8 +50,8 @@ export default function OrdersPage() {
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
       const matchesSearch = 
-        order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        order.customerName.toLowerCase().includes(searchQuery.toLowerCase());
+        (order.orderNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) || 
+        (order.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
       
       const matchesStatus = statusFilter === null || order.status === statusFilter;
       

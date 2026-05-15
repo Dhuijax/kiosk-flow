@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -45,6 +46,21 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { logout } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    return navigation.filter(item => 
+      item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && searchResults.length > 0) {
+      router.push(searchResults[0].href);
+      setSearchQuery('');
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-background text-foreground font-sans selection:bg-accent selection:text-accent-foreground">
@@ -110,14 +126,44 @@ export default function DashboardLayout({
           <div className="flex items-center gap-6 flex-1 min-w-0">
             <BranchSwitcher />
             
-            <div className="flex items-center gap-4 bg-surface px-6 py-3 rounded-2xl border border-foreground/10 w-[400px] max-w-full group focus-within:border-interaction focus-within:shadow-md transition-all">
+            <div className="flex items-center gap-4 bg-surface px-6 py-3 rounded-2xl border border-foreground/10 w-[400px] max-w-full group focus-within:border-interaction focus-within:shadow-md transition-all relative">
               <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction" />
               <input 
                 type="text" 
                 placeholder="TÌM KIẾM HÀNH ĐỘNG..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 className="bg-transparent border-none outline-none text-sm font-black uppercase italic tracking-tighter w-full placeholder:text-foreground/20"
                 aria-label="Tìm kiếm nhanh"
               />
+              
+              {/* Search Results Dropdown */}
+              {searchQuery.trim() && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-surface border border-foreground/10 rounded-2xl shadow-xl overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2">
+                  {searchResults.length > 0 ? (
+                    <div className="p-2">
+                      {searchResults.map((result) => (
+                        <button
+                          key={result.href}
+                          onClick={() => {
+                            router.push(result.href);
+                            setSearchQuery('');
+                          }}
+                          className="w-full flex items-center gap-4 px-4 py-3 hover:bg-interaction hover:text-white rounded-xl transition-all group/item"
+                        >
+                          <result.icon className="w-5 h-5 group-hover/item:scale-110 transition-transform" />
+                          <span className="font-black uppercase italic tracking-tighter text-sm">{result.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center text-foreground/40 font-bold italic text-xs">
+                      KHÔNG TÌM THẤY HÀNH ĐỘNG NÀO...
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

@@ -90,8 +90,8 @@ export default function BranchesPage() {
   };
 
   const filteredBranches = branches.filter(b => 
-    b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    b.address?.toLowerCase().includes(searchQuery.toLowerCase())
+    (b.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+    (b.address?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
   );
 
   return (

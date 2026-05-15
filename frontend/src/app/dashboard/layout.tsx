@@ -89,13 +89,13 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        <div className="p-6 mt-auto border-t border-foreground/5">
+        <div className="px-6 py-8 mt-auto border-t border-foreground/5">
           <button 
             onClick={() => {
               logout();
               router.push('/auth/login');
             }}
-            className="flex items-center gap-4 w-full px-6 py-4 text-foreground/40 hover:bg-red-500/10 hover:text-red-500 rounded-2xl transition-all group font-black uppercase italic tracking-tighter text-sm"
+            className="flex items-center gap-4 w-full px-6 py-4 text-foreground/40 hover:bg-red-500/10 hover:text-red-500 rounded-2xl border border-transparent transition-all group font-black uppercase italic tracking-tighter text-sm"
           >
             <LogOut className="w-6 h-6 group-hover:-translate-x-1 transition-transform stroke-[3]" />
             <span>Đăng xuất</span>

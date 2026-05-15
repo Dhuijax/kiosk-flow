@@ -535,8 +535,8 @@ kiosk-flow/
 | S23.2| `[x]` Transparency Policy (Status Badges) | 2026-05-10 |
 | S23.3| `[x]` Completed | 2026-05-12 |
 | S23.4| `[x]` Completed | 2026-05-12 |
-| S24 | `[x]` Completed | 2026-05-14 |
-| S25 | `[ ]` Pending | — |
+| S24 | `[x]` Completed | 2026-05-15 |
+| S25 | `[x]` Completed | 2026-05-15 |
 | S26 | `[ ]` Pending | — |
 | S27 | `[ ]` Pending | — |
 | S28 | `[ ]` Pending | — |

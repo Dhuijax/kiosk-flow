@@ -288,7 +288,10 @@ export default function CheckoutClient() {
                   amountReceived: parseInt(receivedAmount || '0'),
                   change: changeAmount,
                   cashierName: user?.fullName,
-                  tableName: "Bàn 01" // Temporary, should come from order
+                  tableName: "Bàn 01", // Temporary, should come from order
+                  branchName: currentBranch?.name,
+                  branchAddress: currentBranch?.address,
+                  branchPhone: currentBranch?.phone
                 };
                 const success = await printerService.printReceipt(receiptData);
                 if (!success) {

@@ -3,6 +3,7 @@
 import React from 'react';
 import { Printer, X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 interface ReceiptData {
   orderNumber: string;
@@ -23,6 +24,8 @@ interface ReceiptPreviewProps {
 }
 
 export default function ReceiptPreview({ data, onClose, onPrint }: ReceiptPreviewProps) {
+  const { currentBranch } = useAuth();
+  
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
   };
@@ -40,11 +43,13 @@ export default function ReceiptPreview({ data, onClose, onPrint }: ReceiptPrevie
         
         {/* Header */}
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-black uppercase italic tracking-tighter mb-2">KIOSKFLOW POS</h1>
-          <p className="text-[10px] text-foreground/40 font-black uppercase tracking-[0.2em] leading-relaxed">
-            123 ĐƯỜNG CÔNG NGHỆ, TP. HỒ CHÍ MINH<br />
-            HOTLINE: 1900 1234
-          </p>
+          <h1 className="text-3xl font-black uppercase italic tracking-tighter mb-2">
+            {currentBranch?.name || 'KIOSKFLOW POS'}
+          </h1>
+          <div className="text-[10px] text-foreground/40 font-black uppercase tracking-[0.2em] leading-relaxed">
+            <p>{currentBranch?.address || '123 ĐƯỜNG CÔNG NGHỆ, TP. HCM'}</p>
+            <p>HOTLINE: {currentBranch?.phone || '1900 1234'}</p>
+          </div>
         </div>
 
         {/* Info Box */}
@@ -130,12 +135,12 @@ export default function ReceiptPreview({ data, onClose, onPrint }: ReceiptPrevie
           onClick={onPrint}
           className="btn-dynamic px-10 py-4 text-sm"
         >
-          <Printer size={20} className="stroke-[3]" />
+          <Printer size={20} className="stroke-[3] transition-transform group-hover:scale-110" />
           <span>IN HÓA ĐƠN</span>
         </button>
         <button 
           onClick={onClose}
-          className="px-10 py-4 bg-background border border-foreground/10 rounded-2xl font-black text-sm uppercase italic tracking-tighter text-foreground/40 hover:text-foreground transition-all shadow-sm"
+          className="px-10 py-4 bg-background border border-foreground/10 rounded-2xl font-black text-sm uppercase italic tracking-tighter text-foreground/40 hover:text-foreground hover:border-foreground/20 transition-all shadow-sm"
         >
           <X size={20} className="stroke-[3]" />
           <span>ĐÓNG</span>

@@ -22,6 +22,8 @@ export const metadata: Metadata = {
     locale: "vi_VN",
     type: "website",
   },
+  manifest: "/manifest.json",
+  themeColor: "#0F172A",
   twitter: {
     card: "summary_large_image",
     title: "KioskFlow - Modern POS System",

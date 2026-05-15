@@ -1746,7 +1746,7 @@ impl StoreRepository {
         let branch = sqlx::query_as!(
             Branch,
             r#"
-            SELECT id, tenant_id, name, address, phone, is_main as "is_main!", created_at as "created_at!"
+            SELECT id, tenant_id, name, address, phone, is_main as "is_main!", is_active as "is_active!", created_at as "created_at!"
             FROM branches
             WHERE tenant_id = $1 AND is_main = true
             LIMIT 1
@@ -1762,9 +1762,9 @@ impl StoreRepository {
                 sqlx::query_as!(
                     Branch,
                     r#"
-                    INSERT INTO branches (tenant_id, name, is_main)
-                    VALUES ($1, 'Main Branch', true)
-                    RETURNING id, tenant_id, name, address, phone, is_main as "is_main!", created_at as "created_at!"
+                    INSERT INTO branches (tenant_id, name, is_main, is_active)
+                    VALUES ($1, 'Main Branch', true, true)
+                    RETURNING id, tenant_id, name, address, phone, is_main as "is_main!", is_active as "is_active!", created_at as "created_at!"
                     "#,
                     tenant_id
                 ).fetch_one(&mut *tx).await?
@@ -1784,7 +1784,7 @@ impl StoreRepository {
             UPDATE branches
             SET name = $1, address = $2, phone = $3
             WHERE tenant_id = $4 AND is_main = true
-            RETURNING id, tenant_id, name, address, phone, is_main as "is_main!", created_at as "created_at!"
+            RETURNING id, tenant_id, name, address, phone, is_main as "is_main!", is_active as "is_active!", created_at as "created_at!"
             "#,
             name,
             address,
@@ -1814,16 +1814,17 @@ impl StoreRepository {
         let created = sqlx::query_as!(
             Branch,
             r#"
-            INSERT INTO branches (id, tenant_id, name, address, phone, is_main)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id, tenant_id, name, address, phone, is_main as "is_main!", created_at as "created_at!"
+            INSERT INTO branches (id, tenant_id, name, address, phone, is_main, is_active)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id, tenant_id, name, address, phone, is_main as "is_main!", is_active as "is_active!", created_at as "created_at!"
             "#,
             branch.id,
             branch.tenant_id,
             branch.name,
             branch.address,
             branch.phone,
-            branch.is_main
+            branch.is_main,
+            branch.is_active
         )
         .fetch_one(&mut *tx)
         .await?;
@@ -1832,7 +1833,7 @@ impl StoreRepository {
         Ok(created)
     }
 
-    pub async fn update_branch(&self, tenant_id: &Uuid, id: &Uuid, name: Option<String>, address: Option<String>, phone: Option<String>, is_main: Option<bool>) -> Result<Branch> {
+    pub async fn update_branch(&self, tenant_id: &Uuid, id: &Uuid, name: Option<String>, address: Option<String>, phone: Option<String>, is_main: Option<bool>, is_active: Option<bool>) -> Result<Branch> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         if let Some(true) = is_main {
@@ -1851,14 +1852,16 @@ impl StoreRepository {
             SET name = COALESCE($1, name),
                 address = COALESCE($2, address),
                 phone = COALESCE($3, phone),
-                is_main = COALESCE($4, is_main)
-            WHERE id = $5 AND tenant_id = $6
-            RETURNING id, tenant_id, name, address, phone, is_main as "is_main!", created_at as "created_at!"
+                is_main = COALESCE($4, is_main),
+                is_active = COALESCE($5, is_active)
+            WHERE id = $6 AND tenant_id = $7
+            RETURNING id, tenant_id, name, address, phone, is_main as "is_main!", is_active as "is_active!", created_at as "created_at!"
             "#,
             name,
             address,
             phone,
             is_main,
+            is_active,
             id,
             tenant_id
         )
@@ -1892,7 +1895,7 @@ impl StoreRepository {
         let branches = sqlx::query_as!(
             Branch,
             r#"
-            SELECT id, tenant_id, name, address, phone, is_main as "is_main!", created_at as "created_at!"
+            SELECT id, tenant_id, name, address, phone, is_main as "is_main!", is_active as "is_active!", created_at as "created_at!"
             FROM branches
             WHERE tenant_id = $1
             ORDER BY is_main DESC, created_at ASC
@@ -1912,7 +1915,7 @@ impl StoreRepository {
         let branch = sqlx::query_as!(
             Branch,
             r#"
-            SELECT id, tenant_id, name, address, phone, is_main as "is_main!", created_at as "created_at!"
+            SELECT id, tenant_id, name, address, phone, is_main as "is_main!", is_active as "is_active!", created_at as "created_at!"
             FROM branches
             WHERE id = $1 AND tenant_id = $2
             "#,

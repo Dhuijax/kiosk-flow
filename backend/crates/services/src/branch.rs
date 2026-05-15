@@ -48,6 +48,7 @@ impl BranchService for BranchServiceImpl {
                 address: b.address,
                 phone: b.phone,
                 is_main: b.is_main,
+                is_active: b.is_active,
                 created_at: b.created_at.to_rfc3339(),
             }).collect(),
             pagination: None,
@@ -68,6 +69,7 @@ impl BranchService for BranchServiceImpl {
             address: req.address,
             phone: req.phone,
             is_main: req.is_main,
+            is_active: req.is_active,
             created_at: chrono::Utc::now(),
         };
 
@@ -81,6 +83,7 @@ impl BranchService for BranchServiceImpl {
             address: created.address,
             phone: created.phone,
             is_main: created.is_main,
+            is_active: created.is_active,
             created_at: created.created_at.to_rfc3339(),
         }))
     }
@@ -100,6 +103,7 @@ impl BranchService for BranchServiceImpl {
             req.address,
             req.phone,
             req.is_main,
+            req.is_active,
         ).await.map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(Branch {
@@ -109,6 +113,7 @@ impl BranchService for BranchServiceImpl {
             address: updated.address,
             phone: updated.phone,
             is_main: updated.is_main,
+            is_active: updated.is_active,
             created_at: updated.created_at.to_rfc3339(),
         }))
     }
@@ -149,6 +154,7 @@ impl BranchService for BranchServiceImpl {
             address: branch.address,
             phone: branch.phone,
             is_main: branch.is_main,
+            is_active: branch.is_active,
             created_at: branch.created_at.to_rfc3339(),
         }))
     }

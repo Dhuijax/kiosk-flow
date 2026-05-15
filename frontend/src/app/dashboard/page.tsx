@@ -15,24 +15,37 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
-import { ProductService } from '@/gen/product_connect';
-import { AuthService } from '@/gen/auth_connect';
-import { ReportService } from '@/gen/report_connect';
-import { PeriodType } from '@/gen/report_pb';
+import { OrderService } from '@/gen/order_connect';
+import { InventoryService } from '@/gen/inventory_connect';
+import { OrderStatus } from '@/gen/order_pb';
 import { formatISO, startOfDay, startOfWeek, startOfMonth, startOfYear, subDays } from 'date-fns';
 import Link from 'next/link';
-import { formatVND, moneyToNumber } from '@/lib/utils/format';
+import { formatVND, moneyToNumber, formatDateTime } from '@/lib/utils/format';
 import RevenueChart from '@/components/dashboard/RevenueChart';
 import TopProducts from '@/components/dashboard/TopProducts';
 import DashboardFilters, { DateRange } from '@/components/dashboard/DashboardFilters';
 
 import StatusBadge from '@/components/ui/StatusBadge';
 
+interface RecentOrder {
+  id: string;
+  target: string;
+  time: string;
+  amount: string;
+  status: string;
+  type: 'processing' | 'done' | 'cancel';
+}
+
+interface StockAlert {
+  name: string;
+  stock: string;
+  min: string;
+}
+
 export default function DashboardPage() {
-  const { token, tenantId } = useAuth();
+  const { token, tenantId, branchId } = useAuth();
   
   const [dateRange, setDateRange] = useState<DateRange>('week');
-  const [branchId, setBranchId] = useState('');
   
   const [stats, setStats] = useState({
     productCount: 0,
@@ -46,10 +59,14 @@ export default function DashboardPage() {
   const [reportData, setReportData] = useState<{
     trends: { label: string; revenue: number; orders: number }[];
     topProducts: { name: string; quantity: number; revenue: number }[];
+    recentOrders: RecentOrder[];
+    stockAlerts: StockAlert[];
     loading: boolean;
   }>({
     trends: [],
     topProducts: [],
+    recentOrders: [],
+    stockAlerts: [],
     loading: true
   });
 
@@ -64,6 +81,8 @@ export default function DashboardPage() {
         const prodClient = getAuthenticatedClient(ProductService, tenantId, token);
         const authClient = getAuthenticatedClient(AuthService, tenantId, token);
         const reportClient = getAuthenticatedClient(ReportService, tenantId, token);
+        const orderClient = getAuthenticatedClient(OrderService, tenantId, token);
+        const inventoryClient = getAuthenticatedClient(InventoryService, tenantId, token);
         
         const now = new Date();
         let startDate: Date;
@@ -80,13 +99,17 @@ export default function DashboardPage() {
         const startStr = formatISO(startDate);
         const endStr = formatISO(now);
 
-        const [prodRes, staffRes, summaryRes, topRes, trendRes] = await Promise.all([
-          prodClient.listProducts({ pagination: { page: 1, pageSize: 1 } }),
+        const [prodRes, staffRes, summaryRes, topRes, trendRes, orderRes, stockRes] = await Promise.all([
+          prodClient.listProducts({ pagination: { page: 1, pageSize: 100 } }),
           authClient.listStaff({}),
-          reportClient.getRevenueSummary({ branchId, startDate: startStr, endDate: endStr }),
-          reportClient.getTopProducts({ branchId, startDate: startStr, endDate: endStr, limit: 5 }),
-          reportClient.getSalesByPeriod({ branchId, startDate: startStr, endDate: endStr, period: periodType })
+          reportClient.getRevenueSummary({ branchId: branchId || undefined, startDate: startStr, endDate: endStr }),
+          reportClient.getTopProducts({ branchId: branchId || undefined, startDate: startStr, endDate: endStr, limit: 5 }),
+          reportClient.getSalesByPeriod({ branchId: branchId || undefined, startDate: startStr, endDate: endStr, period: periodType }),
+          orderClient.listOrders({ branchId: branchId || undefined, pagination: { page: 1, pageSize: 5 } }),
+          inventoryClient.listStock({ branchId: branchId || undefined, lowStockOnly: true, pagination: { page: 1, pageSize: 5 } })
         ]);
+
+        const productMap = new Map(prodRes.products.map(p => [p.id, p]));
 
         setStats({
           productCount: prodRes.pagination?.totalCount || 0,
@@ -108,6 +131,19 @@ export default function DashboardPage() {
             revenue: moneyToNumber(i.revenue),
             orders: i.orderCount
           })),
+          recentOrders: orderRes.orders.map(o => ({
+            id: o.orderNumber || `#${o.id.substring(0, 8)}`,
+            target: o.tableName || 'MANG VỀ',
+            time: o.createdAt ? formatDateTime(o.createdAt.toDate()) : '...',
+            amount: formatVND(moneyToNumber(o.total)),
+            status: mapOrderStatus(o.status).label,
+            type: mapOrderStatus(o.status).type
+          })),
+          stockAlerts: stockRes.items.map(s => ({
+            name: productMap.get(s.productId)?.name || 'Sản phẩm ẩn',
+            stock: `${s.quantity} ${productMap.get(s.productId)?.unit || ''}`,
+            min: `${s.minQuantity} ${productMap.get(s.productId)?.unit || ''}`
+          })),
           loading: false
         });
       } catch (err) {
@@ -117,7 +153,11 @@ export default function DashboardPage() {
       }
     };
 
-    fetchData();
+    let mounted = true;
+    if (mounted) {
+      Promise.resolve().then(() => fetchData());
+    }
+    return () => { mounted = false; };
   }, [token, tenantId, dateRange, branchId]);
 
   return (
@@ -142,8 +182,8 @@ export default function DashboardPage() {
           <DashboardFilters 
             dateRange={dateRange} 
             onDateRangeChange={setDateRange}
-            branchId={branchId}
-            onBranchChange={setBranchId}
+            branchId={branchId || ''}
+            onBranchChange={() => {}} // Disabled as we use global switcher
           />
           <div className="h-10 w-1 bg-foreground/10 mx-2 hidden md:block rounded-full"></div>
           <Link href="/pos/order" className="btn-dynamic py-3 px-8 text-sm">
@@ -222,8 +262,14 @@ export default function DashboardPage() {
             </h3>
             <StatusBadge status="coming-soon" className="mb-6" />
             <div className="space-y-4">
-              <StockAlertItem name="Cà phê Robusta" stock="2.5kg" min="5.0kg" />
-              <StockAlertItem name="Sữa đặc Lon" stock="8 lon" min="12 lon" />
+              {reportData.stockAlerts.length === 0 && !reportData.loading && (
+                <div className="py-8 text-center text-foreground/20 italic text-xs">
+                  Kho hàng ổn định
+                </div>
+              )}
+              {reportData.stockAlerts.map((alert, idx) => (
+                <StockAlertItem key={idx} {...alert} />
+              ))}
               <button className="w-full py-4 text-xs font-black uppercase italic text-red-600 hover:underline tracking-widest">
                 Xem chi tiết kho hàng
               </button>
@@ -259,9 +305,16 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-foreground/5">
-              <OrderRow id="#ORD-0424" target="BÀN 12" time="12:45" amount="125.000 ₫" status="Đang xử lý" type="processing" />
-              <OrderRow id="#ORD-0423" target="MANG VỀ" time="12:30" amount="45.000 ₫" status="Hoàn thành" type="done" />
-              <OrderRow id="#ORD-0422" target="BÀN 05" time="12:15" amount="210.000 ₫" status="Hoàn thành" type="done" />
+              {reportData.recentOrders.length === 0 && !reportData.loading && (
+                <tr>
+                  <td colSpan={5} className="px-8 py-12 text-center text-foreground/20 italic text-sm">
+                    Chưa có giao dịch nào
+                  </td>
+                </tr>
+              )}
+              {reportData.recentOrders.map((order, idx) => (
+                <OrderRow key={idx} {...order} />
+              ))}
             </tbody>
           </table>
         </div>
@@ -349,4 +402,17 @@ function OrderRow({ id, target, time, amount, status, type }: {
       </td>
     </tr>
   );
+}
+
+function mapOrderStatus(status: OrderStatus): { label: string; type: 'processing' | 'done' | 'cancel' } {
+  switch (status) {
+    case OrderStatus.ORDER_STATUS_COMPLETED:
+    case OrderStatus.ORDER_STATUS_PAID:
+    case OrderStatus.ORDER_STATUS_SERVED:
+      return { label: 'Hoàn thành', type: 'done' };
+    case OrderStatus.ORDER_STATUS_CANCELLED:
+      return { label: 'Đã hủy', type: 'cancel' };
+    default:
+      return { label: 'Đang xử lý', type: 'processing' };
+  }
 }

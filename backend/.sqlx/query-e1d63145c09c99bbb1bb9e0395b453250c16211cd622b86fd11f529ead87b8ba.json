@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT id, tenant_id, name, address, phone, is_main as \"is_main!\", created_at as \"created_at!\"\n            FROM branches\n            WHERE id = $1 AND tenant_id = $2\n            ",
+  "query": "\n            UPDATE branches\n            SET name = COALESCE($1, name),\n                address = COALESCE($2, address),\n                phone = COALESCE($3, phone),\n                is_main = COALESCE($4, is_main),\n                is_active = COALESCE($5, is_active)\n            WHERE id = $6 AND tenant_id = $7\n            RETURNING id, tenant_id, name, address, phone, is_main as \"is_main!\", is_active as \"is_active!\", created_at as \"created_at!\"\n            ",
   "describe": {
     "columns": [
       {
@@ -35,12 +35,22 @@
       },
       {
         "ordinal": 6,
+        "name": "is_active!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
         "name": "created_at!",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool",
         "Uuid",
         "Uuid"
       ]
@@ -52,8 +62,9 @@
       true,
       true,
       true,
+      true,
       true
     ]
   },
-  "hash": "e244e90f7a54dea84e18e48a867ebb009280bd0a97522ce33061c25737c12525"
+  "hash": "e1d63145c09c99bbb1bb9e0395b453250c16211cd622b86fd11f529ead87b8ba"
 }

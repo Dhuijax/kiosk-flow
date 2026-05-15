@@ -58,7 +58,6 @@ pub fn get_auth_interceptor(secret: String) -> impl Fn(Request<()>) -> Result<Re
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tonic::metadata::MetadataMap;
 
     #[test]
     fn test_extract_tenant_from_x_tenant_id() {

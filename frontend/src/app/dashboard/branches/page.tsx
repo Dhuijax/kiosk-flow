@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { BranchService } from '@/gen/branch_connect';
@@ -9,7 +9,6 @@ import {
   MapPin, 
   Plus, 
   Search, 
-  MoreVertical, 
   Edit2, 
   Trash2, 
   CheckCircle2, 
@@ -17,40 +16,77 @@ import {
   Phone,
   Sparkles,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-react';
+import BranchModal from '@/components/dashboard/BranchModal';
 
 export default function BranchesPage() {
   const { tenantId, token, branchId, setBranchId } = useAuth();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingBranch, setEditingBranch] = useState<Branch | undefined>();
+
+  const loadBranches = useCallback(async () => {
+    if (!tenantId || !token) return;
+    try {
+      setLoading(true);
+      const client = getAuthenticatedClient(BranchService, tenantId, token);
+      const res = await client.listBranches({});
+      setBranches(res.branches);
+    } catch (err) {
+      console.error('Failed to fetch branches:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [tenantId, token]);
 
   useEffect(() => {
-    let isMounted = true;
-    
-    async function loadBranches() {
-      if (!tenantId || !token) return;
-      try {
-        const client = getAuthenticatedClient(BranchService, tenantId, token);
-        const res = await client.listBranches({});
-        if (isMounted) setBranches(res.branches);
-      } catch (err) {
-        console.error('Failed to fetch branches:', err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
+    let mounted = true;
+    if (mounted) {
+      Promise.resolve().then(() => loadBranches());
     }
-
-    loadBranches();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [tenantId, token]);
+    return () => { mounted = false; };
+  }, [loadBranches]);
 
   const handleSwitchBranch = (id: string) => {
     setBranchId(id);
+  };
+
+  const handleAdd = () => {
+    setEditingBranch(undefined);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (branch: Branch) => {
+    setEditingBranch(branch);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!tenantId || !token) return;
+    if (!confirm('Bạn có chắc chắn muốn xóa chi nhánh này? Thao tác này không thể hoàn tác.')) return;
+
+    try {
+      const client = getAuthenticatedClient(BranchService, tenantId, token);
+      await client.deleteBranch({ id });
+      await loadBranches();
+      if (branchId === id) {
+        // If deleted current branch, reset or switch to main
+        const main = branches.find(b => b.isMain);
+        if (main && main.id !== id) {
+          setBranchId(main.id);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to delete branch:', err);
+      alert('Có lỗi xảy ra khi xóa chi nhánh.');
+    }
   };
 
   const filteredBranches = branches.filter(b => 
@@ -77,7 +113,10 @@ export default function BranchesPage() {
           </p>
         </div>
 
-        <button className="h-20 px-10 bg-primary text-white rounded-3xl font-black uppercase italic tracking-tighter flex items-center gap-4 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 group">
+        <button 
+          onClick={handleAdd}
+          className="h-20 px-10 bg-primary text-white rounded-3xl font-black uppercase italic tracking-tighter flex items-center gap-4 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 group"
+        >
           <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform stroke-[3]" />
           <span>Thêm chi nhánh mới</span>
         </button>
@@ -97,10 +136,17 @@ export default function BranchesPage() {
             className="w-full h-20 pl-16 pr-8 bg-surface border border-foreground/10 rounded-3xl focus:border-interaction focus:ring-4 focus:ring-interaction/10 outline-none transition-all font-black uppercase italic tracking-tighter placeholder:text-foreground/10"
           />
         </div>
+        <button 
+          onClick={loadBranches}
+          className="h-20 w-20 bg-surface border border-foreground/10 rounded-3xl flex items-center justify-center hover:bg-foreground/5 transition-all"
+          title="Tải lại"
+        >
+          <RefreshCw className={`w-6 h-6 text-foreground/40 ${loading ? 'animate-spin' : ''}`} />
+        </button>
       </div>
 
       {/* Grid Layout */}
-      {loading ? (
+      {loading && branches.length === 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[1, 2, 3].map(i => (
             <div key={i} className="h-[400px] bg-surface/50 border border-foreground/10 rounded-[40px] animate-pulse"></div>
@@ -109,20 +155,23 @@ export default function BranchesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredBranches.map((branch) => {
-            const isActive = branchId === branch.id;
+            const isCurrent = branchId === branch.id;
+            const statusColor = branch.isActive ? 'text-green-500' : 'text-red-500';
+            
             return (
               <div 
                 key={branch.id}
                 className={`
                   group relative bg-surface border rounded-[40px] p-8 flex flex-col gap-8 transition-all duration-500
-                  ${isActive 
+                  ${isCurrent 
                     ? 'border-interaction shadow-2xl shadow-interaction/10 scale-[1.02]' 
                     : 'border-foreground/10 hover:border-foreground/20 hover:shadow-xl hover:-translate-y-2'
                   }
+                  ${!branch.isActive ? 'opacity-60 grayscale-[0.5]' : ''}
                 `}
               >
                 {/* Active Indicator */}
-                {isActive && (
+                {isCurrent && (
                   <div className="absolute -top-4 -right-4 bg-interaction text-white p-4 rounded-2xl shadow-xl animate-in zoom-in duration-500">
                     <CheckCircle2 className="w-6 h-6 stroke-[3]" />
                   </div>
@@ -132,13 +181,16 @@ export default function BranchesPage() {
                 <div className="flex items-start justify-between">
                   <div className={`
                     w-20 h-20 rounded-3xl flex items-center justify-center transition-all duration-500
-                    ${isActive ? 'bg-interaction text-white' : 'bg-foreground/5 text-foreground/40 group-hover:bg-interaction/10 group-hover:text-interaction'}
+                    ${isCurrent ? 'bg-interaction text-white' : 'bg-foreground/5 text-foreground/40 group-hover:bg-interaction/10 group-hover:text-interaction'}
                   `}>
                     <Store className="w-10 h-10 stroke-[2.5]" />
                   </div>
-                  <button className="w-12 h-12 rounded-2xl border border-foreground/10 flex items-center justify-center hover:bg-foreground/5 transition-colors">
-                    <MoreVertical className="w-6 h-6 text-foreground/20" />
-                  </button>
+                  {!branch.isActive && (
+                    <div className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4" />
+                      Ngừng hoạt động
+                    </div>
+                  )}
                 </div>
 
                 {/* Content */}
@@ -148,6 +200,12 @@ export default function BranchesPage() {
                       <div className="px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
                         <ShieldCheck className="w-3 h-3" />
                         Trụ sở chính
+                      </div>
+                    )}
+                    {branch.isActive && (
+                      <div className="px-3 py-1 bg-green-500/10 text-green-500 border border-green-500/20 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                        Đang mở cửa
                       </div>
                     )}
                   </div>
@@ -168,7 +226,7 @@ export default function BranchesPage() {
 
                 {/* Footer Actions */}
                 <div className="pt-8 border-t border-foreground/5 flex items-center justify-between">
-                  {isActive ? (
+                  {isCurrent ? (
                     <div className="flex items-center gap-2 text-interaction font-black uppercase italic tracking-tighter text-sm">
                       <Sparkles className="w-5 h-5 animate-pulse" />
                       <span>Đang vận hành</span>
@@ -176,7 +234,8 @@ export default function BranchesPage() {
                   ) : (
                     <button 
                       onClick={() => handleSwitchBranch(branch.id)}
-                      className="px-6 py-3 bg-foreground/5 hover:bg-interaction hover:text-white rounded-2xl transition-all font-black uppercase italic tracking-tighter text-sm flex items-center gap-2"
+                      disabled={!branch.isActive}
+                      className="px-6 py-3 bg-foreground/5 hover:bg-interaction hover:text-white disabled:opacity-50 disabled:hover:bg-foreground/5 disabled:hover:text-foreground rounded-2xl transition-all font-black uppercase italic tracking-tighter text-sm flex items-center gap-2"
                     >
                       <span>Sử dụng</span>
                       <ChevronRight className="w-4 h-4" />
@@ -184,11 +243,17 @@ export default function BranchesPage() {
                   )}
                   
                   <div className="flex items-center gap-2">
-                    <button className="w-12 h-12 rounded-2xl border border-foreground/10 flex items-center justify-center hover:bg-interaction/10 hover:text-interaction transition-colors" title="Sửa">
+                    <button 
+                      onClick={() => handleEdit(branch)}
+                      className="w-12 h-12 rounded-2xl border border-foreground/10 flex items-center justify-center hover:bg-interaction/10 hover:text-interaction transition-colors" title="Sửa"
+                    >
                       <Edit2 className="w-5 h-5" />
                     </button>
                     {!branch.isMain && (
-                      <button className="w-12 h-12 rounded-2xl border border-foreground/10 flex items-center justify-center hover:bg-red-500/10 hover:text-red-500 transition-colors" title="Xóa">
+                      <button 
+                        onClick={() => handleDelete(branch.id)}
+                        className="w-12 h-12 rounded-2xl border border-foreground/10 flex items-center justify-center hover:bg-red-500/10 hover:text-red-500 transition-colors" title="Xóa"
+                      >
                         <Trash2 className="w-5 h-5" />
                       </button>
                     )}
@@ -210,11 +275,21 @@ export default function BranchesPage() {
             <h3 className="text-3xl font-black uppercase italic tracking-tighter">Không tìm thấy chi nhánh</h3>
             <p className="text-foreground/40 font-medium">Hãy thử thay đổi từ khóa tìm kiếm hoặc thêm chi nhánh mới.</p>
           </div>
-          <button className="h-16 px-8 bg-foreground text-background rounded-2xl font-black uppercase italic tracking-tighter hover:scale-105 transition-all">
+          <button 
+            onClick={() => setSearchQuery('')}
+            className="h-16 px-8 bg-foreground text-background rounded-2xl font-black uppercase italic tracking-tighter hover:scale-105 transition-all"
+          >
             Xóa tìm kiếm
           </button>
         </div>
       )}
+
+      <BranchModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={loadBranches}
+        editingBranch={editingBranch}
+      />
     </div>
   );
 }

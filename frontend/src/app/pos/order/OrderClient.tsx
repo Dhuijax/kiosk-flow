@@ -15,16 +15,20 @@ import { PaymentService } from '@/gen/payment_connect';
 import { PaymentMethod } from '@/gen/payment_pb';
 import PaymentModal from '@/components/pos/PaymentModal';
 import { Customer } from '@/gen/customer_pb';
+import { db } from '@/lib/offline/db';
+import { useOfflineSync } from '@/lib/offline/useOfflineSync';
 
 export default function OrderClient() {
   const { token, tenantId, branchId } = useAuth();
   const { items, clearCart, tableId, total } = useOrderCart();
+  const { pendingCount } = useOfflineSync();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [status, setStatus] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [status, setStatus] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [isOrderSummaryOpen, setIsOrderSummaryOpen] = useState(false);
 
   const handleCheckout = () => {
     if (!token || !tenantId || !branchId || items.length === 0) {
@@ -37,6 +41,45 @@ export default function OrderClient() {
 
   const confirmPayment = async (method: PaymentMethod, receivedAmount?: number) => {
     if (!token || !tenantId || !branchId) return;
+    
+    const orderData = {
+      branchId,
+      tableId: tableId || "",
+      customerName: selectedCustomer?.name || "Kiosk Customer",
+      customerId: selectedCustomer?.id || "",
+      note: "",
+      items: items.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        note: item.note,
+        toppingIds: item.selectedToppings.map(t => t.id)
+      })),
+      payment: {
+        method,
+        receivedAmount: receivedAmount || 0
+      }
+    };
+
+    // Check if offline
+    if (!navigator.onLine) {
+      try {
+        await db.queuedOrders.add({
+          ...orderData,
+          createdAt: Date.now(),
+          status: 'pending'
+        });
+        setStatus({ message: 'Đã lưu đơn hàng ngoại tuyến!', type: 'info' });
+        clearCart();
+        setSelectedCustomer(null);
+        setIsPaymentModalOpen(false);
+        setIsOrderSummaryOpen(false);
+        setTimeout(() => setStatus(null), 3000);
+        return;
+      } catch (err) {
+        console.error('Failed to queue order:', err);
+      }
+    }
+
     setIsSubmitting(true);
     try {
       const orderClient = getAuthenticatedClient(OrderService, tenantId, token!);
@@ -44,17 +87,12 @@ export default function OrderClient() {
 
       // 1. Create Order
       const response = await orderClient.createOrder({
-        branchId,
-        tableId: tableId || "",
-        customerName: selectedCustomer?.name || "Kiosk Customer",
-        customerId: selectedCustomer?.id || "",
-        note: "",
-        items: items.map(item => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          note: item.note,
-          toppingIds: item.selectedToppings.map(t => t.id)
-        }))
+        branchId: orderData.branchId,
+        tableId: orderData.tableId,
+        customerName: orderData.customerName,
+        customerId: orderData.customerId,
+        note: orderData.note,
+        items: orderData.items
       });
 
       if (!response.order) {
@@ -64,8 +102,8 @@ export default function OrderClient() {
       // 2. Process Payment
       await paymentClient.processPayment({
         orderId: response.order.id,
-        method,
-        receivedAmount: { units: BigInt(receivedAmount || 0), nanos: 0, currencyCode: "VND" },
+        method: orderData.payment.method,
+        receivedAmount: { units: BigInt(orderData.payment.receivedAmount), nanos: 0, currencyCode: "VND" },
         transactionRef: `KIOSK_${Date.now()}`
       });
 
@@ -73,6 +111,7 @@ export default function OrderClient() {
       clearCart();
       setSelectedCustomer(null);
       setIsPaymentModalOpen(false);
+      setIsOrderSummaryOpen(false);
       setTimeout(() => setStatus(null), 3000);
     } catch (err) {
       console.error('Payment/Order failed:', err);
@@ -107,39 +146,41 @@ export default function OrderClient() {
       </AnimatePresence>
 
       {/* Adaptive Header / Search */}
-      <div className="flex-none flex items-center bg-background border-b border-foreground/10 h-32 px-12 gap-12">
-        <div className="flex-1">
+      <div className="flex-none flex flex-col md:flex-row items-center bg-background border-b border-foreground/10 h-auto md:h-32 px-4 md:px-12 py-4 md:py-0 gap-4 md:gap-12">
+        <div className="flex-1 w-full">
           <div className="relative group">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-8 h-8 text-foreground opacity-40 group-focus-within:opacity-100 transition-opacity" />
+            <Search className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-5 h-5 md:w-8 md:h-8 text-foreground opacity-40 group-focus-within:opacity-100 transition-opacity" />
             <input 
               type="text" 
-              placeholder="BẠN MUỐN TÌM GÌ HÔM NAY?" 
+              placeholder="TÌM KIẾM SẢN PHẨM..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-20 pr-8 py-6 bg-surface border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-2xl uppercase italic tracking-tighter shadow-sm"
+              className="w-full pl-12 md:pl-20 pr-4 md:pr-8 py-3 md:py-6 bg-surface border border-foreground/10 rounded-xl md:rounded-2xl outline-none focus:bg-white transition-all font-black text-sm md:text-2xl uppercase italic tracking-tighter shadow-sm"
             />
-            <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-4">
-              <button className="w-12 h-12 bg-accent border border-foreground/10 rounded-xl flex items-center justify-center shadow-sm active:scale-95 transition-all">
-                <Mic size={24} />
-              </button>
-            </div>
           </div>
         </div>
         
-        <div className="flex items-center gap-6">
-          <button className="px-8 py-5 bg-surface hover:bg-foreground hover:text-background border border-foreground/10 rounded-2xl transition-all shadow-sm font-black uppercase italic tracking-tighter flex items-center gap-3">
-            <Filter className="w-6 h-6 stroke-[3]" />
+        <div className="flex items-center gap-3 md:gap-6 w-full md:w-auto">
+          <button className="flex-1 md:flex-none px-4 md:px-8 py-3 md:py-5 bg-surface hover:bg-foreground hover:text-background border border-foreground/10 rounded-xl md:rounded-2xl transition-all shadow-sm font-black uppercase italic tracking-tighter flex items-center justify-center gap-3 text-xs md:text-base">
+            <Filter className="w-4 h-4 md:w-6 md:h-6 stroke-[3]" />
             LỌC
+          </button>
+          
+          <button 
+            onClick={() => setIsOrderSummaryOpen(true)}
+            className="md:hidden flex-1 px-4 py-3 bg-interaction text-white rounded-xl font-black uppercase italic tracking-tighter flex items-center justify-center gap-3 text-xs"
+          >
+            GIỎ HÀNG ({items.length})
           </button>
         </div>
       </div>
 
       {/* Main Experience */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* Left Side: Categories & Products */}
         <div className="flex-1 flex flex-col min-w-0 border-r border-foreground/10">
           {/* Categories */}
-          <div className="flex-none border-b border-foreground/10 bg-background">
+          <div className="flex-none border-b border-foreground/10 bg-background overflow-x-auto">
             <CategoryTabs 
               selectedId={selectedCategoryId} 
               onSelect={setSelectedCategoryId} 
@@ -156,15 +197,58 @@ export default function OrderClient() {
           </div>
         </div>
 
-        {/* Right Side: Order Summary */}
-        <div className="w-[480px] flex-none">
+        {/* Right Side: Order Summary (Desktop) */}
+        <div className="hidden md:block w-[400px] lg:w-[480px] flex-none">
           <OrderSummary 
             onCheckout={handleCheckout} 
             selectedCustomer={selectedCustomer}
             onCustomerSelect={setSelectedCustomer}
           />
         </div>
+
+        {/* Mobile Order Summary Drawer */}
+        <AnimatePresence>
+          {isOrderSummaryOpen && (
+            <>
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsOrderSummaryOpen(false)}
+                className="fixed inset-0 bg-background/60 backdrop-blur-sm z-[100] md:hidden"
+              />
+              <motion.div 
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="fixed bottom-0 left-0 right-0 h-[85vh] bg-background border-t border-foreground/10 z-[110] md:hidden rounded-t-[2.5rem] shadow-2xl overflow-hidden flex flex-col"
+              >
+                <div className="flex-none p-4 flex justify-center">
+                  <div className="w-12 h-1.5 bg-foreground/10 rounded-full" />
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <OrderSummary 
+                    onCheckout={handleCheckout} 
+                    selectedCustomer={selectedCustomer}
+                    onCustomerSelect={setSelectedCustomer}
+                  />
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
+
+      {/* Offline Sync Status Indicator */}
+      {pendingCount > 0 && (
+        <div className="fixed bottom-6 left-6 z-[160] px-4 py-2 bg-accent text-white rounded-full shadow-lg border border-white/20 flex items-center gap-3 animate-bounce">
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest italic">
+            {pendingCount} Đơn hàng đang chờ đồng bộ
+          </span>
+        </div>
+      )}
 
       {/* AI Processing Overlay */}
       <AnimatePresence>

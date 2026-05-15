@@ -1,6 +1,7 @@
-'use client';
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { getAuthenticatedClient } from '@/lib/grpc/client';
+import { BranchService } from '@/gen/branch_connect';
+import { Branch } from '@/gen/branch_pb';
 
 interface AuthUser {
   id: string;
@@ -13,6 +14,7 @@ interface AuthContextType {
   token: string | null;
   tenantId: string | null;
   branchId: string | null;
+  currentBranch: Branch | null;
   user: AuthUser | null;
   loading: boolean;
   login: (token: string, tenantId: string, branchId: string, user: AuthUser) => void;
@@ -26,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [branchId, setBranchIdState] = useState<string | null>(null);
+  const [currentBranch, setCurrentBranch] = useState<Branch | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -33,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(null);
     setTenantId(null);
     setBranchIdState(null);
+    setCurrentBranch(null);
     setUser(null);
     
     if (typeof localStorage !== 'undefined') {
@@ -47,6 +51,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const fetchBranchInfo = useCallback(async (tId: string, bId: string, tok: string) => {
+    try {
+      const client = getAuthenticatedClient(BranchService, tId, tok);
+      const response = await client.getBranch({ id: bId });
+      if (response.branch) {
+        setCurrentBranch(response.branch);
+      }
+    } catch (err) {
+      console.error('Failed to fetch current branch info:', err);
+    }
+  }, []);
+
   useEffect(() => {
     const getCookie = (name: string) => {
       if (typeof document === 'undefined') return undefined;
@@ -56,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return undefined;
     };
 
-    const initializeAuth = () => {
+    const initializeAuth = async () => {
       try {
         const savedToken = getCookie('auth_token');
         const savedTenant = localStorage.getItem('tenant_id');
@@ -68,6 +84,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTenantId(savedTenant);
           setBranchIdState(savedBranch);
           if (savedUser) setUser(JSON.parse(savedUser));
+          
+          if (savedBranch) {
+            await fetchBranchInfo(savedTenant, savedBranch, savedToken);
+          }
         } else {
           // Clean up if something is missing
           if (!savedToken) logout();
@@ -80,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initializeAuth();
-  }, [logout]);
+  }, [logout, fetchBranchInfo]);
 
   const login = (newToken: string, newTenantId: string, bId: string, newUser: AuthUser) => {
     setToken(newToken);
@@ -96,15 +116,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set cookie for middleware with stricter attributes
     const secure = window.location.protocol === 'https:' ? 'Secure;' : '';
     document.cookie = `auth_token=${newToken}; path=/; max-age=86400; SameSite=Strict; ${secure}`;
+
+    // Fetch branch info
+    fetchBranchInfo(newTenantId, bId, newToken);
   };
 
   const setBranchId = (id: string) => {
     setBranchIdState(id);
     localStorage.setItem('branch_id', id);
+    if (tenantId && token) {
+      fetchBranchInfo(tenantId, id, token);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ token, tenantId, branchId, user, loading, login, logout, setBranchId }}>
+    <AuthContext.Provider value={{ 
+      token, 
+      tenantId, 
+      branchId, 
+      currentBranch,
+      user, 
+      loading, 
+      login, 
+      logout, 
+      setBranchId 
+    }}>
       {children}
     </AuthContext.Provider>
   );

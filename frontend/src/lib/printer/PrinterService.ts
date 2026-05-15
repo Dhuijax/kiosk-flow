@@ -28,6 +28,9 @@ export interface ReceiptData {
   change: number;
   cashierName?: string;
   tableName?: string;
+  branchName?: string;
+  branchAddress?: string;
+  branchPhone?: string;
 }
 
 class PrinterService {
@@ -84,10 +87,7 @@ class PrinterService {
         const server = await device.gatt?.connect();
         if (!server) return false;
 
-        // Common Thermal Printer Service UUID
-        // Some devices use custom ones, but this is a common one
         const services = await server.getPrimaryServices();
-        // Try to find a service with write characteristics
         for (const service of services) {
             const characteristics = await service.getCharacteristics();
             const writeChar = characteristics.find(c => 
@@ -104,8 +104,6 @@ class PrinterService {
       
       if (this.settings.type === 'serial') {
         const ports = await navigator.serial.getPorts();
-        // Since getPorts doesn't have IDs for SerialPort easily matched to settings, 
-        // we'll try the first one for now or rethink how we store serial ports
         if (ports.length === 0) return false;
         
         const port = ports[0];
@@ -132,27 +130,30 @@ class PrinterService {
       .codepage('windows1258') // Vietnamese code page
       .align('center')
       .size('double')
-      .line('KIOSKFLOW')
+      .line(data.branchName || 'KIOSKFLOW')
       .size('normal')
-      .line('--------------------------------')
+      if (data.branchAddress) encoder.line(data.branchAddress)
+      if (data.branchPhone) encoder.line(`HOTLINE: ${data.branchPhone}`)
+      
+    encoder.line('------------------------------------------------')
       .align('left')
       .line(`Đơn hàng: #${data.orderId.slice(-8).toUpperCase()}`)
       .line(`Ngày: ${new Date().toLocaleString('vi-VN')}`)
       if (data.cashierName) encoder.line(`Thu ngân: ${data.cashierName}`)
       if (data.tableName) encoder.line(`Bàn: ${data.tableName}`)
       
-    encoder.line('--------------------------------')
-      .line('Sản phẩm                      SL   Thành tiền')
-      .line('--------------------------------')
+    encoder.line('------------------------------------------------')
+      .line('Sản phẩm                      SL      Thành tiền')
+      .line('------------------------------------------------')
 
     data.items.forEach(item => {
       const name = item.name.length > 25 ? item.name.substring(0, 22) + '...' : item.name.padEnd(25);
       const qty = item.quantity.toString().padStart(3);
-      const price = (item.price * item.quantity).toLocaleString('vi-VN').padStart(12);
+      const price = (item.price * item.quantity).toLocaleString('vi-VN').padStart(14);
       encoder.line(`${name}${qty}${price}`);
     });
 
-    encoder.line('--------------------------------')
+    encoder.line('------------------------------------------------')
       .align('right')
       .line(`Tạm tính: ${data.subtotal.toLocaleString('vi-VN')} đ`)
       .line(`Thuế: ${data.tax.toLocaleString('vi-VN')} đ`)
@@ -160,11 +161,11 @@ class PrinterService {
       .size('double')
       .line(`TỔNG: ${data.total.toLocaleString('vi-VN')} đ`)
       .size('normal')
-      .line('--------------------------------')
+      .line('------------------------------------------------')
       .line(`Hình thức: ${data.paymentMethod}`)
       .line(`Khách đưa: ${data.amountReceived.toLocaleString('vi-VN')} đ`)
       .line(`Tiền thừa: ${data.change.toLocaleString('vi-VN')} đ`)
-      .line('--------------------------------')
+      .line('------------------------------------------------')
       .align('center')
       .line('Cảm ơn quý khách!')
       .line('Hẹn gặp lại!')
@@ -177,7 +178,6 @@ class PrinterService {
 
     try {
       if (this.bluetoothCharacteristic) {
-        // Bluetooth usually has an MTU limit, so we might need to chunk
         const CHUNK_SIZE = 20;
         for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
           await this.bluetoothCharacteristic.writeValue(bytes.slice(i, i + CHUNK_SIZE));
@@ -190,7 +190,6 @@ class PrinterService {
         return true;
       }
 
-      // If not connected, try one-time connect
       if (await this.connect()) {
         return this.printReceipt(data);
       }

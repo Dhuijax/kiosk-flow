@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT id, tenant_id, name, address, phone, is_main as \"is_main!\", created_at as \"created_at!\"\n            FROM branches\n            WHERE tenant_id = $1 AND is_main = true\n            LIMIT 1\n            ",
+  "query": "\n                    INSERT INTO branches (tenant_id, name, is_main, is_active)\n                    VALUES ($1, 'Main Branch', true, true)\n                    RETURNING id, tenant_id, name, address, phone, is_main as \"is_main!\", is_active as \"is_active!\", created_at as \"created_at!\"\n                    ",
   "describe": {
     "columns": [
       {
@@ -35,6 +35,11 @@
       },
       {
         "ordinal": 6,
+        "name": "is_active!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
         "name": "created_at!",
         "type_info": "Timestamptz"
       }
@@ -51,8 +56,9 @@
       true,
       true,
       true,
+      true,
       true
     ]
   },
-  "hash": "d1cc2f7985a4ccc47fc0ec236d0516c3781ebe928ed37419a4c770710cf54cd1"
+  "hash": "936413f4d53d0e970202eaf572facbd6762c5b4b8bcafe2224553f82984bf3cf"
 }

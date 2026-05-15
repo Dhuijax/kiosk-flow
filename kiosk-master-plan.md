@@ -353,7 +353,7 @@ proto/
 
 | Sprint | Name | Description | Verify | Status |
 |--------|------|-------------|--------|--------|
-| **S29** | Ingredient Management | CRUD for raw materials (Back-end) | Create/List ingredients via gRPC | [ ] |
+| **S29** | Ingredient Management | CRUD for raw materials (Back-end) | Create/List ingredients via gRPC | [x] |
 | **S30** | Ingredient UI | Admin UI for managing raw materials | CRUD ingredients in dashboard | [ ] |
 | **S31** | Recipe/BOM Service | Map Products to Ingredients + Quantities | Define recipes for products | [ ] |
 | **S32** | Recipe/BOM UI | UI to manage product recipes | Admin can set formulas per item | [ ] |
@@ -540,7 +540,7 @@ kiosk-flow/
 | S26 | `[x]` Completed | 2026-05-15 |
 | S27 | `[x]` Completed | 2026-05-15 |
 | S28 | `[x]` Completed | 2026-05-15 |
-| S29 | `[ ]` Pending | — |
+| S29 | `[x]` Completed | 2026-05-15 |
 | S30 | `[ ]` Pending | — |
 | S31 | `[ ]` Pending | — |
 | S32 | `[ ]` Pending | — |

@@ -50,4 +50,8 @@ pub mod branch {
     tonic::include_proto!("branch");
 }
 
+pub mod ingredient {
+    tonic::include_proto!("ingredient");
+}
+
 pub const FILE_DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("kioskflow_descriptor");

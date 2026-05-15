@@ -8,6 +8,7 @@ use domain::models::payment::Payment;
 use domain::models::inventory::{Inventory, InventoryTransaction, InventoryTransactionType};
 use domain::models::tenant::{Tenant, TenantSettings, Branch};
 use domain::models::customer::Customer;
+use domain::models::ingredient::Ingredient;
 use anyhow::Result;
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
@@ -1986,5 +1987,128 @@ impl StoreRepository {
 
         tx.commit().await?;
         Ok(updated)
+    }
+}
+
+pub struct IngredientRepository {
+    pool: PgPool,
+}
+
+impl IngredientRepository {
+    pub fn new(pool: PgPool) -> Self {
+        Self { pool }
+    }
+
+    async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
+        let mut tx = self.pool.begin().await?;
+        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
+            .bind(tenant_id.to_string())
+            .execute(&mut *tx)
+            .await?;
+        Ok(tx)
+    }
+
+    pub async fn create(&self, ingredient: &Ingredient) -> Result<Ingredient> {
+        let mut tx = self.tx_with_tenant(&ingredient.tenant_id).await?;
+
+        let created = sqlx::query_as!(
+            Ingredient,
+            r#"
+            INSERT INTO ingredients (id, tenant_id, name, unit, cost_price, is_active)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id, tenant_id, name, unit, cost_price, is_active as "is_active!", created_at as "created_at!", updated_at as "updated_at!"
+            "#,
+            ingredient.id,
+            ingredient.tenant_id,
+            ingredient.name,
+            ingredient.unit,
+            ingredient.cost_price,
+            ingredient.is_active
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(created)
+    }
+
+    pub async fn find_by_id(&self, tenant_id: &Uuid, id: &Uuid) -> Result<Option<Ingredient>> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        let ingredient = sqlx::query_as!(
+            Ingredient,
+            r#"
+            SELECT id, tenant_id, name, unit, cost_price, is_active as "is_active!", created_at as "created_at!", updated_at as "updated_at!"
+            FROM ingredients
+            WHERE id = $1
+            "#,
+            id
+        )
+        .fetch_optional(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(ingredient)
+    }
+
+    pub async fn list_by_tenant(&self, tenant_id: &Uuid, search: Option<String>) -> Result<Vec<Ingredient>> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        let search_pattern = format!("%{}%", search.unwrap_or_default());
+        let ingredients = sqlx::query_as!(
+            Ingredient,
+            r#"
+            SELECT id, tenant_id, name, unit, cost_price, is_active as "is_active!", created_at as "created_at!", updated_at as "updated_at!"
+            FROM ingredients
+            WHERE (name ILIKE $1 OR $1 = '%%')
+            ORDER BY created_at DESC
+            "#,
+            search_pattern
+        )
+        .fetch_all(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(ingredients)
+    }
+
+    pub async fn update(&self, tenant_id: &Uuid, id: &Uuid, name: Option<String>, unit: Option<String>, cost_price: Option<BigDecimal>, is_active: Option<bool>) -> Result<Ingredient> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        let updated = sqlx::query_as!(
+            Ingredient,
+            r#"
+            UPDATE ingredients
+            SET 
+                name = COALESCE($1, name),
+                unit = COALESCE($2, unit),
+                cost_price = COALESCE($3, cost_price),
+                is_active = COALESCE($4, is_active),
+                updated_at = NOW()
+            WHERE id = $5
+            RETURNING id, tenant_id, name, unit, cost_price, is_active as "is_active!", created_at as "created_at!", updated_at as "updated_at!"
+            "#,
+            name,
+            unit,
+            cost_price,
+            is_active,
+            id
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(updated)
+    }
+
+    pub async fn delete(&self, tenant_id: &Uuid, id: &Uuid) -> Result<()> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        sqlx::query!("DELETE FROM ingredients WHERE id = $1", id)
+            .execute(&mut *tx)
+            .await?;
+
+        tx.commit().await?;
+        Ok(())
     }
 }

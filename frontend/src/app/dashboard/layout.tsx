@@ -18,7 +18,8 @@ import {
   Heart,
   TrendingUp,
   Receipt,
-  MapPin
+  MapPin,
+  Box
 } from 'lucide-react';
 
 import StatusBadge from '@/components/ui/StatusBadge';
@@ -34,6 +35,7 @@ const navigation = [
   { name: 'Nhân viên', href: '/dashboard/staff', icon: Users },
   { name: 'Sản phẩm', href: '/dashboard/products', icon: Package },
   { name: 'Kho hàng', href: '/dashboard/inventory', icon: Package },
+  { name: 'Nguyên liệu', href: '/dashboard/inventory/ingredients', icon: Box },
   { name: 'Chi nhánh', href: '/dashboard/branches', icon: MapPin },
   { name: 'Cấu hình', href: '/dashboard/settings', icon: Settings, status: 'demo' as const },
 ];

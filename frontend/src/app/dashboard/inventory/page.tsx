@@ -10,8 +10,10 @@ import {
   Settings2,
   History,
   Package,
-  Sparkles
+  Sparkles,
+  Box
 } from 'lucide-react';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useInventory } from '@/hooks/useInventory';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
@@ -148,6 +150,13 @@ export default function InventoryPage() {
           >
             <RefreshCw className={`w-6 h-6 stroke-[3] ${loadingStock ? 'animate-spin' : ''}`} />
           </button>
+          <Link 
+            href="/dashboard/inventory/ingredients"
+            className="w-14 h-14 bg-surface border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-sm"
+            title="Quản lý nguyên liệu"
+          >
+            <Box className="w-6 h-6 stroke-[3]" />
+          </Link>
           <button 
             onClick={handleExportCSV}
             className="btn-dynamic px-8 py-3 text-sm"

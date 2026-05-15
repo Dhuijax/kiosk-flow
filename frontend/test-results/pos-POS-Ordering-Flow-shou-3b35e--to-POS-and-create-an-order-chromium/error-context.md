@@ -26,13 +26,13 @@ Call log:
 ```
 
 ```yaml
-- alert: Bán hàng - KioskFlow
+- alert
 - banner:
   - link:
     - /url: /dashboard
   - paragraph: Chi nhánh
   - paragraph: Cửa hàng chính
-  - text: 10:21
+  - text: 10:23
   - paragraph: Cashier Mode
   - text: Online
   - button "Đăng xuất"
@@ -42,6 +42,8 @@ Call log:
   - button "LỌC"
   - button
   - button "TẤT CẢ"
+  - button "Category B"
+  - button "Category A"
   - button "Bánh ngọt"
   - button "Trà sữa"
   - button "Cà phê"

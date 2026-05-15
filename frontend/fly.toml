@@ -1,0 +1,25 @@
+app = 'kioskflow-frontend'
+primary_region = 'sin'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  PORT = '3000'
+  # The backend URL should be set via secrets or environment
+  # NEXT_PUBLIC_API_URL = 'https://kioskflow-backend.fly.dev'
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  connect_timeout_ms = 5000
+  processes = ['app']
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '512mb'
+  cpus = 1
+  memory_mb = 512

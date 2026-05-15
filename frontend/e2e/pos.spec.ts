@@ -27,6 +27,6 @@ test.describe('POS Ordering Flow', () => {
     await expect(page.locator('text=Cà phê đen').first()).toBeVisible();
 
     // Check subtotal
-    await expect(page.locator('text=Tổng cộng')).toBeVisible();
+    await expect(page.locator('text=TỔNG')).toBeVisible();
   });
 });

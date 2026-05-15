@@ -495,9 +495,9 @@ kiosk-flow/
 
 ## 7. Next Step
 
-> **Sprint S14: Order Service**
+> **Sprint S28: Deployment Config**
 >
-> Khi bạn sẵn sàng, hãy nói "Bắt đầu S14" và tôi sẽ thực hiện **chỉ sprint đó**.
+> Khi bạn sẵn sàng, hãy nói "Bắt đầu S28" và tôi sẽ thực hiện **chỉ sprint đó**.
 > Mỗi sprint hoàn thành sẽ được đánh dấu `[x]` trong plan này.
 
 ---
@@ -538,7 +538,7 @@ kiosk-flow/
 | S24 | `[x]` Completed | 2026-05-15 |
 | S25 | `[x]` Completed | 2026-05-15 |
 | S26 | `[x]` Completed | 2026-05-15 |
-| S27 | `[ ]` Pending | — |
+| S27 | `[x]` Completed | 2026-05-15 |
 | S28 | `[ ]` Pending | — |
 | S29 | `[ ]` Pending | — |
 | S30 | `[ ]` Pending | — |

@@ -125,7 +125,7 @@ export default function StaffPage() {
       {/* Filter & Stats Bar */}
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1 relative group">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-foreground/20 group-focus-within:text-interaction transition-colors" />
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-foreground/20 group-focus-within:text-interaction transition-colors pointer-events-none" />
           <input 
             type="text" 
             placeholder="TÌM KIẾM NHÂN VIÊN..." 

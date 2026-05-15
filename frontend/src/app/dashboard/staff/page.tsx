@@ -124,21 +124,24 @@ export default function StaffPage() {
 
       {/* Filter & Stats Bar */}
       <div className="flex flex-col lg:flex-row gap-6">
-        <div className="flex-1 relative group">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-foreground/20 group-focus-within:text-interaction transition-colors pointer-events-none" />
+        <div className="flex-1 flex items-center gap-4 bg-surface px-8 h-16 rounded-2xl border border-foreground/10 group focus-within:bg-white focus-within:border-interaction focus-within:shadow-md transition-all relative overflow-hidden">
+          <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none translate-y-[1px]" />
           <input 
             type="text" 
             placeholder="TÌM KIẾM NHÂN VIÊN..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-16 pr-6 py-5 bg-surface border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all shadow-sm font-black text-lg uppercase italic tracking-tighter"
+            className="bg-transparent border-none outline-none w-full h-full py-0 font-black text-lg uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
           />
         </div>
         
         <div className="flex gap-4">
           <div className="bg-background border border-foreground/10 rounded-2xl px-8 py-4 flex flex-col justify-center shadow-sm min-w-[160px]">
-            <span className="text-[10px] font-black uppercase opacity-40">Tổng số</span>
-            <span className="text-3xl font-black italic tracking-tighter">{staff.length}</span>
+            <span className="text-[10px] font-black uppercase opacity-40">Hiển thị</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-black italic tracking-tighter text-interaction">{filteredStaff.length}</span>
+              <span className="text-sm font-black uppercase opacity-20 italic">/ {staff.length}</span>
+            </div>
           </div>
           <button 
             onClick={() => fetchStaff()}

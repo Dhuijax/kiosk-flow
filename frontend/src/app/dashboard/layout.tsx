@@ -127,14 +127,14 @@ export default function DashboardLayout({
             <BranchSwitcher />
             
             <div className="flex items-center gap-4 bg-surface px-6 h-12 rounded-2xl border border-foreground/10 w-[400px] max-w-full group focus-within:border-interaction focus-within:shadow-md transition-all relative">
-              <Search className="w-5 h-5 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none" />
+              <Search className="w-5 h-5 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none translate-y-[0.5px]" />
               <input 
                 type="text" 
                 placeholder="TÌM KIẾM HÀNH ĐỘNG..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
-                className="bg-transparent border-none outline-none text-sm font-black uppercase italic tracking-tighter w-full placeholder:text-foreground/20 h-full py-0"
+                className="bg-transparent border-none outline-none text-sm font-black uppercase italic tracking-tighter w-full placeholder:text-foreground/20 h-full py-0 leading-none"
                 aria-label="Tìm kiếm nhanh"
               />
               

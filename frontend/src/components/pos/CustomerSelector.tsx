@@ -123,7 +123,7 @@ export default function CustomerSelector({ onSelect, selectedCustomer }: Custome
                     placeholder="NHẬP SỐ ĐIỆN THOẠI HOẶC TÊN..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="bg-transparent border-none outline-none w-full h-full py-0 font-black text-lg uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
+                    className="bg-transparent border-none outline-none flex-1 h-full py-0 font-black text-lg uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
                   />
                 </div>
 

@@ -139,7 +139,7 @@ export default function OrdersPage() {
             placeholder="TÌM THEO MÃ ĐƠN HOẶC TÊN KHÁCH..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-transparent border-none outline-none w-full h-full py-0 font-black text-sm uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
+            className="bg-transparent border-none outline-none flex-1 h-full py-0 font-black text-sm uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
           />
         </div>
         <div className="flex items-center gap-4 w-full md:w-auto">

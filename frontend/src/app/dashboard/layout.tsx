@@ -134,7 +134,7 @@ export default function DashboardLayout({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
-                className="bg-transparent border-none outline-none text-sm font-black uppercase italic tracking-tighter w-full placeholder:text-foreground/20 h-full py-0 leading-none"
+                className="bg-transparent border-none outline-none text-sm font-black uppercase italic tracking-tighter flex-1 placeholder:text-foreground/20 h-full py-0 leading-none"
                 aria-label="Tìm kiếm nhanh"
               />
               

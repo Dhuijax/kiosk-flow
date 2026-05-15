@@ -131,7 +131,7 @@ export default function BranchesPage() {
             placeholder="TÌM THEO TÊN HOẶC ĐỊA CHỈ..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-transparent border-none outline-none w-full h-full py-0 font-black uppercase italic tracking-tighter placeholder:text-foreground/10 leading-none"
+            className="bg-transparent border-none outline-none flex-1 h-full py-0 font-black uppercase italic tracking-tighter placeholder:text-foreground/10 leading-none"
           />
         </div>
         <button 

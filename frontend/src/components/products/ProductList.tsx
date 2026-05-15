@@ -54,7 +54,7 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
     } finally {
       setLoading(false);
     }
-  }, [token, tenantId, page, pageSize, selectedCategoryId]);
+  }, [token, tenantId, page, pageSize, selectedCategoryId, searchQuery]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -95,7 +95,7 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
             placeholder="TÌM KIẾM MÓN ĂN, MÃ SKU..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-transparent border-none outline-none w-full h-full py-0 font-black text-sm uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
+            className="bg-transparent border-none outline-none flex-1 h-full py-0 font-black text-sm uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
           />
         </div>
         <div className="flex gap-4">

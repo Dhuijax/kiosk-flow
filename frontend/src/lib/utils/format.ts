@@ -20,3 +20,19 @@ export function formatVND(value: Money | number | undefined): string {
   return `${formatted} ₫`;
 }
 
+/**
+ * Formats a date as a human-readable string (DD/MM HH:mm)
+ */
+export function formatDateTime(date: Date | string | number | undefined): string {
+  if (!date) return '...';
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return '...';
+  
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  const day = pad(d.getDate());
+  const month = pad(d.getMonth() + 1);
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  
+  return `${day}/${month} ${hours}:${minutes}`;
+}

@@ -558,34 +558,25 @@ impl ProductRepository {
         Ok(product)
     }
 
-    pub async fn list_by_tenant(&self, tenant_id: &Uuid, category_id: Option<Uuid>) -> Result<Vec<Product>> {
+    pub async fn list_by_tenant(&self, tenant_id: &Uuid, category_id: Option<Uuid>, search_query: Option<String>) -> Result<Vec<Product>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
-        let products = if let Some(cat_id) = category_id {
-            sqlx::query_as!(
-                Product,
-                r#"
-                SELECT id, tenant_id, category_id, sku, name, description, price, cost_price, unit, image_url, is_active as "is_active!", allow_topping as "allow_topping!", track_inventory as "track_inventory!", created_at as "created_at!", updated_at as "updated_at!"
-                FROM products
-                WHERE category_id = $1
-                ORDER BY created_at DESC
-                "#,
-                cat_id
-            )
-            .fetch_all(&mut *tx)
-            .await?
-        } else {
-            sqlx::query_as!(
-                Product,
-                r#"
-                SELECT id, tenant_id, category_id, sku, name, description, price, cost_price, unit, image_url, is_active as "is_active!", allow_topping as "allow_topping!", track_inventory as "track_inventory!", created_at as "created_at!", updated_at as "updated_at!"
-                FROM products
-                ORDER BY created_at DESC
-                "#
-            )
-            .fetch_all(&mut *tx)
-            .await?
-        };
+        let search_pattern = search_query.map(|s| format!("%{}%", s));
+
+        let products = sqlx::query_as!(
+            Product,
+            r#"
+            SELECT id, tenant_id, category_id, sku, name, description, price, cost_price, unit, image_url, is_active as "is_active!", allow_topping as "allow_topping!", track_inventory as "track_inventory!", created_at as "created_at!", updated_at as "updated_at!"
+            FROM products
+            WHERE (category_id = $1 OR $1 IS NULL)
+              AND (name ILIKE $2 OR sku ILIKE $2 OR $2 IS NULL)
+            ORDER BY created_at DESC
+            "#,
+            category_id,
+            search_pattern
+        )
+        .fetch_all(&mut *tx)
+        .await?;
 
         // Note: For MVP we don't load toppings here, but we could if needed for the UI
         tx.commit().await?;

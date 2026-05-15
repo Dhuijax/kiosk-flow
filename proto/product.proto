@@ -43,6 +43,7 @@ message Topping {
 message ListProductsRequest {
     common.PaginationRequest pagination = 1;
     optional string category_id = 2;
+    optional string search_query = 3;
 }
 
 message ListProductsResponse {

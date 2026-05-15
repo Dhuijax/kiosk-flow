@@ -185,6 +185,11 @@ export class ListProductsRequest extends Message<ListProductsRequest> {
    */
   categoryId?: string;
 
+  /**
+   * @generated from field: optional string search_query = 3;
+   */
+  searchQuery?: string;
+
   constructor(data?: PartialMessage<ListProductsRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -195,6 +200,7 @@ export class ListProductsRequest extends Message<ListProductsRequest> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "pagination", kind: "message", T: PaginationRequest },
     { no: 2, name: "category_id", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+    { no: 3, name: "search_query", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListProductsRequest {

@@ -104,8 +104,9 @@ impl ProductService for ProductServiceImpl {
         let tenant_id = self.get_tenant_id(&request)?;
         let req = request.into_inner();
         let cat_opt = req.category_id.map(|c| Uuid::parse_str(&c).unwrap_or_default());
+        let search_opt = req.search_query;
         
-        let products = self.product_repo.list_by_tenant(&tenant_id, cat_opt)
+        let products = self.product_repo.list_by_tenant(&tenant_id, cat_opt, search_opt)
             .await
             .map_err(|e| Status::internal(format!("DB Error: {}", e)))?;
 

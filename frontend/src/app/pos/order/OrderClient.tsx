@@ -148,14 +148,14 @@ export default function OrderClient() {
       {/* Adaptive Header / Search */}
       <div className="flex-none flex flex-col md:flex-row items-center bg-background border-b border-foreground/10 h-auto md:h-32 px-4 md:px-12 py-4 md:py-0 gap-4 md:gap-12">
         <div className="flex-1 w-full">
-          <div className="relative group">
-            <Search className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-5 h-5 md:w-8 md:h-8 text-foreground opacity-40 group-focus-within:opacity-100 transition-opacity" />
+          <div className="flex-1 flex items-center gap-4 bg-surface px-6 md:px-8 h-14 md:h-20 rounded-xl md:rounded-2xl border border-foreground/10 group focus-within:bg-white focus-within:border-interaction focus-within:shadow-md transition-all relative overflow-hidden">
+            <Search className="w-5 h-5 md:w-8 md:h-8 text-foreground opacity-40 group-focus-within:opacity-100 group-focus-within:text-interaction transition-all flex-none pointer-events-none translate-y-[1px]" />
             <input 
               type="text" 
               placeholder="TÌM KIẾM SẢN PHẨM..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 md:pl-20 pr-4 md:pr-8 py-3 md:py-6 bg-surface border border-foreground/10 rounded-xl md:rounded-2xl outline-none focus:bg-white transition-all font-black text-sm md:text-2xl uppercase italic tracking-tighter shadow-sm"
+              className="bg-transparent border-none outline-none w-full h-full py-0 font-black text-sm md:text-2xl uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
             />
           </div>
         </div>

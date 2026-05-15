@@ -115,15 +115,15 @@ export default function CustomerSelector({ onSelect, selectedCustomer }: Custome
               </div>
 
               <div className="p-8 space-y-8 flex-1 overflow-y-auto custom-scrollbar">
-                <div className="relative group">
-                  <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-foreground/20 group-focus-within:text-interaction transition-colors" />
+                <div className="flex items-center gap-4 bg-background px-6 h-16 rounded-2xl border border-foreground/10 group focus-within:bg-white focus-within:border-interaction focus-within:shadow-md transition-all relative overflow-hidden">
+                  <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none translate-y-[1px]" />
                   <input 
                     autoFocus
                     type="text" 
                     placeholder="NHẬP SỐ ĐIỆN THOẠI HOẶC TÊN..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-16 pr-6 py-5 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-lg uppercase italic tracking-tighter shadow-sm"
+                    className="bg-transparent border-none outline-none w-full h-full py-0 font-black text-lg uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
                   />
                 </div>
 

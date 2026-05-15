@@ -124,16 +124,14 @@ export default function BranchesPage() {
 
       {/* Toolbar */}
       <div className="flex flex-col md:flex-row gap-6">
-        <div className="flex-1 relative group">
-          <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
-            <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction transition-colors" />
-          </div>
+        <div className="flex-1 flex items-center gap-4 bg-surface px-8 h-20 rounded-3xl border border-foreground/10 group focus-within:bg-white focus-within:border-interaction focus-within:shadow-md transition-all relative overflow-hidden">
+          <Search className="w-7 h-7 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none translate-y-[1px]" />
           <input
             type="text"
             placeholder="TÌM THEO TÊN HOẶC ĐỊA CHỈ..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-20 pl-16 pr-8 bg-surface border border-foreground/10 rounded-3xl focus:border-interaction focus:ring-4 focus:ring-interaction/10 outline-none transition-all font-black uppercase italic tracking-tighter placeholder:text-foreground/10"
+            className="bg-transparent border-none outline-none w-full h-full py-0 font-black uppercase italic tracking-tighter placeholder:text-foreground/10 leading-none"
           />
         </div>
         <button 

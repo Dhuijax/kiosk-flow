@@ -102,8 +102,7 @@ export default function CustomersPage() {
     const query = searchQuery.toLowerCase();
     const name = (customer.name || '').toLowerCase();
     const phone = (customer.phone || '').toLowerCase();
-    const email = (customer.email || '').toLowerCase();
-    return name.includes(query) || phone.includes(query) || email.includes(query);
+    return name.includes(query) || phone.includes(query);
   });
 
   return (

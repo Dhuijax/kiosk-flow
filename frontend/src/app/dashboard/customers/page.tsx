@@ -98,6 +98,14 @@ export default function CustomersPage() {
     return () => clearTimeout(timer);
   }, [fetchCustomers]);
 
+  const filteredCustomers = customers.filter(customer => {
+    const query = searchQuery.toLowerCase();
+    const name = (customer.name || '').toLowerCase();
+    const phone = (customer.phone || '').toLowerCase();
+    const email = (customer.email || '').toLowerCase();
+    return name.includes(query) || phone.includes(query) || email.includes(query);
+  });
+
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header Section */}
@@ -158,7 +166,7 @@ export default function CustomersPage() {
       {/* Filter Bar */}
       <div className="ai-card bg-surface flex flex-col md:flex-row gap-8 items-center p-8">
         <div className="flex-1 flex items-center gap-4 bg-background px-8 h-20 rounded-3xl border border-foreground/10 group focus-within:bg-white focus-within:border-interaction focus-within:shadow-md transition-all relative overflow-hidden">
-          <Search className="w-7 h-7 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none translate-y-[1px]" />
+          <Search className="w-7 h-7 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none" />
           <input 
             type="text" 
             placeholder="TÌM THEO TÊN, SỐ ĐIỆN THOẠI HOẶC EMAIL..." 
@@ -181,7 +189,7 @@ export default function CustomersPage() {
           <div className="col-span-full py-20 flex justify-center">
             <div className="w-12 h-12 border-4 border-interaction border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : customers.length === 0 ? (
+        ) : filteredCustomers.length === 0 ? (
           <div className="col-span-full py-20 text-center space-y-4">
             <p className="text-2xl font-black uppercase italic tracking-tighter text-foreground/40">Không tìm thấy khách hàng</p>
             <button 
@@ -192,7 +200,7 @@ export default function CustomersPage() {
             </button>
           </div>
         ) : (
-          customers.map((customer, idx) => {
+          filteredCustomers.map((customer, idx) => {
             const tier = getTier(Number(customer.points));
             return (
               <motion.div

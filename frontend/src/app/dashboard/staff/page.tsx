@@ -75,10 +75,12 @@ export default function StaffPage() {
     }
   };
 
-  const filteredStaff = staff.filter(member => 
-    (member.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) || 
-    (member.email?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
-  );
+  const filteredStaff = staff.filter(member => {
+    const query = searchQuery.toLowerCase();
+    const fullName = (member.fullName || '').toLowerCase();
+    const email = (member.email || '').toLowerCase();
+    return fullName.includes(query) || email.includes(query);
+  });
 
   return (
     <div className="space-y-12 pb-20 relative">
@@ -125,7 +127,7 @@ export default function StaffPage() {
       {/* Filter & Stats Bar */}
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1 flex items-center gap-4 bg-surface px-8 h-16 rounded-2xl border border-foreground/10 group focus-within:bg-white focus-within:border-interaction focus-within:shadow-md transition-all relative overflow-hidden">
-          <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none translate-y-[1px]" />
+          <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none" />
           <input 
             type="text" 
             placeholder="TÌM KIẾM NHÂN VIÊN..." 

@@ -133,7 +133,7 @@ export default function OrdersPage() {
       {/* Filter & Search Bar */}
       <div className="ai-card bg-surface flex flex-col md:flex-row gap-8 items-center">
         <div className="flex-1 flex items-center gap-4 bg-background px-6 h-14 rounded-2xl border border-foreground/10 group focus-within:bg-white focus-within:border-interaction focus-within:shadow-md transition-all relative overflow-hidden">
-          <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none translate-y-[1px]" />
+          <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none" />
           <input 
             type="text" 
             placeholder="TÌM THEO MÃ ĐƠN HOẶC TÊN KHÁCH..." 

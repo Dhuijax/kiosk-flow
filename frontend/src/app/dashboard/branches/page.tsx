@@ -125,7 +125,7 @@ export default function BranchesPage() {
       {/* Toolbar */}
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex-1 flex items-center gap-4 bg-surface px-8 h-20 rounded-3xl border border-foreground/10 group focus-within:bg-white focus-within:border-interaction focus-within:shadow-md transition-all relative overflow-hidden">
-          <Search className="w-7 h-7 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none translate-y-[1px]" />
+          <Search className="w-7 h-7 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none" />
           <input
             type="text"
             placeholder="TÌM THEO TÊN HOẶC ĐỊA CHỈ..."

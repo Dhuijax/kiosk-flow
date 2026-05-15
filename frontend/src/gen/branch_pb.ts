@@ -42,7 +42,12 @@ export class Branch extends Message<Branch> {
   isMain = false;
 
   /**
-   * @generated from field: string created_at = 7;
+   * @generated from field: bool is_active = 7;
+   */
+  isActive = false;
+
+  /**
+   * @generated from field: string created_at = 8;
    */
   createdAt = "";
 
@@ -60,7 +65,8 @@ export class Branch extends Message<Branch> {
     { no: 4, name: "address", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
     { no: 5, name: "phone", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
     { no: 6, name: "is_main", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 7, name: "created_at", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 7, name: "is_active", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 8, name: "created_at", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Branch {
@@ -184,6 +190,11 @@ export class CreateBranchRequest extends Message<CreateBranchRequest> {
    */
   isMain = false;
 
+  /**
+   * @generated from field: bool is_active = 5;
+   */
+  isActive = false;
+
   constructor(data?: PartialMessage<CreateBranchRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -196,6 +207,7 @@ export class CreateBranchRequest extends Message<CreateBranchRequest> {
     { no: 2, name: "address", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
     { no: 3, name: "phone", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
     { no: 4, name: "is_main", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 5, name: "is_active", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreateBranchRequest {
@@ -244,6 +256,11 @@ export class UpdateBranchRequest extends Message<UpdateBranchRequest> {
    */
   isMain?: boolean;
 
+  /**
+   * @generated from field: optional bool is_active = 6;
+   */
+  isActive?: boolean;
+
   constructor(data?: PartialMessage<UpdateBranchRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -257,6 +274,7 @@ export class UpdateBranchRequest extends Message<UpdateBranchRequest> {
     { no: 3, name: "address", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
     { no: 4, name: "phone", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
     { no: 5, name: "is_main", kind: "scalar", T: 8 /* ScalarType.BOOL */, opt: true },
+    { no: 6, name: "is_active", kind: "scalar", T: 8 /* ScalarType.BOOL */, opt: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UpdateBranchRequest {

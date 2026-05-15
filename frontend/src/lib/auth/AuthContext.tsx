@@ -1,3 +1,5 @@
+'use client';
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { BranchService } from '@/gen/branch_connect';
@@ -55,8 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const client = getAuthenticatedClient(BranchService, tId, tok);
       const response = await client.getBranch({ id: bId });
-      if (response.branch) {
-        setCurrentBranch(response.branch);
+      if (response) {
+        setCurrentBranch(response);
       }
     } catch (err) {
       console.error('Failed to fetch current branch info:', err);

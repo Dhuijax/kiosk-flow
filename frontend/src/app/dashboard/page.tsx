@@ -17,7 +17,11 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { OrderService } from '@/gen/order_connect';
 import { InventoryService } from '@/gen/inventory_connect';
+import { ProductService } from '@/gen/product_connect';
+import { AuthService } from '@/gen/auth_connect';
+import { ReportService } from '@/gen/report_connect';
 import { OrderStatus } from '@/gen/order_pb';
+import { PeriodType } from '@/gen/report_pb';
 import { formatISO, startOfDay, startOfWeek, startOfMonth, startOfYear, subDays } from 'date-fns';
 import Link from 'next/link';
 import { formatVND, moneyToNumber, formatDateTime } from '@/lib/utils/format';
@@ -406,11 +410,11 @@ function OrderRow({ id, target, time, amount, status, type }: {
 
 function mapOrderStatus(status: OrderStatus): { label: string; type: 'processing' | 'done' | 'cancel' } {
   switch (status) {
-    case OrderStatus.ORDER_STATUS_COMPLETED:
-    case OrderStatus.ORDER_STATUS_PAID:
-    case OrderStatus.ORDER_STATUS_SERVED:
+    case OrderStatus.COMPLETED:
+    case OrderStatus.PAID:
+    case OrderStatus.SERVED:
       return { label: 'Hoàn thành', type: 'done' };
-    case OrderStatus.ORDER_STATUS_CANCELLED:
+    case OrderStatus.CANCELLED:
       return { label: 'Đã hủy', type: 'cancel' };
     default:
       return { label: 'Đang xử lý', type: 'processing' };

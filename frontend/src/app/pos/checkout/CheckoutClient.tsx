@@ -26,7 +26,7 @@ import { Settings } from 'lucide-react';
 export default function CheckoutClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { token, tenantId, user } = useAuth();
+  const { token, tenantId, user, currentBranch } = useAuth();
   const orderId = searchParams.get('orderId');
 
   const [order, setOrder] = useState<Order | null>(null);

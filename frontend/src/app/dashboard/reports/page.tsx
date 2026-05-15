@@ -287,7 +287,7 @@ export default function ReportsPage() {
 
         {/* Insights Section */}
         <div className="bg-foreground text-background rounded-3xl p-12 border border-foreground shadow-2xl relative overflow-hidden group">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--color-primary)_0%,_transparent_1px)] bg-[size:30px:30px] opacity-[0.05]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--color-primary)_0%,_transparent_1px)] bg-[size:30px_30px] opacity-[0.05]" />
           <div className="relative z-10 space-y-10">
             <div className="flex items-center gap-6">
               <div className="w-20 h-20 bg-primary border border-background/20 rounded-2xl flex items-center justify-center text-white">

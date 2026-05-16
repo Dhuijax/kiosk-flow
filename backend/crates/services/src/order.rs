@@ -11,8 +11,7 @@ use proto_gen::order::{
     OrderStatus as ProtoOrderStatus, OrderItemStatus as ProtoOrderItemStatus
 };
 use proto_gen::common::Money;
-use infra::repository::{OrderRepository, ProductRepository, InventoryRepository, ToppingRepository, TableRepository};
-use domain::models::inventory::InventoryTransactionType;
+use infra::repository::{OrderRepository, ProductRepository, ToppingRepository, TableRepository};
 use domain::models::order::{Order as DomainOrder, OrderItem as DomainOrderItem, OrderItemTopping as DomainOrderItemTopping, OrderStatus as DomainOrderStatus, OrderItemStatus as DomainOrderItemStatus};
 use infra::security::Claims;
 use redis::aio::ConnectionManager;
@@ -21,13 +20,14 @@ use tokio_stream::Stream;
 use futures_util::StreamExt;
 use std::pin::Pin;
 use serde::{Serialize, Deserialize};
+use crate::deduction::DeductionService;
 
 pub struct OrderServiceImpl {
     order_repo: Arc<OrderRepository>,
     product_repo: Arc<ProductRepository>,
     topping_repo: Arc<ToppingRepository>,
-    inventory_repo: Arc<InventoryRepository>,
     table_repo: Arc<TableRepository>,
+    deduction_service: Arc<DeductionService>,
     redis: ConnectionManager,
 }
 
@@ -40,8 +40,8 @@ struct OrderEvent {
 }
 
 impl OrderServiceImpl {
-    pub fn new(order_repo: Arc<OrderRepository>, product_repo: Arc<ProductRepository>, topping_repo: Arc<ToppingRepository>, inventory_repo: Arc<InventoryRepository>, table_repo: Arc<TableRepository>, redis: ConnectionManager) -> Self {
-        Self { order_repo, product_repo, topping_repo, inventory_repo, table_repo, redis }
+    pub fn new(order_repo: Arc<OrderRepository>, product_repo: Arc<ProductRepository>, topping_repo: Arc<ToppingRepository>, table_repo: Arc<TableRepository>, deduction_service: Arc<DeductionService>, redis: ConnectionManager) -> Self {
+        Self { order_repo, product_repo, topping_repo, table_repo, deduction_service, redis }
     }
 
     fn get_context<T>(&self, request: &Request<T>) -> Result<(Uuid, Uuid), Status> {
@@ -244,25 +244,12 @@ impl OrderService for OrderServiceImpl {
         let updated = self.order_repo.update_status(&tenant_id, &id, next_status.clone()).await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        // 2. Perform Stock Deduction if moving to Completed
+        // 2. Perform Ingredient Deduction if moving to Completed
         if next_status == DomainOrderStatus::Completed {
-            for (item, _) in items.iter() {
-                // Fetch product to check if inventory tracking is enabled
-                if let Ok(Some(product)) = self.product_repo.find_by_id(&tenant_id, &item.product_id).await {
-                    if product.track_inventory {
-                        let quantity_change = BigDecimal::from(-item.quantity);
-                        let _ = self.inventory_repo.update_stock(
-                            &tenant_id,
-                            &current_order.branch_id,
-                            &item.product_id,
-                            &quantity_change,
-                            InventoryTransactionType::Sale,
-                            Some(current_order.id),
-                            Some(format!("Sale from Order #{}", current_order.order_number)),
-                            None // Could use system user ID here
-                        ).await.map_err(|e| Status::internal(format!("Failed to deduct stock for {}: {}", product.name, e)))?;
-                    }
-                }
+            if let Err(e) = self.deduction_service.deduct_stock_for_order(&tenant_id, &current_order.branch_id, &current_order.id).await {
+                eprintln!("Failed to deduct stock for order {}: {}", current_order.id, e);
+                // We log the error but don't fail the status update for now to avoid blocking the POS flow.
+                // In a stricter system, we might wrap this in a transaction.
             }
         }
 

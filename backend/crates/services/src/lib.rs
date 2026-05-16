@@ -15,3 +15,4 @@ pub mod report;
 pub mod customer;
 pub mod branch;
 pub mod ingredient;
+pub mod deduction;

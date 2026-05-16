@@ -36,7 +36,7 @@ impl InventoryServiceImpl {
 fn to_proto_stock(i: Inventory) -> StockItem {
     StockItem {
         id: i.id.to_string(),
-        product_id: i.product_id.to_string(),
+        product_id: i.product_id.map(|id| id.to_string()).unwrap_or_default(),
         branch_id: i.branch_id.to_string(),
         quantity: i.quantity.to_string().parse().unwrap_or(0.0),
         min_quantity: i.min_quantity.to_string().parse().unwrap_or(0.0),
@@ -47,7 +47,7 @@ fn to_proto_stock(i: Inventory) -> StockItem {
 fn to_proto_history(h: InventoryTransaction) -> StockHistoryEntry {
     StockHistoryEntry {
         id: h.id.to_string(),
-        product_id: h.product_id.to_string(),
+        product_id: h.product_id.map(|id| id.to_string()).unwrap_or_default(),
         r#type: format!("{:?}", h.r#type).to_lowercase(),
         quantity_change: h.quantity_change.to_string().parse().unwrap_or(0.0),
         reference_id: h.reference_id.map(|id| id.to_string()),
@@ -69,7 +69,7 @@ impl InventoryService for InventoryServiceImpl {
         let branch_id = Uuid::parse_str(&req.branch_id).map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
         let product_id = Uuid::parse_str(&req.product_id).map_err(|_| Status::invalid_argument("Invalid product_id"))?;
 
-        let stock = self.inventory_repo.get_stock(&tenant_id, &branch_id, &product_id).await
+        let stock = self.inventory_repo.get_stock(&tenant_id, &branch_id, Some(product_id), None).await
             .map_err(|e| Status::internal(format!("DB error: {}", e)))?
             .ok_or_else(|| Status::not_found("Stock record not found"))?;
 
@@ -104,7 +104,8 @@ impl InventoryService for InventoryServiceImpl {
         let updated = self.inventory_repo.update_stock(
             &tenant_id,
             &branch_id,
-            &product_id,
+            Some(product_id),
+            None,
             &change,
             trx_type,
             None,
@@ -145,7 +146,7 @@ impl InventoryService for InventoryServiceImpl {
         let branch_id = Uuid::parse_str(&req.branch_id).map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
         let product_id = Uuid::parse_str(&req.product_id).map_err(|_| Status::invalid_argument("Invalid product_id"))?;
 
-        let history = self.inventory_repo.get_history(&tenant_id, &branch_id, &product_id).await
+        let history = self.inventory_repo.get_history(&tenant_id, &branch_id, Some(product_id), None).await
             .map_err(|e| Status::internal(format!("Failed to fetch history: {}", e)))?;
 
         Ok(Response::new(StockHistoryResponse {

@@ -32,6 +32,7 @@ use proto_gen::ingredient::ingredient_service_server::IngredientServiceServer;
 use services::ingredient::IngredientServiceImpl;
 use proto_gen::recipe::recipe_service_server::RecipeServiceServer;
 use services::recipe::RecipeServiceImpl;
+use services::deduction::DeductionService;
 
 use infra::middleware::get_auth_interceptor;
 
@@ -78,6 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let store_repo = Arc::new(StoreRepository::new(pool.clone()));
     let ingredient_repo = Arc::new(IngredientRepository::new(pool.clone()));
     let recipe_repo = Arc::new(RecipeRepository::new(pool.clone()));
+    let deduction_service = Arc::new(DeductionService::new(order_repo.clone(), inventory_repo.clone(), recipe_repo.clone()));
 
     // 3. Initialize Services
     let auth_service = AuthServiceImpl::new(user_repo.clone(), tenant_repo.clone(), security.clone());
@@ -87,7 +89,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let category_service = CategoryServiceImpl::new(category_repo.clone());
     let product_service = ProductServiceImpl::new(product_repo.clone(), topping_repo.clone());
     let table_service = TableServiceImpl::new(table_repo.clone(), floor_plan_repo.clone());
-    let order_service = OrderServiceImpl::new(order_repo.clone(), product_repo.clone(), topping_repo.clone(), inventory_repo.clone(), table_repo.clone(), redis_manager.clone());
+    let order_service = OrderServiceImpl::new(order_repo.clone(), product_repo.clone(), topping_repo.clone(), table_repo.clone(), deduction_service.clone(), redis_manager.clone());
     let payment_service = PaymentServiceImpl::new(payment_repo.clone(), order_repo.clone(), customer_repo.clone(), user_repo.clone());
     let report_service = ReportServiceImpl::new(report_repo.clone());
     let customer_service = CustomerServiceImpl::new(customer_repo.clone(), order_repo.clone());

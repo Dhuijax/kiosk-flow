@@ -1410,18 +1410,21 @@ impl InventoryRepository {
         Ok(tx)
     }
 
-    pub async fn get_stock(&self, tenant_id: &Uuid, branch_id: &Uuid, product_id: &Uuid) -> Result<Option<Inventory>> {
+    pub async fn get_stock(&self, tenant_id: &Uuid, branch_id: &Uuid, product_id: Option<Uuid>, ingredient_id: Option<Uuid>) -> Result<Option<Inventory>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let inventory = sqlx::query_as!(
             Inventory,
             r#"
-            SELECT id, tenant_id, branch_id, product_id, quantity, min_quantity, updated_at as "updated_at!"
+            SELECT id, tenant_id, branch_id, product_id, ingredient_id, quantity, min_quantity, updated_at as "updated_at!"
             FROM inventory
-            WHERE branch_id = $1 AND product_id = $2
+            WHERE branch_id = $1 
+              AND (product_id = $2 OR ($2 IS NULL AND product_id IS NULL))
+              AND (ingredient_id = $3 OR ($3 IS NULL AND ingredient_id IS NULL))
             "#,
             branch_id,
-            product_id
+            product_id,
+            ingredient_id
         )
         .fetch_optional(&mut *tx)
         .await?;
@@ -1434,7 +1437,8 @@ impl InventoryRepository {
         &self,
         tenant_id: &Uuid,
         branch_id: &Uuid,
-        product_id: &Uuid,
+        product_id: Option<Uuid>,
+        ingredient_id: Option<Uuid>,
         quantity_change: &sqlx::types::BigDecimal,
         r#type: InventoryTransactionType,
         reference_id: Option<Uuid>,
@@ -1444,32 +1448,56 @@ impl InventoryRepository {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         // 1. Update or Insert Inventory
-        let inventory = sqlx::query_as!(
-            Inventory,
-            r#"
-            INSERT INTO inventory (tenant_id, branch_id, product_id, quantity)
-            VALUES ($1, $2, $3, $4)
-            ON CONFLICT (tenant_id, branch_id, product_id)
-            DO UPDATE SET quantity = inventory.quantity + EXCLUDED.quantity, updated_at = NOW()
-            RETURNING id, tenant_id, branch_id, product_id, quantity, min_quantity, updated_at as "updated_at!"
-            "#,
-            tenant_id,
-            branch_id,
-            product_id,
-            quantity_change
-        )
-        .fetch_one(&mut *tx)
-        .await?;
+        let inventory = if let Some(pid) = product_id {
+            sqlx::query_as!(
+                Inventory,
+                r#"
+                INSERT INTO inventory (tenant_id, branch_id, product_id, ingredient_id, quantity)
+                VALUES ($1, $2, $3, $4, $5)
+                ON CONFLICT (tenant_id, branch_id, product_id) WHERE product_id IS NOT NULL
+                    DO UPDATE SET quantity = inventory.quantity + EXCLUDED.quantity, updated_at = NOW()
+                RETURNING id, tenant_id, branch_id, product_id, ingredient_id, quantity, min_quantity, updated_at as "updated_at!"
+                "#,
+                tenant_id,
+                branch_id,
+                pid,
+                None::<Uuid>,
+                quantity_change
+            )
+            .fetch_one(&mut *tx)
+            .await?
+        } else if let Some(iid) = ingredient_id {
+            sqlx::query_as!(
+                Inventory,
+                r#"
+                INSERT INTO inventory (tenant_id, branch_id, product_id, ingredient_id, quantity)
+                VALUES ($1, $2, $3, $4, $5)
+                ON CONFLICT (tenant_id, branch_id, ingredient_id) WHERE ingredient_id IS NOT NULL
+                    DO UPDATE SET quantity = inventory.quantity + EXCLUDED.quantity, updated_at = NOW()
+                RETURNING id, tenant_id, branch_id, product_id, ingredient_id, quantity, min_quantity, updated_at as "updated_at!"
+                "#,
+                tenant_id,
+                branch_id,
+                None::<Uuid>,
+                iid,
+                quantity_change
+            )
+            .fetch_one(&mut *tx)
+            .await?
+        } else {
+            return Err(sqlx::Error::RowNotFound.into());
+        };
 
         // 2. Log Transaction
         sqlx::query!(
             r#"
-            INSERT INTO inventory_transactions (tenant_id, branch_id, product_id, type, quantity_change, reference_id, note, created_by)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO inventory_transactions (tenant_id, branch_id, product_id, ingredient_id, type, quantity_change, reference_id, note, created_by)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             "#,
             tenant_id,
             branch_id,
             product_id,
+            ingredient_id,
             r#type as _,
             quantity_change,
             reference_id,
@@ -1490,7 +1518,7 @@ impl InventoryRepository {
             sqlx::query_as!(
                 Inventory,
                 r#"
-                SELECT id, tenant_id, branch_id, product_id, quantity, min_quantity, updated_at as "updated_at!"
+                SELECT id, tenant_id, branch_id, product_id, ingredient_id, quantity, min_quantity, updated_at as "updated_at!"
                 FROM inventory
                 WHERE branch_id = $1 AND quantity <= min_quantity
                 ORDER BY updated_at DESC
@@ -1503,7 +1531,7 @@ impl InventoryRepository {
             sqlx::query_as!(
                 Inventory,
                 r#"
-                SELECT id, tenant_id, branch_id, product_id, quantity, min_quantity, updated_at as "updated_at!"
+                SELECT id, tenant_id, branch_id, product_id, ingredient_id, quantity, min_quantity, updated_at as "updated_at!"
                 FROM inventory
                 WHERE branch_id = $1
                 ORDER BY updated_at DESC
@@ -1518,19 +1546,22 @@ impl InventoryRepository {
         Ok(items)
     }
 
-    pub async fn get_history(&self, tenant_id: &Uuid, branch_id: &Uuid, product_id: &Uuid) -> Result<Vec<InventoryTransaction>> {
+    pub async fn get_history(&self, tenant_id: &Uuid, branch_id: &Uuid, product_id: Option<Uuid>, ingredient_id: Option<Uuid>) -> Result<Vec<InventoryTransaction>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let history = sqlx::query_as!(
             InventoryTransaction,
             r#"
-            SELECT id, tenant_id, branch_id, product_id, type as "type: _", quantity_change, reference_id, note, created_by, created_at as "created_at!"
+            SELECT id, tenant_id, branch_id, product_id, ingredient_id, type as "type: _", quantity_change, reference_id, note, created_by, created_at as "created_at!"
             FROM inventory_transactions
-            WHERE branch_id = $1 AND product_id = $2
+            WHERE branch_id = $1 
+              AND (product_id = $2 OR ($2 IS NULL AND product_id IS NULL))
+              AND (ingredient_id = $3 OR ($3 IS NULL AND ingredient_id IS NULL))
             ORDER BY created_at DESC
             "#,
             branch_id,
-            product_id
+            product_id,
+            ingredient_id
         )
         .fetch_all(&mut *tx)
         .await?;

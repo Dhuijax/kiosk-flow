@@ -1,7 +1,6 @@
 use sqlx::PgPool;
 use uuid::Uuid;
 use domain::models::recipe::ProductIngredient;
-use std::sync::Arc;
 use bigdecimal::BigDecimal;
 
 pub struct RecipeRepository {

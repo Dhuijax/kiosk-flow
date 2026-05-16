@@ -6,3 +6,4 @@ pub mod cache;
 pub mod middleware;
 pub mod security;
 pub mod repository;
+pub mod recipe_repository;

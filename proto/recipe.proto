@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package recipe;
+
+import "common.proto";
+
+service RecipeService {
+    rpc GetRecipe (GetRecipeRequest) returns (GetRecipeResponse);
+    rpc SetRecipe (SetRecipeRequest) returns (SetRecipeResponse);
+}
+
+message ProductIngredient {
+    string id = 1;
+    string product_id = 2;
+    string ingredient_id = 3;
+    string ingredient_name = 4;
+    string unit = 5;
+    double quantity = 6;
+}
+
+message GetRecipeRequest {
+    string product_id = 1;
+}
+
+message GetRecipeResponse {
+    repeated ProductIngredient ingredients = 1;
+}
+
+message SetRecipeRequest {
+    string product_id = 1;
+    repeated ProductIngredientInput ingredients = 2;
+}
+
+message ProductIngredientInput {
+    string ingredient_id = 1;
+    double quantity = 2;
+}
+
+message SetRecipeResponse {
+    common.SuccessResponse success = 1;
+}

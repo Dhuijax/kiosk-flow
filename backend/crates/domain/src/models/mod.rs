@@ -8,3 +8,4 @@ pub mod inventory;
 pub mod tenant;
 pub mod customer;
 pub mod ingredient;
+pub mod recipe;

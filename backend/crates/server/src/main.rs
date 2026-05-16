@@ -30,11 +30,14 @@ use proto_gen::branch::branch_service_server::BranchServiceServer;
 use services::branch::BranchServiceImpl;
 use proto_gen::ingredient::ingredient_service_server::IngredientServiceServer;
 use services::ingredient::IngredientServiceImpl;
+use proto_gen::recipe::recipe_service_server::RecipeServiceServer;
+use services::recipe::RecipeServiceImpl;
 
 use infra::middleware::get_auth_interceptor;
 
 use infra::db::create_pool;
 use infra::repository::{UserRepository, TenantRepository, CategoryRepository, ProductRepository, ToppingRepository, TableRepository, FloorPlanRepository, OrderRepository, PaymentRepository, InventoryRepository, ReportRepository, CustomerRepository, StoreRepository, IngredientRepository};
+use infra::recipe_repository::RecipeRepository;
 use infra::security::SecurityService;
 use std::sync::Arc;
 use dotenvy::dotenv;
@@ -74,6 +77,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let customer_repo = Arc::new(CustomerRepository::new(pool.clone()));
     let store_repo = Arc::new(StoreRepository::new(pool.clone()));
     let ingredient_repo = Arc::new(IngredientRepository::new(pool.clone()));
+    let recipe_repo = Arc::new(RecipeRepository::new(pool.clone()));
 
     // 3. Initialize Services
     let auth_service = AuthServiceImpl::new(user_repo.clone(), tenant_repo.clone(), security.clone());
@@ -89,6 +93,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let customer_service = CustomerServiceImpl::new(customer_repo.clone(), order_repo.clone());
     let branch_service = BranchServiceImpl::new(store_repo.clone());
     let ingredient_service = IngredientServiceImpl::new(ingredient_repo.clone());
+    let recipe_service = RecipeServiceImpl::new(recipe_repo.clone());
     let status_service = StatusServiceImpl::new();
 
     let auth_interceptor = get_auth_interceptor(config.jwt_secret.clone());
@@ -106,6 +111,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let customer_server = CustomerServiceServer::with_interceptor(customer_service, auth_interceptor.clone());
     let branch_server = BranchServiceServer::with_interceptor(branch_service, auth_interceptor.clone());
     let ingredient_server = IngredientServiceServer::with_interceptor(ingredient_service, auth_interceptor.clone());
+    let recipe_server = RecipeServiceServer::with_interceptor(recipe_service, auth_interceptor.clone());
     let status_server = StatusServiceServer::new(status_service);
 
     // 4. Setup gRPC Reflection
@@ -165,6 +171,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let settings_server = tonic_web::enable(settings_server);
     let branch_server = tonic_web::enable(branch_server);
     let ingredient_server = tonic_web::enable(ingredient_server);
+    let recipe_server = tonic_web::enable(recipe_server);
 
     router
         .add_service(ext_descriptor_set)
@@ -182,6 +189,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(settings_server)
         .add_service(branch_server)
         .add_service(ingredient_server)
+        .add_service(recipe_server)
         .serve(addr)
         .await?;
 

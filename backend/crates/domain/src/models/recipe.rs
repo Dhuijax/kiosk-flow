@@ -1,0 +1,14 @@
+use chrono::{DateTime, Utc};
+use uuid::Uuid;
+use bigdecimal::BigDecimal;
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProductIngredient {
+    pub id: Uuid,
+    pub product_id: Uuid,
+    pub ingredient_id: Uuid,
+    pub ingredient_name: String,
+    pub unit: String,
+    pub quantity: BigDecimal,
+}

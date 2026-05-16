@@ -9,6 +9,7 @@ pub mod status;
 pub mod store;
 pub mod product;
 pub mod table;
+pub mod recipe;
 pub mod payment;
 pub mod report;
 pub mod customer;

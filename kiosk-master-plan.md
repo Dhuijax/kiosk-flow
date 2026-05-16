@@ -355,7 +355,7 @@ proto/
 |--------|------|-------------|--------|--------|
 | **S29** | Ingredient Management | CRUD for raw materials (Back-end) | Create/List ingredients via gRPC | [x] |
 | **S30** | Ingredient UI | Admin UI for managing raw materials | CRUD ingredients in dashboard | [ ] |
-| **S31** | Recipe/BOM Service | Map Products to Ingredients + Quantities | Define recipes for products | [ ] |
+| **S31** | Recipe/BOM Service | Map Products to Ingredients + Quantities | Define recipes for products | [x] |
 | **S32** | Recipe/BOM UI | UI to manage product recipes | Admin can set formulas per item | [ ] |
 | **S33** | Auto-Deduction Engine | Real-time ingredient deduction on Order completion | Stock levels update based on sales | [ ] |
 | **S34** | Procurement & Alerts | Purchase orders for ingredients + low stock alerts | Purchase ingredients to refill stock | [ ] |
@@ -542,7 +542,7 @@ kiosk-flow/
 | S28 | `[x]` Completed | 2026-05-15 |
 | S29 | `[x]` Completed | 2026-05-15 |
 | S30 | `[x]` Completed | 2026-05-15 |
-| S31 | `[ ]` Pending | — |
+| S31 | `[x]` Completed | 2026-05-16 |
 | S32 | `[ ]` Pending | — |
 | S33 | `[ ]` Pending | — |
 | S34 | `[ ]` Pending | — |

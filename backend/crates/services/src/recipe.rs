@@ -27,6 +27,7 @@ impl RecipeServiceImpl {
             ingredient_name: item.ingredient_name,
             unit: item.unit,
             quantity: item.quantity.to_f64().unwrap_or(0.0), // using f64 for simplicity in proto
+            is_customizable: item.is_customizable,
         }
     }
 }
@@ -88,7 +89,7 @@ impl RecipeService for RecipeServiceImpl {
                 .map_err(|_| Status::invalid_argument("Invalid Ingredient ID format"))?;
             let qty = BigDecimal::from_str(&item.quantity.to_string())
                 .map_err(|_| Status::invalid_argument("Invalid quantity"))?;
-            items.push((ing_id, qty));
+            items.push((ing_id, qty, item.is_customizable));
         }
 
         self.repo

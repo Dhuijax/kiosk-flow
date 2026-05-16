@@ -11,4 +11,5 @@ pub struct ProductIngredient {
     pub ingredient_name: String,
     pub unit: String,
     pub quantity: BigDecimal,
+    pub is_customizable: bool,
 }

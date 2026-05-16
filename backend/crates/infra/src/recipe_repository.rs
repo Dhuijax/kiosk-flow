@@ -25,6 +25,7 @@ impl RecipeRepository {
                 pi.product_id, 
                 pi.ingredient_id, 
                 pi.quantity,
+                pi.is_customizable,
                 i.name as ingredient_name,
                 i.unit
             FROM product_ingredients pi
@@ -46,6 +47,7 @@ impl RecipeRepository {
                 ingredient_name: row.ingredient_name,
                 unit: row.unit,
                 quantity: row.quantity,
+                is_customizable: row.is_customizable,
             })
             .collect())
     }
@@ -54,7 +56,7 @@ impl RecipeRepository {
         &self,
         tenant_id: &Uuid,
         product_id: &Uuid,
-        ingredients: &[(Uuid, BigDecimal)],
+        ingredients: &[(Uuid, BigDecimal, bool)],
     ) -> Result<(), sqlx::Error> {
         let mut tx = self.pool.begin().await?;
 
@@ -68,13 +70,14 @@ impl RecipeRepository {
         .await?;
 
         // 2. Insert new
-        for (ingredient_id, quantity) in ingredients {
+        for (ingredient_id, quantity, is_customizable) in ingredients {
             sqlx::query!(
-                "INSERT INTO product_ingredients (tenant_id, product_id, ingredient_id, quantity) VALUES ($1, $2, $3, $4)",
+                "INSERT INTO product_ingredients (tenant_id, product_id, ingredient_id, quantity, is_customizable) VALUES ($1, $2, $3, $4, $5)",
                 tenant_id,
                 product_id,
                 ingredient_id,
-                quantity
+                quantity,
+                is_customizable
             )
             .execute(&mut *tx)
             .await?;

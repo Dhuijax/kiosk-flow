@@ -12,6 +12,11 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { protoInt64 } from "@bufbuild/protobuf";
 import { cn } from "@/lib/utils";
 import Portal from '@/components/ui/Portal';
+import { useRecipe } from '@/hooks/useRecipe';
+import { useIngredient } from '@/hooks/useIngredient';
+import { Ingredient } from '@/gen/ingredient_pb';
+import { ProductIngredient, ProductIngredientInput } from '@/gen/recipe_pb';
+import { motion, AnimatePresence } from 'framer-motion';
 
 
 interface ProductModalProps {
@@ -38,9 +43,20 @@ interface FormData {
 
 export default function ProductModal({ isOpen, onClose, onSuccess, editingProduct }: ProductModalProps) {
   const { token, tenantId } = useAuth();
+  const { getRecipe, setRecipe } = useRecipe();
+  const { listIngredients } = useIngredient();
+  const [activeTab, setActiveTab] = useState<'info' | 'recipe'>('info');
   const [categories, setCategories] = useState<Category[]>([]);
   const [toppings, setToppings] = useState<Topping[]>([]);
   const [loading, setLoading] = useState(false);
+  const [recipeLoading, setRecipeLoading] = useState(false);
+  
+  // Recipe state
+  const [recipeIngredients, setRecipeIngredients] = useState<ProductIngredient[]>([]);
+  const [ingredientSearch, setIngredientSearch] = useState('');
+  const [searchResults, setSearchResults] = useState<Ingredient[]>([]);
+  const [productSearchResults, setProductSearchResults] = useState<Product[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     name: '',
     sku: '',
@@ -57,7 +73,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
   });
 
   useEffect(() => {
-    if (editingProduct) {
+    if (editingProduct && isOpen) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         name: editingProduct.name,
@@ -73,6 +89,15 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
         trackInventory: editingProduct.trackInventory,
         toppingIds: editingProduct.toppings.map(t => t.id),
       });
+
+      // Fetch recipe
+      const fetchRecipeData = async () => {
+        setRecipeLoading(true);
+        const ingredients = await getRecipe(editingProduct.id);
+        setRecipeIngredients(ingredients);
+        setRecipeLoading(false);
+      };
+      fetchRecipeData();
     } else {
       setFormData({
         name: '',
@@ -88,8 +113,10 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
         trackInventory: true,
         toppingIds: [],
       });
+      setRecipeIngredients([]);
     }
-  }, [editingProduct, isOpen]);
+    setActiveTab('info');
+  }, [editingProduct, isOpen, getRecipe]);
 
   useEffect(() => {
     if (isOpen && token && tenantId) {
@@ -113,6 +140,67 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
     }
   }, [isOpen, token, tenantId]);
 
+  // Ingredient & Product search logic
+  useEffect(() => {
+    const searchAll = async () => {
+      if (ingredientSearch.length < 2) {
+        setSearchResults([]);
+        setProductSearchResults([]);
+        return;
+      }
+      setIsSearching(true);
+      try {
+        const prodClient = getAuthenticatedClient(ProductService, tenantId!, token!);
+        const [ingRes, prodRes] = await Promise.all([
+          listIngredients({ search: ingredientSearch }),
+          prodClient.listProducts({ searchQuery: ingredientSearch })
+        ]);
+        setSearchResults(ingRes.ingredients);
+        setProductSearchResults(prodRes.products.filter(p => p.id !== editingProduct?.id));
+      } catch (err) {
+        console.error('Search failed:', err);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const timer = setTimeout(searchAll, 300);
+    return () => clearTimeout(timer);
+  }, [ingredientSearch, listIngredients, token, tenantId, editingProduct?.id]);
+
+  const addIngredientToRecipe = (ing: Ingredient | Product) => {
+    if (recipeIngredients.some(item => item.ingredientId === ing.id)) return;
+    
+    const newIngredient = new ProductIngredient({
+      ingredientId: ing.id,
+      ingredientName: ing.name,
+      unit: (ing as Ingredient).unit || (ing as Product).unit || 'Unit',
+      quantity: 1,
+      isCustomizable: false,
+    });
+    
+    setRecipeIngredients([...recipeIngredients, newIngredient]);
+    setIngredientSearch('');
+    setSearchResults([]);
+    setProductSearchResults([]);
+  };
+
+  const removeIngredientFromRecipe = (ingId: string) => {
+    setRecipeIngredients(recipeIngredients.filter(item => item.ingredientId !== ingId));
+  };
+
+  const updateIngredientQuantity = (ingId: string, qty: number) => {
+    setRecipeIngredients(recipeIngredients.map(item => 
+      item.ingredientId === ingId ? new ProductIngredient({ ...item, quantity: qty }) : item
+    ));
+  };
+
+  const toggleIngredientCustomizable = (ingId: string) => {
+    setRecipeIngredients(recipeIngredients.map(item => 
+      item.ingredientId === ingId ? new ProductIngredient({ ...item, isCustomizable: !item.isCustomizable }) : item
+    ));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token || !tenantId) return;
@@ -127,11 +215,23 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
         costPrice: { currencyCode: 'VND', units: protoInt64.parse(formData.costPrice), nanos: 0 },
       };
 
+      let productId = editingProduct?.id;
       if (editingProduct) {
         await client.updateProduct({ id: editingProduct.id, ...payload });
       } else {
-        await client.createProduct(payload);
+        const res = await client.createProduct(payload);
+        productId = res.id;
       }
+
+      // Save Recipe if we have a productId
+      if (productId) {
+        await setRecipe(productId, recipeIngredients.map(ri => new ProductIngredientInput({
+          ingredientId: ri.ingredientId,
+          quantity: ri.quantity,
+          isCustomizable: ri.isCustomizable
+        })));
+      }
+
       onSuccess();
       onClose();
     } catch (err) {
@@ -163,8 +263,39 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex-1 overflow-auto p-10 custom-scrollbar">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          {/* Tabs Navigation */}
+          <div className="px-8 border-b border-foreground/5 bg-foreground/5 flex gap-2">
+            {[
+              { id: 'info', label: 'Thông tin cơ bản', icon: Info },
+              { id: 'recipe', label: 'Công thức (BOM)', icon: RefreshCw },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as any)}
+                className={cn(
+                  "px-6 py-4 text-[10px] font-black uppercase italic tracking-[0.2em] flex items-center gap-2 transition-all border-b-2",
+                  activeTab === tab.id 
+                    ? "border-interaction text-interaction bg-interaction/5" 
+                    : "border-transparent text-foreground/40 hover:text-foreground hover:bg-foreground/5"
+                )}
+              >
+                <tab.icon className={cn("w-4 h-4", activeTab === tab.id ? "animate-pulse" : "")} />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex-1 overflow-auto p-10 custom-scrollbar relative">
+            <AnimatePresence mode="wait">
+              {activeTab === 'info' ? (
+                <motion.div 
+                  key="info"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="grid grid-cols-1 lg:grid-cols-12 gap-12"
+                >
               {/* Left Column: Basic Info */}
               <div className="lg:col-span-7 space-y-10">
                 <div className="space-y-3">
@@ -339,8 +470,184 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                   </div>
                 )}
               </div>
-            </div>
-          </form>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="recipe"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-10"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-black uppercase italic tracking-tighter">Định mức nguyên liệu</h3>
+                  <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest mt-1">Thiết lập công thức chế biến cho sản phẩm này</p>
+                </div>
+                {recipeLoading && <RefreshCw className="w-5 h-5 animate-spin text-interaction" />}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                {/* Search & Add */}
+                <div className="lg:col-span-4 space-y-6">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Tìm nguyên liệu</label>
+                    <div className="relative">
+                      <input 
+                        value={ingredientSearch}
+                        onChange={e => setIngredientSearch(e.target.value)}
+                        placeholder="VÍ DỤ: ĐƯỜNG, SỮA..."
+                        className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm uppercase italic tracking-tighter shadow-sm"
+                      />
+                      {isSearching && <RefreshCw className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-foreground/20" />}
+                    </div>
+                  </div>
+
+                  <div className="bg-foreground/5 rounded-[2rem] border border-foreground/5 p-4 min-h-[300px] max-h-[400px] overflow-auto custom-scrollbar">
+                    {(searchResults.length > 0 || productSearchResults.length > 0) ? (
+                      <div className="space-y-4">
+                        {searchResults.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-[8px] font-black text-foreground/20 uppercase tracking-widest ml-2">Nguyên liệu</p>
+                            {searchResults.map(ing => (
+                              <button
+                                key={ing.id}
+                                type="button"
+                                onClick={() => addIngredientToRecipe(ing)}
+                                className="w-full flex items-center justify-between p-4 bg-background rounded-2xl border border-foreground/5 hover:border-interaction/40 hover:scale-[1.02] transition-all group shadow-sm"
+                              >
+                                <div className="text-left">
+                                  <p className="text-xs font-black uppercase italic tracking-tighter">{ing.name}</p>
+                                  <p className="text-[8px] font-bold text-foreground/40 uppercase">{ing.unit}</p>
+                                </div>
+                                <Package className="w-4 h-4 text-foreground/10 group-hover:text-interaction transition-colors" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {productSearchResults.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-[8px] font-black text-interaction/40 uppercase tracking-widest ml-2">Phụ phẩm / Sản phẩm khác</p>
+                            {productSearchResults.map(prod => (
+                              <button
+                                key={prod.id}
+                                type="button"
+                                onClick={() => addIngredientToRecipe(prod)}
+                                className="w-full flex items-center justify-between p-4 bg-background rounded-2xl border border-interaction/5 hover:border-interaction/40 hover:scale-[1.02] transition-all group shadow-sm"
+                              >
+                                <div className="text-left">
+                                  <p className="text-xs font-black uppercase italic tracking-tighter text-interaction">{prod.name}</p>
+                                  <p className="text-[8px] font-bold text-foreground/40 uppercase">{prod.unit || 'Đơn vị'}</p>
+                                </div>
+                                <RefreshCw className="w-4 h-4 text-interaction/20 group-hover:text-interaction transition-colors" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full opacity-20 py-10">
+                        <Package className="w-12 h-12 mb-4" />
+                        <p className="text-[10px] font-black uppercase tracking-widest italic text-center px-6">
+                          {ingredientSearch.length < 2 ? 'NHẬP TÊN ĐỂ TÌM KIẾM' : 'KHÔNG TÌM THẤY KẾT QUẢ'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Selected Ingredients */}
+                <div className="lg:col-span-8">
+                  <div className="bg-surface rounded-[2.5rem] border border-foreground/10 overflow-hidden shadow-inner min-h-[400px]">
+                    <div className="bg-foreground/5 px-8 py-4 border-b border-foreground/5 flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">Nguyên liệu đã chọn ({recipeIngredients.length})</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">Định lượng</span>
+                    </div>
+
+                    <div className="p-4 space-y-4">
+                      {recipeIngredients.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 opacity-10">
+                          <RefreshCw className="w-16 h-16 mb-4" />
+                          <p className="text-sm font-black uppercase italic tracking-widest">Chưa có công thức</p>
+                        </div>
+                      ) : (
+                        recipeIngredients.map((item) => (
+                          <div 
+                            key={item.ingredientId}
+                            className="flex items-center gap-6 p-4 bg-background rounded-[2rem] border border-foreground/5 shadow-sm group hover:border-interaction/20 transition-all"
+                          >
+                            <div className="w-12 h-12 rounded-xl bg-foreground/5 flex items-center justify-center text-foreground/20 font-black italic">
+                              {recipeIngredients.indexOf(item) + 1}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-black uppercase italic tracking-tighter">{item.ingredientName}</h4>
+                                {productSearchResults.some(p => p.id === item.ingredientId) && (
+                                  <span className="text-[8px] bg-interaction/10 text-interaction px-1.5 py-0.5 rounded-full font-black uppercase">Phụ phẩm</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-4 mt-1">
+                                <p className="text-[10px] font-bold text-foreground/40 uppercase">Đơn vị: {item.unit}</p>
+                                <button 
+                                  type="button"
+                                  onClick={() => toggleIngredientCustomizable(item.ingredientId)}
+                                  className={cn(
+                                    "text-[8px] font-black uppercase italic tracking-widest px-2 py-0.5 rounded-md border transition-all",
+                                    item.isCustomizable 
+                                      ? "bg-primary text-white border-primary shadow-sm" 
+                                      : "bg-foreground/5 text-foreground/20 border-foreground/10 hover:border-foreground/30"
+                                  )}
+                                >
+                                  {item.isCustomizable ? 'Cho phép tùy chỉnh' : 'Cố định'}
+                                </button>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="relative">
+                                <input 
+                                  type="number"
+                                  step="0.01"
+                                  value={item.quantity}
+                                  onChange={e => updateIngredientQuantity(item.ingredientId, parseFloat(e.target.value))}
+                                  className="w-24 px-4 py-3 bg-foreground/5 border border-foreground/10 rounded-xl outline-none focus:bg-white transition-all text-center font-black text-lg italic tracking-tighter text-interaction"
+                                />
+                                <span className="absolute -top-2 -right-2 bg-interaction text-white text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase">
+                                  {item.unit}
+                                </span>
+                              </div>
+                              <button 
+                                type="button"
+                                onClick={() => removeIngredientFromRecipe(item.ingredientId)}
+                                className="w-10 h-10 rounded-xl flex items-center justify-center text-foreground/20 hover:bg-red-500 hover:text-white transition-all"
+                              >
+                                <X className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-8 p-6 bg-interaction/5 border border-interaction/10 rounded-3xl">
+                    <div className="flex items-start gap-4">
+                      <Info className="w-5 h-5 text-interaction mt-1" />
+                      <div>
+                        <p className="text-xs font-black text-interaction uppercase italic tracking-tighter">Ghi chú vận hành</p>
+                        <p className="text-[10px] text-interaction/60 font-medium leading-relaxed mt-1 italic">
+                          Hệ thống sẽ tự động trừ tồn kho nguyên liệu tương ứng ngay khi đơn hàng được hoàn tất. 
+                          Hãy đảm bảo định lượng (số lượng) được nhập chính xác theo đơn vị cơ bản trong kho.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+          </AnimatePresence>
+        </form>
 
           <div className="p-8 border-t border-foreground/5 flex items-center justify-end gap-4 bg-foreground/5">
             <button 

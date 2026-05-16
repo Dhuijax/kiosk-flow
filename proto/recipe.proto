@@ -16,6 +16,7 @@ message ProductIngredient {
     string ingredient_name = 4;
     string unit = 5;
     double quantity = 6;
+    bool is_customizable = 7;
 }
 
 message GetRecipeRequest {
@@ -34,6 +35,7 @@ message SetRecipeRequest {
 message ProductIngredientInput {
     string ingredient_id = 1;
     double quantity = 2;
+    bool is_customizable = 3;
 }
 
 message SetRecipeResponse {

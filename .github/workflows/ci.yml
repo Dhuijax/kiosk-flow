@@ -46,6 +46,8 @@ jobs:
   backend-ci:
     name: Backend CI
     runs-on: ubuntu-latest
+    env:
+      SQLX_OFFLINE: true
     defaults:
       run:
         working-directory: backend

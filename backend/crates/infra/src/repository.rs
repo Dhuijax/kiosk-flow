@@ -1010,8 +1010,10 @@ impl TableRepository {
                 for (idx, (t_item, t_toppings)) in target_items_with_toppings.iter().enumerate() {
                     if t_item.product_id == s_item.product_id && t_item.note == s_item.note {
                         // Compare toppings list
-                        let mut s_top_ids: Vec<Uuid> = s_toppings.iter().map(|t| t.topping_id).collect();
-                        let mut t_top_ids: Vec<Uuid> = t_toppings.iter().map(|t| t.topping_id).collect();
+                        let mut s_top_ids: Vec<Uuid> =
+                            s_toppings.iter().map(|t| t.topping_id).collect();
+                        let mut t_top_ids: Vec<Uuid> =
+                            t_toppings.iter().map(|t| t.topping_id).collect();
                         s_top_ids.sort();
                         t_top_ids.sort();
                         if s_top_ids == t_top_ids {
@@ -1037,9 +1039,12 @@ impl TableRepository {
                     .await?;
 
                     // Source item details are merged, so delete source item
-                    sqlx::query!("DELETE FROM order_item_toppings WHERE order_item_id = $1", s_item.id)
-                        .execute(&mut *tx)
-                        .await?;
+                    sqlx::query!(
+                        "DELETE FROM order_item_toppings WHERE order_item_id = $1",
+                        s_item.id
+                    )
+                    .execute(&mut *tx)
+                    .await?;
                     sqlx::query!("DELETE FROM order_items WHERE id = $1", s_item.id)
                         .execute(&mut *tx)
                         .await?;
@@ -1098,7 +1103,6 @@ impl TableRepository {
             )
             .execute(&mut *tx)
             .await?;
-
         } else {
             // TARGET IS EMPTY -> Simple Transfer
             sqlx::query!(
@@ -1606,8 +1610,10 @@ impl OrderRepository {
             for (idx, (t_item, t_toppings)) in target_items_with_toppings.iter().enumerate() {
                 if t_item.product_id == s_item.product_id && t_item.note == s_item.note {
                     // Compare toppings list
-                    let mut s_top_ids: Vec<Uuid> = s_toppings.iter().map(|t| t.topping_id).collect();
-                    let mut t_top_ids: Vec<Uuid> = t_toppings.iter().map(|t| t.topping_id).collect();
+                    let mut s_top_ids: Vec<Uuid> =
+                        s_toppings.iter().map(|t| t.topping_id).collect();
+                    let mut t_top_ids: Vec<Uuid> =
+                        t_toppings.iter().map(|t| t.topping_id).collect();
                     s_top_ids.sort();
                     t_top_ids.sort();
                     if s_top_ids == t_top_ids {
@@ -1633,9 +1639,12 @@ impl OrderRepository {
                 .await?;
 
                 // Source item details are merged, so delete source item
-                sqlx::query!("DELETE FROM order_item_toppings WHERE order_item_id = $1", s_item.id)
-                    .execute(&mut *tx)
-                    .await?;
+                sqlx::query!(
+                    "DELETE FROM order_item_toppings WHERE order_item_id = $1",
+                    s_item.id
+                )
+                .execute(&mut *tx)
+                .await?;
                 sqlx::query!("DELETE FROM order_items WHERE id = $1", s_item.id)
                     .execute(&mut *tx)
                     .await?;
@@ -1717,7 +1726,9 @@ impl OrderRepository {
 
         // 2. Generate target order ID and daily order number
         let target_order_id = Uuid::new_v4();
-        let target_order_number = self.next_order_number(&mut tx, &source_order.branch_id).await?;
+        let target_order_number = self
+            .next_order_number(&mut tx, &source_order.branch_id)
+            .await?;
 
         // 3. Create target order in Draft/same status
         let _created_target_order: Order = sqlx::query_as(

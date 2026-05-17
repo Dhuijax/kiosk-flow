@@ -11,10 +11,10 @@ use infra::security::Claims;
 use proto_gen::common::Money;
 use proto_gen::order::{
     order_service_server::OrderService, CancelOrderRequest, CreateOrderRequest, GetOrderRequest,
-    ListOrdersRequest, ListOrdersResponse, Order as ProtoOrder, OrderItem as ProtoOrderItem,
-    OrderItemStatus as ProtoOrderItemStatus, OrderItemTopping as ProtoOrderItemTopping,
-    OrderResponse, OrderStatus as ProtoOrderStatus, StreamOrdersRequest, UpdateOrderStatusRequest,
-    MergeOrdersRequest, SplitOrderItemsRequest, SplitOrderItemsResponse,
+    ListOrdersRequest, ListOrdersResponse, MergeOrdersRequest, Order as ProtoOrder,
+    OrderItem as ProtoOrderItem, OrderItemStatus as ProtoOrderItemStatus,
+    OrderItemTopping as ProtoOrderItemTopping, OrderResponse, OrderStatus as ProtoOrderStatus,
+    SplitOrderItemsRequest, SplitOrderItemsResponse, StreamOrdersRequest, UpdateOrderStatusRequest,
 };
 use redis::aio::ConnectionManager;
 use redis::AsyncCommands;
@@ -486,8 +486,13 @@ impl OrderService for OrderServiceImpl {
         let branch_id = merged.branch_id;
         self.notify_order_update(tenant_id, branch_id, merged.id, DomainOrderStatus::Draft)
             .await;
-        self.notify_order_update(tenant_id, branch_id, source_uuid, DomainOrderStatus::Cancelled)
-            .await;
+        self.notify_order_update(
+            tenant_id,
+            branch_id,
+            source_uuid,
+            DomainOrderStatus::Cancelled,
+        )
+        .await;
 
         Ok(Response::new(OrderResponse {
             order: Some(map_domain_to_proto(full_order.0, full_order.1)),

@@ -8,8 +8,8 @@ use proto_gen::table::{
     table_service_server::TableService, CreateFloorPlanRequest, CreateTablesRequest,
     CreateTablesResponse, DeleteFloorPlanRequest, DeleteTableRequest, FloorPlan as ProtoFloorPlan,
     ListFloorPlansRequest, ListFloorPlansResponse, ListTablesRequest, ListTablesResponse,
-    Table as ProtoTable, TableStatus as ProtoTableStatus, UpdateFloorPlanRequest,
-    UpdateTableRequest, UpdateTableStatusRequest, TransferTableRequest, TransferTableResponse,
+    Table as ProtoTable, TableStatus as ProtoTableStatus, TransferTableRequest,
+    TransferTableResponse, UpdateFloorPlanRequest, UpdateTableRequest, UpdateTableStatusRequest,
 };
 use std::convert::TryFrom;
 use std::sync::Arc;

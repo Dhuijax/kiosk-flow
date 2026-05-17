@@ -7,3 +7,4 @@ pub mod middleware;
 pub mod security;
 pub mod repository;
 pub mod recipe_repository;
+pub mod procurement_repository;

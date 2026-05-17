@@ -33,12 +33,17 @@ use services::ingredient::IngredientServiceImpl;
 use proto_gen::recipe::recipe_service_server::RecipeServiceServer;
 use services::recipe::RecipeServiceImpl;
 use services::deduction::DeductionService;
+use proto_gen::procurement::supplier_service_server::SupplierServiceServer;
+use proto_gen::procurement::procurement_service_server::ProcurementServiceServer;
+use proto_gen::procurement::alert_service_server::AlertServiceServer;
+use services::procurement::{SupplierServiceImpl, ProcurementServiceImpl, AlertServiceImpl};
 
 use infra::middleware::get_auth_interceptor;
 
 use infra::db::create_pool;
 use infra::repository::{UserRepository, TenantRepository, CategoryRepository, ProductRepository, ToppingRepository, TableRepository, FloorPlanRepository, OrderRepository, PaymentRepository, InventoryRepository, ReportRepository, CustomerRepository, StoreRepository, IngredientRepository};
 use infra::recipe_repository::RecipeRepository;
+use infra::procurement_repository::ProcurementRepository;
 use infra::security::SecurityService;
 use std::sync::Arc;
 use dotenvy::dotenv;
@@ -79,6 +84,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let store_repo = Arc::new(StoreRepository::new(pool.clone()));
     let ingredient_repo = Arc::new(IngredientRepository::new(pool.clone()));
     let recipe_repo = Arc::new(RecipeRepository::new(pool.clone()));
+    let procurement_repo = Arc::new(ProcurementRepository::new(pool.clone()));
     let deduction_service = Arc::new(DeductionService::new(order_repo.clone(), inventory_repo.clone(), recipe_repo.clone()));
 
     // 3. Initialize Services
@@ -96,6 +102,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let branch_service = BranchServiceImpl::new(store_repo.clone());
     let ingredient_service = IngredientServiceImpl::new(ingredient_repo.clone());
     let recipe_service = RecipeServiceImpl::new(recipe_repo.clone());
+    let supplier_service = SupplierServiceImpl::new(procurement_repo.clone());
+    let procurement_service = ProcurementServiceImpl::new(procurement_repo.clone());
+    let alert_service = AlertServiceImpl::new(procurement_repo.clone());
     let status_service = StatusServiceImpl::new();
 
     let auth_interceptor = get_auth_interceptor(config.jwt_secret.clone());
@@ -114,6 +123,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let branch_server = BranchServiceServer::with_interceptor(branch_service, auth_interceptor.clone());
     let ingredient_server = IngredientServiceServer::with_interceptor(ingredient_service, auth_interceptor.clone());
     let recipe_server = RecipeServiceServer::with_interceptor(recipe_service, auth_interceptor.clone());
+    let supplier_server = SupplierServiceServer::with_interceptor(supplier_service, auth_interceptor.clone());
+    let procurement_server = ProcurementServiceServer::with_interceptor(procurement_service, auth_interceptor.clone());
+    let alert_server = AlertServiceServer::with_interceptor(alert_service, auth_interceptor.clone());
     let status_server = StatusServiceServer::new(status_service);
 
     // 4. Setup gRPC Reflection
@@ -174,6 +186,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let branch_server = tonic_web::enable(branch_server);
     let ingredient_server = tonic_web::enable(ingredient_server);
     let recipe_server = tonic_web::enable(recipe_server);
+    let supplier_server = tonic_web::enable(supplier_server);
+    let procurement_server = tonic_web::enable(procurement_server);
+    let alert_server = tonic_web::enable(alert_server);
 
     router
         .add_service(ext_descriptor_set)
@@ -192,6 +207,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(branch_server)
         .add_service(ingredient_server)
         .add_service(recipe_server)
+        .add_service(supplier_server)
+        .add_service(procurement_server)
+        .add_service(alert_server)
         .serve(addr)
         .await?;
 

@@ -20,6 +20,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "../../../proto/branch.proto",
                 "../../../proto/ingredient.proto",
                 "../../../proto/recipe.proto",
+                "../../../proto/procurement.proto",
             ],
             &["../../../proto"],
         )?;

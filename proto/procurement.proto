@@ -1,0 +1,154 @@
+syntax = "proto3";
+
+package procurement;
+
+import "common.proto";
+
+service SupplierService {
+    rpc ListSuppliers (ListSuppliersRequest) returns (ListSuppliersResponse);
+    rpc GetSupplier (GetSupplierRequest) returns (Supplier);
+    rpc CreateSupplier (CreateSupplierRequest) returns (Supplier);
+    rpc UpdateSupplier (UpdateSupplierRequest) returns (Supplier);
+    rpc DeleteSupplier (DeleteSupplierRequest) returns (common.SuccessResponse);
+}
+
+service ProcurementService {
+    rpc ListPurchaseOrders (ListPurchaseOrdersRequest) returns (ListPurchaseOrdersResponse);
+    rpc GetPurchaseOrder (GetPurchaseOrderRequest) returns (PurchaseOrder);
+    rpc CreatePurchaseOrder (CreatePurchaseOrderRequest) returns (PurchaseOrder);
+}
+
+service AlertService {
+    rpc ListStockAlerts (ListStockAlertsRequest) returns (ListStockAlertsResponse);
+    rpc MarkAlertAsRead (MarkAlertAsReadRequest) returns (common.SuccessResponse);
+    rpc DismissAlert (DismissAlertRequest) returns (common.SuccessResponse);
+}
+
+// ==========================================
+// Suppliers
+// ==========================================
+
+message Supplier {
+    string id = 1;
+    string name = 2;
+    optional string phone = 3;
+    optional string email = 4;
+    optional string address = 5;
+    string created_at = 6;
+    string updated_at = 7;
+}
+
+message ListSuppliersRequest {
+    common.PaginationRequest pagination = 1;
+    optional string search = 2;
+}
+
+message ListSuppliersResponse {
+    repeated Supplier suppliers = 1;
+    common.PaginationResponse pagination = 2;
+}
+
+message GetSupplierRequest {
+    string id = 1;
+}
+
+message CreateSupplierRequest {
+    string name = 1;
+    optional string phone = 2;
+    optional string email = 3;
+    optional string address = 4;
+}
+
+message UpdateSupplierRequest {
+    string id = 1;
+    optional string name = 2;
+    optional string phone = 3;
+    optional string email = 4;
+    optional string address = 5;
+}
+
+message DeleteSupplierRequest {
+    string id = 1;
+}
+
+// ==========================================
+// Purchase Orders
+// ==========================================
+
+message PurchaseOrderItem {
+    string id = 1;
+    string ingredient_id = 2;
+    string ingredient_name = 3; // populated for ease of display
+    double quantity = 4;
+    common.Money unit_price = 5;
+}
+
+message PurchaseOrder {
+    string id = 1;
+    string branch_id = 2;
+    string supplier_id = 3;
+    string supplier_name = 4;
+    common.Money total_amount = 5;
+    string created_by = 6;
+    string created_at = 7;
+    repeated PurchaseOrderItem items = 8;
+}
+
+message ListPurchaseOrdersRequest {
+    common.PaginationRequest pagination = 1;
+    string branch_id = 2;
+}
+
+message ListPurchaseOrdersResponse {
+    repeated PurchaseOrder purchase_orders = 1;
+    common.PaginationResponse pagination = 2;
+}
+
+message GetPurchaseOrderRequest {
+    string id = 1;
+}
+
+message PurchaseOrderItemInput {
+    string ingredient_id = 1;
+    double quantity = 2;
+    common.Money unit_price = 3;
+}
+
+message CreatePurchaseOrderRequest {
+    string branch_id = 1;
+    string supplier_id = 2;
+    repeated PurchaseOrderItemInput items = 3;
+}
+
+// ==========================================
+// Stock Alerts
+// ==========================================
+
+message StockAlert {
+    string id = 1;
+    string branch_id = 2;
+    string ingredient_id = 3;
+    string ingredient_name = 4;
+    string message = 5;
+    bool is_read = 6;
+    string created_at = 7;
+}
+
+message ListStockAlertsRequest {
+    common.PaginationRequest pagination = 1;
+    string branch_id = 2;
+    optional bool include_read = 3; // if false, only show unread
+}
+
+message ListStockAlertsResponse {
+    repeated StockAlert alerts = 1;
+    common.PaginationResponse pagination = 2;
+}
+
+message MarkAlertAsReadRequest {
+    string id = 1;
+}
+
+message DismissAlertRequest {
+    string id = 1;
+}

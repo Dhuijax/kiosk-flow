@@ -58,4 +58,8 @@ pub mod recipe {
     tonic::include_proto!("recipe");
 }
 
+pub mod procurement {
+    tonic::include_proto!("procurement");
+}
+
 pub const FILE_DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("kioskflow_descriptor");

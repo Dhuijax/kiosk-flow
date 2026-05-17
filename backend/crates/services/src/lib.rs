@@ -16,3 +16,4 @@ pub mod customer;
 pub mod branch;
 pub mod ingredient;
 pub mod deduction;
+pub mod procurement;

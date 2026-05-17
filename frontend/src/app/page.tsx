@@ -17,10 +17,7 @@ import {
   ShoppingBag,
   TrendingUp,
   Layers,
-  Activity,
   Grid,
-  DollarSign,
-  Award,
   Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -580,7 +577,7 @@ export default function LandingPage() {
                   return (
                     <button
                       key={tab.id}
-                      onClick={() => setActivePlaygroundTab(tab.id as any)}
+                      onClick={() => setActivePlaygroundTab(tab.id as 'sales' | 'tables' | 'ingredients')}
                       className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase transition-all cursor-pointer ${
                         isActive 
                           ? 'bg-foreground text-background shadow-md' 

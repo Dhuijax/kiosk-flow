@@ -23,4 +23,6 @@ chrono = { workspace = true }
 rand = { workspace = true }
 axum = "0.7.9"
 serde = { workspace = true }
+serde_json = { workspace = true }
+
 

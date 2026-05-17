@@ -1921,6 +1921,7 @@ dependencies = [
  "proto-gen",
  "rand",
  "serde",
+ "serde_json",
  "services",
  "sqlx",
  "tokio",

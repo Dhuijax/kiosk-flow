@@ -23,6 +23,10 @@ impl ReportRepository {
         Self { pool }
     }
 
+    pub fn pool(&self) -> &PgPool {
+        &self.pool
+    }
+
     async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
         let mut tx = self.pool.begin().await?;
         sqlx::query("SELECT set_config('app.current_tenant', $1, true)")

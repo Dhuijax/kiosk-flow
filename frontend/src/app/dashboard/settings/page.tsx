@@ -7,7 +7,8 @@ import {
   Smartphone, 
   Sparkles,
   Bell,
-  Shield
+  Shield,
+  CreditCard
 } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import StoreSettings from '@/components/dashboard/settings/StoreSettings';
@@ -15,9 +16,10 @@ import AppearanceSettings from '@/components/dashboard/settings/AppearanceSettin
 import NotificationSettings from '@/components/dashboard/settings/NotificationSettings';
 import SecuritySettings from '@/components/dashboard/settings/SecuritySettings';
 import KioskSettings from '@/components/dashboard/settings/KioskSettings';
+import BillingSettings from '@/components/dashboard/settings/BillingSettings';
 import StatusBadge from '@/components/ui/StatusBadge';
 
-type SettingsTab = 'store' | 'appearance' | 'notifications' | 'security' | 'kiosk';
+type SettingsTab = 'store' | 'appearance' | 'notifications' | 'security' | 'kiosk' | 'billing';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('store');
@@ -26,13 +28,14 @@ export default function SettingsPage() {
   const navItems = [
     { id: 'store', name: 'Cửa hàng', icon: Store },
     { id: 'appearance', name: 'Giao diện', icon: Palette },
+    { id: 'billing', name: 'Gói dịch vụ', icon: CreditCard },
     { id: 'notifications', name: 'Thông báo', icon: Bell },
     { id: 'security', name: 'Bảo mật', icon: Shield },
     { id: 'kiosk', name: 'Thiết bị Kiosk', icon: Smartphone, status: 'coming-soon' as const },
   ] as const;
 
   const renderContent = () => {
-    if (loading && !storeInfo && !settings) {
+    if (loading && !storeInfo && !settings && activeTab !== 'billing') {
       return (
         <div className="ai-card p-12 flex flex-col items-center justify-center min-h-[400px] gap-4 text-center">
           <div className="w-12 h-12 border-4 border-interaction border-t-transparent rounded-full animate-spin" />
@@ -54,6 +57,8 @@ export default function SettingsPage() {
           settings={settings} 
           updateTenantSettings={updateTenantSettings} 
         />;
+      case 'billing':
+        return <BillingSettings />;
       case 'notifications': 
         return <NotificationSettings />;
       case 'security': 

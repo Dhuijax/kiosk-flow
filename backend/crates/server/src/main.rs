@@ -5,6 +5,7 @@ use std::net::SocketAddr;
 use tonic::transport::Server;
 
 use proto_gen::auth::auth_service_server::AuthServiceServer;
+use proto_gen::billing::billing_service_server::BillingServiceServer;
 use proto_gen::branch::branch_service_server::BranchServiceServer;
 use proto_gen::category::category_service_server::CategoryServiceServer;
 use proto_gen::customer::customer_service_server::CustomerServiceServer;
@@ -25,6 +26,7 @@ use proto_gen::store::{
 };
 use proto_gen::table::table_service_server::TableServiceServer;
 use services::auth::AuthServiceImpl;
+use services::billing::BillingServiceImpl;
 use services::branch::BranchServiceImpl;
 use services::category::CategoryServiceImpl;
 use services::customer::CustomerServiceImpl;
@@ -56,7 +58,9 @@ use infra::security::SecurityService;
 use std::sync::Arc;
 
 mod config;
+mod webhook;
 use config::Config;
+use webhook::handle_billing_webhook;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -130,6 +134,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let procurement_service = ProcurementServiceImpl::new(procurement_repo.clone());
     let alert_service = AlertServiceImpl::new(procurement_repo.clone());
     let status_service = StatusServiceImpl::new();
+    let billing_service = BillingServiceImpl::new(pool.clone());
 
     let auth_interceptor = get_auth_interceptor(config.jwt_secret.clone());
 
@@ -167,6 +172,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let alert_server =
         AlertServiceServer::with_interceptor(alert_service, auth_interceptor.clone());
     let status_server = StatusServiceServer::new(status_service);
+    let billing_server =
+        BillingServiceServer::with_interceptor(billing_service, auth_interceptor.clone());
 
     // 4. Setup gRPC Reflection
     let ext_descriptor_set = tonic_reflection::server::Builder::configure()
@@ -227,6 +234,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let supplier_server = tonic_web::enable(supplier_server);
     let procurement_server = tonic_web::enable(procurement_server);
     let alert_server = tonic_web::enable(alert_server);
+    let billing_server = tonic_web::enable(billing_server);
+
+    // 6. Spawn Axum HTTP Webhook Server on port + 1
+    let webhook_addr = SocketAddr::from(([0, 0, 0, 0], addr.port() + 1));
+    println!(
+        "KioskFlow REST Webhook listening on http://{}",
+        webhook_addr
+    );
+    let webhook_pool = pool.clone();
+    let webhook_app = axum::Router::new()
+        .route(
+            "/api/v1/billing/webhook",
+            axum::routing::post(handle_billing_webhook),
+        )
+        .layer(tower_http::cors::CorsLayer::permissive())
+        .with_state(webhook_pool);
+    tokio::spawn(async move {
+        let listener = tokio::net::TcpListener::bind(webhook_addr).await.unwrap();
+        axum::serve(listener, webhook_app).await.unwrap();
+    });
 
     router
         .add_service(ext_descriptor_set)
@@ -248,6 +275,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(supplier_server)
         .add_service(procurement_server)
         .add_service(alert_server)
+        .add_service(billing_server)
         .serve(addr)
         .await?;
 

@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package billing;
+
+import "common.proto";
+
+service BillingService {
+  rpc CreateSubscriptionPayment (CreatePaymentRequest) returns (CreatePaymentResponse);
+  rpc GetSubscriptionStatus (GetSubscriptionRequest) returns (GetSubscriptionResponse);
+}
+
+message CreatePaymentRequest {
+  string plan_type = 1;         // "STARTER", "PRO", "ENTERPRISE"
+  string payment_gateway = 2;   // "MOMO", "ZALOPAY", "VNPAY", "APPLEPAY", "GOOGLEPAY"
+}
+
+message CreatePaymentResponse {
+  string payment_url = 1;
+  string qr_code_url = 2;
+  string transaction_id = 3;
+}
+
+message GetSubscriptionRequest {}
+
+message GetSubscriptionResponse {
+  string plan_type = 1;
+  string status = 2;
+  string expires_at = 3;
+  int32 max_tables = 4;
+  int32 max_products = 5;
+}

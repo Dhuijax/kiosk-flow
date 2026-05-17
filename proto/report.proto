@@ -8,6 +8,8 @@ service ReportService {
   rpc GetRevenueSummary (GetRevenueSummaryRequest) returns (RevenueSummaryResponse);
   rpc GetTopProducts (GetTopProductsRequest) returns (TopProductsResponse);
   rpc GetSalesByPeriod (GetSalesByPeriodRequest) returns (SalesByPeriodResponse);
+  rpc GetAdvancedAnalytics (GetAdvancedAnalyticsRequest) returns (AdvancedAnalyticsResponse);
+  rpc GetZReport (GetZReportRequest) returns (ZReportResponse);
 }
 
 message GetRevenueSummaryRequest {
@@ -61,4 +63,46 @@ message SalesPeriodItem {
 
 message SalesByPeriodResponse {
   repeated SalesPeriodItem items = 1;
+}
+
+message GetAdvancedAnalyticsRequest {
+  string branch_id = 1;
+  string start_date = 2;
+  string end_date = 3;
+}
+
+message ComboTrendItem {
+  string combo_name = 1;
+  int32 quantity_sold = 2;
+  common.Money revenue = 3;
+}
+
+message IngredientWasteItem {
+  string ingredient_name = 1;
+  double wasted_quantity = 2;
+  string unit = 3;
+  common.Money waste_cost = 4;
+}
+
+message AdvancedAnalyticsResponse {
+  repeated common.Money revenue_by_method = 1; // Thứ tự: Tiền mặt, Thẻ POS, MoMo, ZaloPay, VNPAY
+  repeated ComboTrendItem combo_trends = 2;
+  repeated IngredientWasteItem ingredient_wastes = 3;
+}
+
+message GetZReportRequest {
+  string branch_id = 1;
+  string shift_id = 2; // Rỗng nếu lấy báo cáo chốt ngày
+}
+
+message ZReportResponse {
+  string report_time = 1;
+  int32 total_orders = 2;
+  int32 voided_orders = 3;
+  common.Money net_revenue = 4;
+  common.Money cash_revenue = 5;
+  common.Money card_revenue = 6;
+  common.Money qr_revenue = 7;
+  repeated ComboTrendItem top_combos = 8;
+  repeated IngredientWasteItem shift_wastes = 9;
 }

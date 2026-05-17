@@ -425,3 +425,337 @@ export class SalesByPeriodResponse extends Message<SalesByPeriodResponse> {
   }
 }
 
+/**
+ * @generated from message report.GetAdvancedAnalyticsRequest
+ */
+export class GetAdvancedAnalyticsRequest extends Message<GetAdvancedAnalyticsRequest> {
+  /**
+   * @generated from field: string branch_id = 1;
+   */
+  branchId = "";
+
+  /**
+   * @generated from field: string start_date = 2;
+   */
+  startDate = "";
+
+  /**
+   * @generated from field: string end_date = 3;
+   */
+  endDate = "";
+
+  constructor(data?: PartialMessage<GetAdvancedAnalyticsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "report.GetAdvancedAnalyticsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "branch_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "start_date", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "end_date", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetAdvancedAnalyticsRequest {
+    return new GetAdvancedAnalyticsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetAdvancedAnalyticsRequest {
+    return new GetAdvancedAnalyticsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetAdvancedAnalyticsRequest {
+    return new GetAdvancedAnalyticsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetAdvancedAnalyticsRequest | PlainMessage<GetAdvancedAnalyticsRequest> | undefined, b: GetAdvancedAnalyticsRequest | PlainMessage<GetAdvancedAnalyticsRequest> | undefined): boolean {
+    return proto3.util.equals(GetAdvancedAnalyticsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message report.ComboTrendItem
+ */
+export class ComboTrendItem extends Message<ComboTrendItem> {
+  /**
+   * @generated from field: string combo_name = 1;
+   */
+  comboName = "";
+
+  /**
+   * @generated from field: int32 quantity_sold = 2;
+   */
+  quantitySold = 0;
+
+  /**
+   * @generated from field: common.Money revenue = 3;
+   */
+  revenue?: Money;
+
+  constructor(data?: PartialMessage<ComboTrendItem>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "report.ComboTrendItem";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "combo_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "quantity_sold", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "revenue", kind: "message", T: Money },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ComboTrendItem {
+    return new ComboTrendItem().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ComboTrendItem {
+    return new ComboTrendItem().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ComboTrendItem {
+    return new ComboTrendItem().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ComboTrendItem | PlainMessage<ComboTrendItem> | undefined, b: ComboTrendItem | PlainMessage<ComboTrendItem> | undefined): boolean {
+    return proto3.util.equals(ComboTrendItem, a, b);
+  }
+}
+
+/**
+ * @generated from message report.IngredientWasteItem
+ */
+export class IngredientWasteItem extends Message<IngredientWasteItem> {
+  /**
+   * @generated from field: string ingredient_name = 1;
+   */
+  ingredientName = "";
+
+  /**
+   * @generated from field: double wasted_quantity = 2;
+   */
+  wastedQuantity = 0;
+
+  /**
+   * @generated from field: string unit = 3;
+   */
+  unit = "";
+
+  /**
+   * @generated from field: common.Money waste_cost = 4;
+   */
+  wasteCost?: Money;
+
+  constructor(data?: PartialMessage<IngredientWasteItem>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "report.IngredientWasteItem";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "ingredient_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "wasted_quantity", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
+    { no: 3, name: "unit", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "waste_cost", kind: "message", T: Money },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): IngredientWasteItem {
+    return new IngredientWasteItem().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): IngredientWasteItem {
+    return new IngredientWasteItem().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): IngredientWasteItem {
+    return new IngredientWasteItem().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: IngredientWasteItem | PlainMessage<IngredientWasteItem> | undefined, b: IngredientWasteItem | PlainMessage<IngredientWasteItem> | undefined): boolean {
+    return proto3.util.equals(IngredientWasteItem, a, b);
+  }
+}
+
+/**
+ * @generated from message report.AdvancedAnalyticsResponse
+ */
+export class AdvancedAnalyticsResponse extends Message<AdvancedAnalyticsResponse> {
+  /**
+   * Thứ tự: Tiền mặt, Thẻ POS, MoMo, ZaloPay, VNPAY
+   *
+   * @generated from field: repeated common.Money revenue_by_method = 1;
+   */
+  revenueByMethod: Money[] = [];
+
+  /**
+   * @generated from field: repeated report.ComboTrendItem combo_trends = 2;
+   */
+  comboTrends: ComboTrendItem[] = [];
+
+  /**
+   * @generated from field: repeated report.IngredientWasteItem ingredient_wastes = 3;
+   */
+  ingredientWastes: IngredientWasteItem[] = [];
+
+  constructor(data?: PartialMessage<AdvancedAnalyticsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "report.AdvancedAnalyticsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "revenue_by_method", kind: "message", T: Money, repeated: true },
+    { no: 2, name: "combo_trends", kind: "message", T: ComboTrendItem, repeated: true },
+    { no: 3, name: "ingredient_wastes", kind: "message", T: IngredientWasteItem, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AdvancedAnalyticsResponse {
+    return new AdvancedAnalyticsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): AdvancedAnalyticsResponse {
+    return new AdvancedAnalyticsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): AdvancedAnalyticsResponse {
+    return new AdvancedAnalyticsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: AdvancedAnalyticsResponse | PlainMessage<AdvancedAnalyticsResponse> | undefined, b: AdvancedAnalyticsResponse | PlainMessage<AdvancedAnalyticsResponse> | undefined): boolean {
+    return proto3.util.equals(AdvancedAnalyticsResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message report.GetZReportRequest
+ */
+export class GetZReportRequest extends Message<GetZReportRequest> {
+  /**
+   * @generated from field: string branch_id = 1;
+   */
+  branchId = "";
+
+  /**
+   * Rỗng nếu lấy báo cáo chốt ngày
+   *
+   * @generated from field: string shift_id = 2;
+   */
+  shiftId = "";
+
+  constructor(data?: PartialMessage<GetZReportRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "report.GetZReportRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "branch_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "shift_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetZReportRequest {
+    return new GetZReportRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetZReportRequest {
+    return new GetZReportRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetZReportRequest {
+    return new GetZReportRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetZReportRequest | PlainMessage<GetZReportRequest> | undefined, b: GetZReportRequest | PlainMessage<GetZReportRequest> | undefined): boolean {
+    return proto3.util.equals(GetZReportRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message report.ZReportResponse
+ */
+export class ZReportResponse extends Message<ZReportResponse> {
+  /**
+   * @generated from field: string report_time = 1;
+   */
+  reportTime = "";
+
+  /**
+   * @generated from field: int32 total_orders = 2;
+   */
+  totalOrders = 0;
+
+  /**
+   * @generated from field: int32 voided_orders = 3;
+   */
+  voidedOrders = 0;
+
+  /**
+   * @generated from field: common.Money net_revenue = 4;
+   */
+  netRevenue?: Money;
+
+  /**
+   * @generated from field: common.Money cash_revenue = 5;
+   */
+  cashRevenue?: Money;
+
+  /**
+   * @generated from field: common.Money card_revenue = 6;
+   */
+  cardRevenue?: Money;
+
+  /**
+   * @generated from field: common.Money qr_revenue = 7;
+   */
+  qrRevenue?: Money;
+
+  /**
+   * @generated from field: repeated report.ComboTrendItem top_combos = 8;
+   */
+  topCombos: ComboTrendItem[] = [];
+
+  /**
+   * @generated from field: repeated report.IngredientWasteItem shift_wastes = 9;
+   */
+  shiftWastes: IngredientWasteItem[] = [];
+
+  constructor(data?: PartialMessage<ZReportResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "report.ZReportResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "report_time", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "total_orders", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "voided_orders", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 4, name: "net_revenue", kind: "message", T: Money },
+    { no: 5, name: "cash_revenue", kind: "message", T: Money },
+    { no: 6, name: "card_revenue", kind: "message", T: Money },
+    { no: 7, name: "qr_revenue", kind: "message", T: Money },
+    { no: 8, name: "top_combos", kind: "message", T: ComboTrendItem, repeated: true },
+    { no: 9, name: "shift_wastes", kind: "message", T: IngredientWasteItem, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ZReportResponse {
+    return new ZReportResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ZReportResponse {
+    return new ZReportResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ZReportResponse {
+    return new ZReportResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ZReportResponse | PlainMessage<ZReportResponse> | undefined, b: ZReportResponse | PlainMessage<ZReportResponse> | undefined): boolean {
+    return proto3.util.equals(ZReportResponse, a, b);
+  }
+}
+

@@ -1,6 +1,7 @@
 #![allow(clippy::all)]
 // Business logic services and gRPC implementations
 pub mod auth;
+pub mod billing;
 pub mod branch;
 pub mod category;
 pub mod customer;

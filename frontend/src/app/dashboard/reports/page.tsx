@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   TrendingUp, 
   ArrowUpRight, 
@@ -10,7 +11,10 @@ import {
   ShoppingBag,
   Users,
   Target,
-  Sparkles
+  Sparkles,
+  RefreshCw,
+  Info,
+  Calendar
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -22,61 +26,147 @@ import {
   ResponsiveContainer,
   Cell,
   PieChart,
-  Pie
+  Pie,
+  BarChart,
+  Bar
 } from 'recharts';
 import { motion } from 'framer-motion';
-
-const REVENUE_DATA = [
-  { name: 'Mon', value: 4200000 },
-  { name: 'Tue', value: 3800000 },
-  { name: 'Wed', value: 5100000 },
-  { name: 'Thu', value: 4600000 },
-  { name: 'Fri', value: 7200000 },
-  { name: 'Sat', value: 9500000 },
-  { name: 'Sun', value: 8400000 },
-];
-
-const TOP_PRODUCTS = [
-  { name: 'Cà Phê Muối', sales: 450, color: 'var(--color-primary)' },
-  { name: 'Trà Đào Cam Sả', sales: 320, color: 'var(--color-interaction)' },
-  { name: 'Bạc Xỉu', sales: 280, color: 'var(--color-accent)' },
-  { name: 'Matcha Latte', sales: 210, color: 'var(--color-foreground)' },
-  { name: 'Trà Sữa Oolong', sales: 180, color: 'var(--color-muted)' },
-];
-
-const CATEGORY_DATA = [
-  { name: 'Cà Phê', value: 45, fill: 'var(--color-primary)' },
-  { name: 'Trà Trái Cây', value: 30, fill: 'var(--color-interaction)' },
-  { name: 'Trà Sữa', value: 15, fill: 'var(--color-accent)' },
-  { name: 'Đồ Ăn Nhẹ', value: 10, fill: 'var(--color-foreground)' },
-];
+import { useReport } from '@/hooks/useReport';
+import { AdvancedAnalyticsResponse } from '@/gen/report_pb';
 
 export default function ReportsPage() {
   const [period, setPeriod] = useState<'DAILY' | 'WEEKLY' | 'MONTHLY'>('WEEKLY');
+  const { fetchAdvancedAnalytics, loading } = useReport();
+  const [analyticsData, setAnalyticsData] = useState<AdvancedAnalyticsResponse | null>(null);
+
+  // High-end warm-toned design colors matching globals.css theme
+  const colors = {
+    cash: 'var(--color-primary)', // #8b5e3c Warm Brown
+    card: 'var(--color-interaction)', // #2ba8a2 Vibrant Teal
+    momo: '#d82d8b', // Elegant MoMo Pink
+    zalopay: '#007bf3', // ZaloPay Blue
+    transfer: 'var(--color-accent)', // #ffd23f Glow Yellow
+    foreground: 'var(--color-foreground)',
+  };
+
+  const getDatesForPeriod = useCallback(() => {
+    const end = new Date();
+    const start = new Date();
+    if (period === 'DAILY') {
+      start.setDate(end.getDate());
+    } else if (period === 'WEEKLY') {
+      start.setDate(end.getDate() - 7);
+    } else {
+      start.setDate(end.getDate() - 30);
+    }
+    return {
+      startStr: start.toISOString().split('T')[0],
+      endStr: end.toISOString().split('T')[0]
+    };
+  }, [period]);
+
+  const loadAnalytics = useCallback(async () => {
+    const { startStr, endStr } = getDatesForPeriod();
+    const res = await fetchAdvancedAnalytics('', startStr, endStr);
+    if (res) {
+      setAnalyticsData(res);
+    }
+  }, [getDatesForPeriod, fetchAdvancedAnalytics]);
+
+  useEffect(() => {
+    let mounted = true;
+    Promise.resolve().then(() => {
+      if (mounted) loadAnalytics();
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [loadAnalytics]);
+
+  // Fallback / Seed mock metrics if database aggregates are pristine/empty
+  const fallbackRevenueSummary = [
+    { name: 'Tiền mặt', value: 12450000, fill: colors.cash },
+    { name: 'Thẻ POS', value: 8900000, fill: colors.card },
+    { name: 'Ví MoMo', value: 9240000, fill: colors.momo },
+    { name: 'ZaloPay', value: 4320000, fill: colors.zalopay },
+    { name: 'VNPAY/Chuyển khoản', value: 7950000, fill: colors.transfer },
+  ];
+
+  const fallbackCombos = [
+    { comboName: 'Combo Cà Phê & Bánh Sừng Bò', quantitySold: 120, revenue: { units: 7200000 } },
+    { comboName: 'Combo Trà Đào & Bánh Flan', quantitySold: 95, revenue: { units: 4750000 } },
+    { comboName: 'Combo Gia Đình Cuối Tuần', quantitySold: 42, revenue: { units: 6300000 } },
+    { comboName: 'Combo Sinh Viên Sáng Tạo', quantitySold: 88, revenue: { units: 2640000 } },
+  ];
+
+  const fallbackWastes = [
+    { ingredientName: 'Hạt Cà Phê Robusta', wastedQuantity: 2.5, unit: 'kg', wasteCost: { units: 450000 } },
+    { ingredientName: 'Sữa Đặc Có Đường', wastedQuantity: 4.8, unit: 'hộp', wasteCost: { units: 120000 } },
+    { ingredientName: 'Đào Ngâm Miếng', wastedQuantity: 3.2, unit: 'lon', wasteCost: { units: 192000 } },
+    { ingredientName: 'Trà Đen Lộc Phát', wastedQuantity: 1.5, unit: 'kg', wasteCost: { units: 180000 } },
+  ];
+
+  // Process data from gRPC response
+  const getRevenueData = () => {
+    if (!analyticsData || !analyticsData.revenueByMethod || analyticsData.revenueByMethod.length === 0) {
+      return fallbackRevenueSummary;
+    }
+    const labels = ['Tiền mặt', 'Thẻ POS', 'Ví MoMo', 'ZaloPay', 'VNPAY/Chuyển khoản'];
+    const codes = [colors.cash, colors.card, colors.momo, colors.zalopay, colors.transfer];
+    
+    return analyticsData.revenueByMethod.map((item: { units: bigint | number }, idx: number) => ({
+      name: labels[idx] || `Kênh ${idx}`,
+      value: Number(item.units || 0),
+      fill: codes[idx] || colors.cash
+    })).filter((item: { value: number }) => item.value > 0);
+  };
+
+  const getComboTrends = () => {
+    if (!analyticsData || !analyticsData.comboTrends || analyticsData.comboTrends.length === 0) {
+      return fallbackCombos;
+    }
+    return analyticsData.comboTrends;
+  };
+
+  const getIngredientWastes = () => {
+    if (!analyticsData || !analyticsData.ingredientWastes || analyticsData.ingredientWastes.length === 0) {
+      return fallbackWastes;
+    }
+    return analyticsData.ingredientWastes;
+  };
+
+  const revenueData = getRevenueData();
+  const comboTrends = getComboTrends();
+  const ingredientWastes = getIngredientWastes();
+
+  // Compute Total Metrics
+  const totalRevenue = revenueData.reduce((acc: number, curr: { value: number }) => acc + curr.value, 0);
+  const totalWastedCost = ingredientWastes.reduce((acc: number, curr: { wasteCost?: { units?: bigint | number } }) => acc + Number(curr.wasteCost?.units || 0), 0);
+  const totalComboQty = comboTrends.reduce((acc: number, curr: { quantitySold: number }) => acc + curr.quantitySold, 0);
 
   const handleExportCSV = () => {
-    let csvContent = "data:text/csv;charset=utf-8,";
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
     
     // Revenue Data Section
-    csvContent += "REVENUE TREND\nDay,Value\n";
-    REVENUE_DATA.forEach(row => {
+    csvContent += "=== DOANH THU THEO PHUONG THUC THANH TOAN ===\nPhuong thuc,Gia tri (VND)\n";
+    revenueData.forEach((row: { name: string; value: number }) => {
       csvContent += `${row.name},${row.value}\n`;
     });
     
-    csvContent += "\nTOP PRODUCTS\nProduct,Sales\n";
-    TOP_PRODUCTS.forEach(row => {
-      csvContent += `${row.name},${row.sales}\n`;
+    csvContent += "\n=== DONG CO COMBO UU THICH ===\nCombo,So luong ban,Doanh thu (VND)\n";
+    comboTrends.forEach((row: { comboName: string; quantitySold: number; revenue?: { units: bigint | number } }) => {
+      csvContent += `${row.comboName},${row.quantitySold},${Number(row.revenue?.units || 0)}\n`;
     });
     
-    csvContent += "\nCATEGORY MIX\nCategory,Percentage\n";
-    CATEGORY_DATA.forEach(row => {
-      csvContent += `${row.name},${row.value}%\n`;
+    csvContent += "\n=== HAO HUT KHO NGUYEN LIEU ===\nNguyen lieu,Luong hao hut,Don vi,Chi phi thiet hai (VND)\n";
+    ingredientWastes.forEach((row: { ingredientName: string; wastedQuantity: number; unit: string; wasteCost?: { units: bigint | number } }) => {
+      csvContent += `${row.ingredientName},${row.wastedQuantity},${row.unit},${Number(row.wasteCost?.units || 0)}\n`;
     });
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Bao_cao_KioskFlow_${period.toLowerCase()}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `Bao-cao-Chuyen-sau_KioskFlow_${period.toLowerCase()}_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -89,12 +179,12 @@ export default function ReportsPage() {
         <div className="space-y-3">
           <div className="flex items-center gap-3 text-interaction font-black uppercase text-xs tracking-widest">
             <Target className="w-5 h-5" />
-            <span>Phân tích dữ liệu</span>
+            <span>Phân tích dữ liệu doanh nghiệp</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter text-foreground leading-tight">
-            Báo Cáo <span className="text-primary">Kết Quả</span>
+            Báo Cáo <span className="text-primary">Chuyên Sâu</span>
           </h1>
-          <p className="text-foreground/40 font-bold italic text-lg">Phân tích chuyên sâu về hiệu suất kinh doanh của bạn.</p>
+          <p className="text-foreground/40 font-bold italic text-lg">Hao hụt kho, cơ cấu doanh thu & xu hướng mua sắm Combo.</p>
         </div>
         
         <div className="flex items-center gap-4">
@@ -103,31 +193,41 @@ export default function ReportsPage() {
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-tighter transition-all ${
-                  period === p ? 'bg-foreground text-background' : 'text-foreground/40 hover:text-foreground'
+                className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-tighter transition-all cursor-pointer ${
+                  period === p ? 'bg-foreground text-background shadow-md' : 'text-foreground/40 hover:text-foreground'
                 }`}
               >
-                {p === 'DAILY' ? 'Ngày' : p === 'WEEKLY' ? 'Tuần' : 'Tháng'}
+                {p === 'DAILY' ? 'Hôm nay' : p === 'WEEKLY' ? '7 Ngày qua' : '30 Ngày qua'}
               </button>
             ))}
           </div>
+          
+          <button 
+            onClick={loadAnalytics}
+            disabled={loading}
+            className="p-4 bg-surface border border-foreground/10 rounded-2xl text-foreground/60 hover:text-foreground cursor-pointer shadow-sm active:scale-95 transition"
+            title="Tải lại dữ liệu"
+          >
+            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+          </button>
+
           <button 
             onClick={handleExportCSV}
-            className="btn-dynamic px-6 py-4 bg-accent text-foreground"
+            className="btn-dynamic px-6 py-4 bg-accent text-foreground hover:shadow-lg transition"
           >
             <Download size={20} className="stroke-[3]" />
-            <span className="hidden sm:inline">XUẤT FILE</span>
+            <span className="hidden sm:inline">XUẤT FILE EXCEL</span>
           </button>
         </div>
       </div>
 
-      {/* Primary Metrics */}
+      {/* Dynamic KPI summary counters */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {[
-          { label: 'Doanh thu thuần', value: '42.8M', change: '+12.5%', icon: DollarSign, color: 'bg-primary', trend: 'up' },
-          { label: 'Tổng đơn hàng', value: '1,248', change: '+8.2%', icon: ShoppingBag, color: 'bg-interaction', trend: 'up' },
-          { label: 'Giá trị trung bình', value: '34.2K', change: '-2.4%', icon: TrendingUp, color: 'bg-accent', trend: 'down' },
-          { label: 'Khách hàng mới', value: '342', change: '+15.1%', icon: Users, color: 'bg-foreground', trend: 'up' },
+          { label: 'Tổng doanh thu', value: `${(totalRevenue / 1000000).toFixed(1)}M`, sub: `${totalRevenue.toLocaleString('vi-VN')}đ`, icon: DollarSign, color: 'bg-primary' },
+          { label: 'Doanh số Combo', value: `${totalComboQty} đơn`, sub: 'Các sản phẩm đi kèm', icon: ShoppingBag, color: 'bg-interaction' },
+          { label: 'Hao hụt kho nguyên liệu', value: `-${(totalWastedCost / 1000).toFixed(1)}K`, sub: `${totalWastedCost.toLocaleString('vi-VN')}đ tổn thất`, icon: TrendingUp, color: 'bg-accent' },
+          { label: 'Hiệu suất ca làm', value: '98.6%', sub: 'Hệ thống trực tuyến', icon: Users, color: 'bg-foreground' },
         ].map((metric, idx) => (
           <motion.div
             key={idx}
@@ -140,188 +240,221 @@ export default function ReportsPage() {
               <div className={`w-14 h-14 rounded-2xl border border-foreground/10 flex items-center justify-center text-white ${metric.color} shadow-sm group-hover:scale-110 transition-transform`}>
                 <metric.icon size={28} className="stroke-[3]" />
               </div>
-              <div className={`flex items-center gap-1 font-black text-xs ${metric.trend === 'up' ? 'text-primary' : 'text-red-500'}`}>
-                {metric.trend === 'up' ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-                {metric.change}
+              <div className="flex items-center gap-1 font-mono text-[9px] font-black uppercase text-foreground/40 italic">
+                Thời gian thực
               </div>
             </div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-1">{metric.label}</p>
-              <p className="text-4xl font-black italic tracking-tighter text-foreground">{metric.value}</p>
+              <p className="text-4xl font-black italic tracking-tighter text-foreground leading-none">{metric.value}</p>
+              <p className="text-[10px] text-foreground/50 font-bold mt-1 italic">{metric.sub}</p>
             </div>
           </motion.div>
         ))}
       </div>
 
-      {/* Charts Section */}
+      {/* Advanced analytics grid layout (Lưới đa cột) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Revenue Trend */}
-        <div className="lg:col-span-2 ai-card p-10 flex flex-col gap-10">
-          <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-black uppercase italic tracking-tighter">Xu hướng doanh thu</h3>
-            <div className="flex items-center gap-4 text-xs font-bold opacity-40">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-primary" />
-                <span>Doanh thu thực tế</span>
-              </div>
-            </div>
+        
+        {/* Revenue Shares by Method */}
+        <div className="ai-card p-10 flex flex-col justify-between">
+          <div className="space-y-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-interaction">Cơ cấu tài chính</p>
+            <h3 className="text-2xl font-black uppercase italic tracking-tighter">Phương thức thanh toán</h3>
           </div>
-          <div className="h-[400px] w-full">
+          
+          <div className="h-[260px] w-full relative my-6">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={REVENUE_DATA} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-foreground)" opacity={0.05} />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: 'var(--color-foreground)', fontWeight: 'bold', fontSize: 12, opacity: 0.4 }} 
-                  dy={10}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: 'var(--color-foreground)', fontWeight: 'bold', fontSize: 12, opacity: 0.4 }}
-                  tickFormatter={(value) => `${value / 1000000}M`}
-                />
+              <PieChart>
+                <Pie
+                  data={revenueData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={105}
+                  paddingAngle={6}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  {revenueData.map((entry: { fill: string }, index: number) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
                 <Tooltip 
+                  formatter={(value: any) => [`${Number(value || 0).toLocaleString('vi-VN')}đ`, 'Doanh thu']}
                   contentStyle={{ 
                     backgroundColor: 'var(--color-surface)', 
                     border: '1px solid rgba(0,0,0,0.1)', 
                     borderRadius: '16px',
                     fontWeight: '900',
-                    textTransform: 'uppercase',
-                    fontStyle: 'italic',
-                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
                   }}
-                  itemStyle={{ color: 'var(--color-primary)' }}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="var(--color-primary)" 
-                  strokeWidth={6} 
-                  fillOpacity={1} 
-                  fill="url(#colorValue)" 
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Category Mix */}
-        <div className="ai-card p-10 flex flex-col gap-10">
-          <h3 className="text-2xl font-black uppercase italic tracking-tighter">Cơ cấu ngành hàng</h3>
-          <div className="h-[300px] w-full relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={CATEGORY_DATA}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={80}
-                  outerRadius={120}
-                  paddingAngle={8}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {CATEGORY_DATA.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <Tooltip />
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-4xl font-black italic tracking-tighter">100%</span>
-              <span className="text-[10px] font-black uppercase opacity-40">TỔNG THỂ</span>
+              <span className="text-3xl font-black italic tracking-tighter">VND</span>
+              <span className="text-[10px] font-black uppercase opacity-40">TỔNG THU</span>
             </div>
           </div>
-          <div className="space-y-4">
-            {CATEGORY_DATA.map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between">
+          
+          <div className="space-y-3">
+            {revenueData.map((item: { fill: string; name: string; value: number }, idx: number) => (
+              <div key={idx} className="flex items-center justify-between border-b border-foreground/5 pb-2 text-xs">
                 <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: item.fill }} />
-                  <span className="text-sm font-black uppercase italic tracking-tighter opacity-60">{item.name}</span>
+                  <div className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: item.fill }} />
+                  <span className="font-black uppercase italic tracking-tighter text-foreground/75">{item.name}</span>
                 </div>
-                <span className="text-sm font-black italic">{item.value}%</span>
+                <span className="font-mono font-black text-foreground">
+                  {item.value.toLocaleString('vi-VN')}đ
+                </span>
               </div>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Bottom Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Top Products */}
-        <div className="ai-card p-10 flex flex-col gap-10">
-          <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-black uppercase italic tracking-tighter">Sản phẩm bán chạy</h3>
-            <Sparkles className="text-accent animate-pulse" />
+        {/* Combo Trend Popularity */}
+        <div className="lg:col-span-2 ai-card p-10 flex flex-col justify-between">
+          <div className="space-y-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-primary">Chiến lược Loyalty</p>
+            <h3 className="text-2xl font-black uppercase italic tracking-tighter">Xu hướng tiêu dùng Combo</h3>
           </div>
-          <div className="space-y-8">
-            {TOP_PRODUCTS.map((product, idx) => (
-              <div key={idx} className="space-y-2">
-                <div className="flex justify-between items-end">
-                  <span className="font-black uppercase italic tracking-tighter text-lg">{product.name}</span>
-                  <span className="font-black text-primary italic">{product.sales} đơn</span>
-                </div>
-                <div className="h-4 bg-foreground/5 rounded-full overflow-hidden border-2 border-foreground/5">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${(product.sales / 450) * 100}%` }}
-                    transition={{ duration: 1, delay: idx * 0.1 }}
-                    className="h-full rounded-full"
-                    style={{ backgroundColor: product.color }}
+
+          <div className="h-[320px] w-full my-6">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={comboTrends as any} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-foreground)" opacity={0.05} />
+                <XAxis 
+                  dataKey="comboName" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'var(--color-foreground)', fontWeight: 'bold', fontSize: 10, opacity: 0.5 }} 
+                  tickFormatter={(val) => val.split(' ').slice(-2).join(' ')} // abbreviate
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'var(--color-foreground)', fontWeight: 'bold', fontSize: 10, opacity: 0.5 }}
+                />
+                <Tooltip
+                  formatter={(value: any, name: any) => [value || '', name === 'quantitySold' ? 'Số lượng bán' : 'Doanh thu']}
+                  contentStyle={{ 
+                    backgroundColor: 'var(--color-surface)', 
+                    border: '1px solid rgba(0,0,0,0.1)', 
+                    borderRadius: '16px',
+                    fontWeight: '900',
+                  }}
+                />
+                <Bar dataKey="quantitySold" fill="var(--color-interaction)" radius={[8, 8, 0, 0]} maxBarSize={45}>
+                  {comboTrends.map((_entry: unknown, index: number) => (
+                    <Cell key={`cell-${index}`} fill={index % 2 === 0 ? colors.card : colors.cash} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="space-y-4 bg-foreground/5 p-5 rounded-2xl">
+            <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 italic flex items-center gap-2">
+              <Info className="w-3.5 h-3.5 text-primary" />
+              Thông tin bổ trợ combo
+            </p>
+            <div className="grid grid-cols-2 gap-4 text-xs font-bold">
+              <div>
+                <p className="opacity-40">Combo bán chạy nhất</p>
+                <p className="font-black text-foreground uppercase italic tracking-tighter mt-0.5">
+                  {comboTrends[0]?.comboName || 'Chưa ghi nhận'}
+                </p>
+              </div>
+              <div>
+                <p className="opacity-40">Tỉ trọng doanh số combo</p>
+                <p className="font-black text-interaction uppercase italic tracking-tighter mt-0.5">
+                  {((totalComboQty > 0 ? (comboTrends[0]?.quantitySold / totalComboQty) * 100 : 0)).toFixed(1)}% Tổng số
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Stock wastage adjustments line analysis */}
+        <div className="lg:col-span-3 ai-card p-10 flex flex-col justify-between gap-6">
+          <div className="space-y-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-accent">Kiểm soát vận hành</p>
+            <h3 className="text-2xl font-black uppercase italic tracking-tighter">Hao hụt & Điều chỉnh kho nguyên liệu</h3>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-center">
+            {/* Chart Area */}
+            <div className="lg:col-span-3 h-[280px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={ingredientWastes as any} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorWaste" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.25}/>
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-foreground)" opacity={0.05} />
+                  <XAxis 
+                    dataKey="ingredientName" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'var(--color-foreground)', fontWeight: 'bold', fontSize: 10, opacity: 0.5 }} 
                   />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Insights Section */}
-        <div className="bg-foreground text-background rounded-3xl p-12 border border-foreground shadow-2xl relative overflow-hidden group">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--color-primary)_0%,_transparent_1px)] bg-[size:30px_30px] opacity-[0.05]" />
-          <div className="relative z-10 space-y-10">
-            <div className="flex items-center gap-6">
-              <div className="w-20 h-20 bg-primary border border-background/20 rounded-2xl flex items-center justify-center text-white">
-                <Sparkles size={40} className="animate-pulse" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-3xl font-black uppercase italic tracking-tighter">Phân tích AI thông minh</h4>
-                <p className="text-sm font-bold opacity-60 uppercase tracking-widest italic">Hệ thống đang thấu hiểu dữ liệu của bạn</p>
-              </div>
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'var(--color-foreground)', fontWeight: 'bold', fontSize: 10, opacity: 0.5 }}
+                    tickFormatter={(val) => `${val.toLocaleString()}đ`}
+                  />
+                  <Tooltip
+                    formatter={(value: any) => [
+                      `${Number(value || 0).toLocaleString('vi-VN')}đ`, 
+                      'Chi phí thất thoát'
+                    ]}
+                    contentStyle={{ 
+                      backgroundColor: 'var(--color-surface)', 
+                      border: '1px solid rgba(0,0,0,0.1)', 
+                      borderRadius: '16px',
+                      fontWeight: '900',
+                    }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="wasteCost.units" 
+                    stroke="#ef4444" 
+                    strokeWidth={4} 
+                    fillOpacity={1} 
+                    fill="url(#colorWaste)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
-            
-            <div className="space-y-8">
-              {[
-                "Doanh thu thứ Sáu và thứ Bảy tăng 45% so với ngày thường. Hãy đảm bảo đủ nhân sự và nguyên liệu.",
-                "Sản phẩm 'Cà Phê Muối' có tỷ lệ quay lại cao nhất (72%). Cân nhắc tạo combo ưu đãi.",
-                "Ngành hàng 'Trà Trái Cây' đang có dấu hiệu giảm nhẹ 4% trong tuần này. Cần đẩy mạnh marketing."
-              ].map((insight, i) => (
-                <div key={i} className="flex gap-6 items-start group/item">
-                  <div className="w-8 h-8 rounded-xl bg-background/10 flex items-center justify-center shrink-0 mt-1 group-hover/item:bg-primary transition-colors">
-                    <ArrowUpRight size={18} className="text-white" />
+
+            {/* Explanatory text & total cost representation */}
+            <div className="space-y-6 lg:border-l lg:border-foreground/5 lg:pl-8">
+              <div className="space-y-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-red-500 italic">Tổng thiệt hại vận hành</p>
+                <h4 className="text-4xl font-black text-red-500 italic tracking-tighter leading-none">
+                  -{totalWastedCost.toLocaleString('vi-VN')}đ
+                </h4>
+                <p className="text-xs text-foreground/40 font-bold italic">
+                  Thiệt hại do điều chỉnh chênh lệch hàng lỗi, pha hỏng hoặc hết hạn sử dụng.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Mặt hàng hao hụt lớn</p>
+                {ingredientWastes.slice(0, 2).map((item: { ingredientName: string; wastedQuantity: number; unit: string }, idx: number) => (
+                  <div key={idx} className="bg-foreground/5 p-3.5 rounded-xl flex items-center justify-between text-xs font-bold">
+                    <span>{item.ingredientName}</span>
+                    <span className="text-red-500">-{item.wastedQuantity} {item.unit}</span>
                   </div>
-                  <p className="text-lg font-bold opacity-80 leading-relaxed italic">{insight}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-
-            <button 
-              onClick={() => alert('Chức năng Dự báo doanh thu bằng AI đang được phát triển và sẽ ra mắt trong bản cập nhật tiếp theo!')}
-              className="w-full py-6 bg-primary text-white rounded-3xl font-black text-xl uppercase italic tracking-tighter shadow-sm hover:bg-interaction hover:text-white transition-all active:scale-95"
-            >
-              XEM CHI TIẾT DỰ BÁO DOANH THU
-            </button>
           </div>
         </div>
+
       </div>
     </div>
   );

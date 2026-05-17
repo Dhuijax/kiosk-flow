@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -8,12 +9,15 @@ import {
   Store,
   Clock,
   User as UserIcon,
-  ChevronLeft
+  ChevronLeft,
+  Printer
 } from 'lucide-react';
+import ZReportModal from '@/components/pos/ZReportModal';
 
 export default function POSHeader() {
   const router = useRouter();
   const { logout } = useAuth();
+  const [zReportOpen, setZReportOpen] = useState(false);
 
   return (
     <header className="h-20 md:h-24 bg-background/80 backdrop-blur-xl border-b border-foreground/10 flex items-center justify-between px-4 md:px-8 sticky top-0 z-50">
@@ -58,16 +62,34 @@ export default function POSHeader() {
         </div>
 
         <button 
+          onClick={() => setZReportOpen(true)}
+          className="flex items-center gap-2 px-4 h-10 md:h-12 bg-primary text-white border border-primary/20 rounded-lg md:rounded-xl shadow-sm hover:bg-interaction transition-all font-black uppercase italic tracking-tighter text-xs cursor-pointer"
+          title="Chốt ca & Xuất Z-Report"
+        >
+          <Printer className="w-5 h-5" />
+          <span className="hidden sm:inline">Chốt ca</span>
+        </button>
+
+        <button 
           onClick={() => {
             logout();
             router.push('/auth/login');
           }}
-          className="w-10 h-10 md:w-12 md:h-12 bg-red-500 text-white border border-red-600/20 rounded-lg md:rounded-xl flex items-center justify-center shadow-sm hover:bg-red-600 transition-all"
+          className="w-10 h-10 md:w-12 md:h-12 bg-red-500 text-white border border-red-600/20 rounded-lg md:rounded-xl flex items-center justify-center shadow-sm hover:bg-red-600 transition-all cursor-pointer"
           title="Đăng xuất"
         >
           <LogOut className="w-5 h-5 md:w-6 md:h-6 stroke-[3]" />
         </button>
       </div>
+
+      <ZReportModal 
+        isOpen={zReportOpen}
+        onClose={() => setZReportOpen(false)}
+        onConfirmCloseShift={() => {
+          logout();
+          router.push('/auth/login');
+        }}
+      />
     </header>
   );
 }

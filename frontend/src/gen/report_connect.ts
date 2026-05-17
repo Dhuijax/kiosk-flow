@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { GetRevenueSummaryRequest, GetSalesByPeriodRequest, GetTopProductsRequest, RevenueSummaryResponse, SalesByPeriodResponse, TopProductsResponse } from "./report_pb";
+import { AdvancedAnalyticsResponse, GetAdvancedAnalyticsRequest, GetRevenueSummaryRequest, GetSalesByPeriodRequest, GetTopProductsRequest, GetZReportRequest, RevenueSummaryResponse, SalesByPeriodResponse, TopProductsResponse, ZReportResponse } from "./report_pb";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -37,6 +37,24 @@ export const ReportService = {
       name: "GetSalesByPeriod",
       I: GetSalesByPeriodRequest,
       O: SalesByPeriodResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc report.ReportService.GetAdvancedAnalytics
+     */
+    getAdvancedAnalytics: {
+      name: "GetAdvancedAnalytics",
+      I: GetAdvancedAnalyticsRequest,
+      O: AdvancedAnalyticsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc report.ReportService.GetZReport
+     */
+    getZReport: {
+      name: "GetZReport",
+      I: GetZReportRequest,
+      O: ZReportResponse,
       kind: MethodKind.Unary,
     },
   }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -19,12 +19,19 @@ import {
   TrendingUp,
   Receipt,
   MapPin,
-  Box
+  Box,
+  ShoppingCart,
+  AlertTriangle,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAlert } from '@/hooks/useAlert';
 
 import StatusBadge from '@/components/ui/StatusBadge';
 import BranchSwitcher from '@/components/dashboard/BranchSwitcher';
 import { cn } from '@/lib/utils';
+
 
 const navigation = [
   { name: 'Tổng quan', href: '/dashboard', icon: LayoutDashboard },
@@ -36,9 +43,13 @@ const navigation = [
   { name: 'Sản phẩm', href: '/dashboard/products', icon: Package },
   { name: 'Kho hàng', href: '/dashboard/inventory', icon: Package },
   { name: 'Nguyên liệu', href: '/dashboard/inventory/ingredients', icon: Box },
+  { name: 'Nhà cung cấp', href: '/dashboard/inventory/suppliers', icon: Users },
+  { name: 'Nhập hàng', href: '/dashboard/inventory/procurement', icon: ShoppingCart },
+  { name: 'Cảnh báo', href: '/dashboard/alerts', icon: AlertTriangle },
   { name: 'Chi nhánh', href: '/dashboard/branches', icon: MapPin },
   { name: 'Cấu hình', href: '/dashboard/settings', icon: Settings, status: 'demo' as const },
 ];
+
 
 export default function DashboardLayout({
   children,
@@ -47,8 +58,45 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, branchId } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const { listStockAlerts } = useAlert();
+  const [toastAlert, setToastAlert] = useState<{ message: string; type: 'success' | 'alert' } | null>(null);
+  const [seenAlertIds] = useState<Set<string>>(() => new Set());
+
+  // Real-time stock alerts Toast polling
+  useEffect(() => {
+    if (!branchId) return;
+
+    const checkAlerts = async () => {
+      try {
+        const res = await listStockAlerts({ branchId, includeRead: false });
+        if (res && res.alerts && res.alerts.length > 0) {
+          // Find the first alert that we haven't toasted yet
+          const newAlert = res.alerts.find(a => !seenAlertIds.has(a.id));
+          if (newAlert) {
+            seenAlertIds.add(newAlert.id);
+            setToastAlert({
+              message: `CẢNH BÁO TỒN KHO: ${newAlert.ingredientName} ĐÃ XUỐNG DƯỚI MỨC AN TOÀN!`,
+              type: 'alert'
+            });
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+              setToastAlert(null);
+            }, 5000);
+          }
+        }
+      } catch (err) {
+        console.error('Error polling real-time stock alerts:', err);
+      }
+    };
+
+    // Check immediately and then every 15 seconds
+    checkAlerts();
+    const interval = setInterval(checkAlerts, 15000);
+    return () => clearInterval(interval);
+  }, [branchId, listStockAlerts, seenAlertIds]);
+
 
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -197,6 +245,25 @@ export default function DashboardLayout({
           </div>
         </div>
       </main>
+
+      {/* Real-time low stock Alert Toast */}
+      <AnimatePresence>
+        {toastAlert && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+            className="fixed bottom-12 right-12 z-[1000] cursor-pointer"
+            onClick={() => router.push('/dashboard/alerts')}
+          >
+            <div className={`px-8 py-4 rounded-full shadow-2xl border flex items-center gap-4 bg-red-500 border-foreground/10 text-white`}>
+              <AlertCircle size={24} className="animate-bounce" />
+              <span className="font-black uppercase tracking-tighter italic">{toastAlert.message}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
+

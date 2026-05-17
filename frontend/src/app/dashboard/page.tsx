@@ -20,6 +20,7 @@ import { InventoryService } from '@/gen/inventory_connect';
 import { ProductService } from '@/gen/product_connect';
 import { AuthService } from '@/gen/auth_connect';
 import { ReportService } from '@/gen/report_connect';
+import { AlertService } from '@/gen/procurement_connect';
 import { OrderStatus } from '@/gen/order_pb';
 import { PeriodType } from '@/gen/report_pb';
 import { formatISO, startOfDay, startOfWeek, startOfMonth, startOfYear, subDays } from 'date-fns';
@@ -86,7 +87,7 @@ export default function DashboardPage() {
         const authClient = getAuthenticatedClient(AuthService, tenantId, token);
         const reportClient = getAuthenticatedClient(ReportService, tenantId, token);
         const orderClient = getAuthenticatedClient(OrderService, tenantId, token);
-        const inventoryClient = getAuthenticatedClient(InventoryService, tenantId, token);
+        const alertClient = getAuthenticatedClient(AlertService, tenantId, token);
         
         const now = new Date();
         let startDate: Date;
@@ -103,14 +104,14 @@ export default function DashboardPage() {
         const startStr = formatISO(startDate);
         const endStr = formatISO(now);
 
-        const [prodRes, staffRes, summaryRes, topRes, trendRes, orderRes, stockRes] = await Promise.all([
+        const [prodRes, staffRes, summaryRes, topRes, trendRes, orderRes, alertRes] = await Promise.all([
           prodClient.listProducts({ pagination: { page: 1, pageSize: 100 } }),
           authClient.listStaff({}),
           reportClient.getRevenueSummary({ branchId: branchId || undefined, startDate: startStr, endDate: endStr }),
           reportClient.getTopProducts({ branchId: branchId || undefined, startDate: startStr, endDate: endStr, limit: 5 }),
           reportClient.getSalesByPeriod({ branchId: branchId || undefined, startDate: startStr, endDate: endStr, period: periodType }),
           orderClient.listOrders({ branchId: branchId || undefined, pagination: { page: 1, pageSize: 5 } }),
-          inventoryClient.listStock({ branchId: branchId || undefined, lowStockOnly: true, pagination: { page: 1, pageSize: 5 } })
+          alertClient.listStockAlerts({ branchId: branchId || '', includeRead: false })
         ]);
 
         const productMap = new Map(prodRes.products.map(p => [p.id, p]));
@@ -143,10 +144,10 @@ export default function DashboardPage() {
             status: mapOrderStatus(o.status).label,
             type: mapOrderStatus(o.status).type
           })),
-          stockAlerts: stockRes.items.map(s => ({
-            name: productMap.get(s.productId)?.name || 'Sản phẩm ẩn',
-            stock: `${s.quantity} ${productMap.get(s.productId)?.unit || ''}`,
-            min: `${s.minQuantity} ${productMap.get(s.productId)?.unit || ''}`
+          stockAlerts: alertRes.alerts.map(a => ({
+            name: a.ingredientName,
+            stock: a.message,
+            min: ''
           })),
           loading: false
         });
@@ -264,7 +265,6 @@ export default function DashboardPage() {
               <AlertTriangle className="w-6 h-6 stroke-[3]" />
               Cảnh báo kho
             </h3>
-            <StatusBadge status="coming-soon" className="mb-6" />
             <div className="space-y-4">
               {reportData.stockAlerts.length === 0 && !reportData.loading && (
                 <div className="py-8 text-center text-foreground/20 italic text-xs">
@@ -274,9 +274,12 @@ export default function DashboardPage() {
               {reportData.stockAlerts.map((alert, idx) => (
                 <StockAlertItem key={idx} {...alert} />
               ))}
-              <button className="w-full py-4 text-xs font-black uppercase italic text-red-600 hover:underline tracking-widest">
+              <Link 
+                href="/dashboard/alerts" 
+                className="w-full py-4 text-xs font-black uppercase italic text-red-600 hover:underline tracking-widest text-center block"
+              >
                 Xem chi tiết kho hàng
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -370,7 +373,7 @@ function StockAlertItem({ name, stock, min }: {
     <div className="p-4 bg-background border border-foreground/10 rounded-2xl flex items-center justify-between group hover:border-red-500/30 transition-all shadow-sm">
       <div className="space-y-1">
         <p className="text-sm font-black uppercase italic tracking-tighter text-foreground">{name}</p>
-        <p className="text-[10px] font-bold opacity-40 uppercase">Tồn: {stock} / Min: {min}</p>
+        <p className="text-[10px] font-bold opacity-40 uppercase">{stock || `Tồn: ${stock} / Min: ${min}`}</p>
       </div>
       <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
     </div>

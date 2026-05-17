@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Table, TableStatus } from '@/gen/table_pb';
+import { Order, OrderItem, OrderItemTopping } from '@/gen/order_pb';
 import { OrderService } from '@/gen/order_connect';
 import { TableService } from '@/gen/table_connect';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
@@ -28,7 +29,7 @@ export const TableDetailsModal: React.FC<TableDetailsModalProps> = ({
 }) => {
   const router = useRouter();
   const { tenantId, token } = useAuth();
-  const [order, setOrder] = useState<any | null>(null);
+  const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,13 +44,7 @@ export const TableDetailsModal: React.FC<TableDetailsModalProps> = ({
   const [splitQuantities, setSplitQuantities] = useState<Record<string, number>>({});
   const [splitting, setSplitting] = useState(false);
 
-  useEffect(() => {
-    if (table && table.currentOrderId && tenantId) {
-      fetchOrderDetails();
-    }
-  }, [table, tenantId]);
-
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     if (!table?.currentOrderId || !tenantId) return;
     setLoading(true);
     setError(null);
@@ -61,31 +56,41 @@ export const TableDetailsModal: React.FC<TableDetailsModalProps> = ({
       } else {
         setError('Không tìm thấy thông tin đơn hàng.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch order details:', err);
       setError('Lỗi khi tải thông tin đơn hàng.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const fetchAvailableTables = async () => {
-    if (!tenantId || !table) return;
-    try {
-      const client = getAuthenticatedClient(TableService, tenantId, token || undefined);
-      const response = await client.listTables({ floorPlanId: table.floorPlanId });
-      // Exclude current table
-      setAllTables(response.tables.filter(t => t.id !== table.id));
-    } catch (err) {
-      console.error('Failed to fetch tables:', err);
-    }
-  };
+  }, [table, tenantId, token]);
 
   useEffect(() => {
-    if (showTransfer) {
-      fetchAvailableTables();
+    if (table && table.currentOrderId && tenantId) {
+      const timer = setTimeout(() => {
+        fetchOrderDetails();
+      }, 0);
+      return () => clearTimeout(timer);
     }
-  }, [showTransfer]);
+  }, [table, tenantId, fetchOrderDetails]);
+
+  useEffect(() => {
+    let active = true;
+    if (showTransfer && tenantId && table) {
+      const client = getAuthenticatedClient(TableService, tenantId, token || undefined);
+      client.listTables({ floorPlanId: table.floorPlanId })
+        .then(response => {
+          if (active) {
+            setAllTables(response.tables.filter(t => t.id !== table.id));
+          }
+        })
+        .catch(err => {
+          console.error('Failed to fetch tables:', err);
+        });
+    }
+    return () => {
+      active = false;
+    };
+  }, [showTransfer, tenantId, table, token]);
 
   const handleTransfer = async () => {
     if (!tenantId || !table || !selectedTargetTableId) return;
@@ -98,9 +103,9 @@ export const TableDetailsModal: React.FC<TableDetailsModalProps> = ({
       });
       onRefresh();
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Transfer failed:', err);
-      alert('Chuyển bàn thất bại: ' + (err.message || 'Lỗi hệ thống'));
+      alert('Chuyển bàn thất bại: ' + ((err as Error).message || 'Lỗi hệ thống'));
     } finally {
       setTransferring(false);
     }
@@ -119,7 +124,7 @@ export const TableDetailsModal: React.FC<TableDetailsModalProps> = ({
     
     // Collect items to split
     const itemsToSplit = Object.entries(splitQuantities)
-      .filter(([_, qty]) => qty > 0)
+      .filter(([, qty]) => qty > 0)
       .map(([itemId, qty]) => ({
         orderItemId: itemId,
         quantity: qty
@@ -142,9 +147,9 @@ export const TableDetailsModal: React.FC<TableDetailsModalProps> = ({
       
       onRefresh();
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Split failed:', err);
-      alert('Tách món thất bại: ' + (err.message || 'Lỗi hệ thống'));
+      alert('Tách món thất bại: ' + ((err as Error).message || 'Lỗi hệ thống'));
     } finally {
       setSplitting(false);
     }
@@ -317,7 +322,7 @@ export const TableDetailsModal: React.FC<TableDetailsModalProps> = ({
                     </div>
 
                     <div className="space-y-2 border-t border-foreground/5 pt-3 max-h-48 overflow-y-auto">
-                      {order.items?.map((item: any) => (
+                      {order.items?.map((item: OrderItem) => (
                         <div key={item.id} className="flex items-center justify-between p-2 hover:bg-foreground/5 rounded-xl transition-all">
                           <div>
                             <p className="text-xs font-black text-foreground">{item.productName}</p>
@@ -375,7 +380,7 @@ export const TableDetailsModal: React.FC<TableDetailsModalProps> = ({
                 <div className="space-y-3">
                   <h4 className="text-xs font-black uppercase tracking-widest text-foreground/40 italic">Danh sách món ăn</h4>
                   <div className="space-y-3 border border-foreground/10 rounded-2xl p-4 max-h-[30vh] overflow-y-auto">
-                    {order.items?.map((item: any) => (
+                    {order.items?.map((item: OrderItem) => (
                       <div key={item.id} className="flex flex-col gap-1 py-2 border-b border-foreground/5 last:border-0">
                         <div className="flex justify-between items-start">
                           <div>
@@ -386,7 +391,7 @@ export const TableDetailsModal: React.FC<TableDetailsModalProps> = ({
                         </div>
                         {item.toppings && item.toppings.length > 0 && (
                           <div className="text-[10px] text-foreground/40 pl-3 border-l border-primary/20 font-bold uppercase tracking-wider space-y-0.5">
-                            {item.toppings.map((t: any) => (
+                            {item.toppings.map((t: OrderItemTopping) => (
                               <p key={t.id}>+ {t.name} (+{formatVND(Number(t.price?.units || 0))})</p>
                             ))}
                           </div>

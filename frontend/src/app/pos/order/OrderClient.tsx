@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { useOrderCart } from '@/lib/order/OrderCartContext';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { OrderService } from '@/gen/order_connect';
+import { Order } from '@/gen/order_pb';
 import { PaymentService } from '@/gen/payment_connect';
 import { PaymentMethod } from '@/gen/payment_pb';
 import PaymentModal from '@/components/pos/PaymentModal';
@@ -36,7 +37,7 @@ export default function OrderClient() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isOrderSummaryOpen, setIsOrderSummaryOpen] = useState(false);
-  const [existingOrder, setExistingOrder] = useState<any | null>(null);
+  const [existingOrder, setExistingOrder] = useState<Order | null>(null);
 
   // Sync targetTableId to cart context
   useEffect(() => {

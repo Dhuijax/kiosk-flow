@@ -78,8 +78,12 @@ export default function CheckoutClient() {
         method: null as PaymentMethod | null,
         paid: false
       }));
-      setSplitPayments(newSplits);
-      setActiveSplitIndex(0);
+      
+      const timer = setTimeout(() => {
+        setSplitPayments(newSplits);
+        setActiveSplitIndex(0);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [order, isSplitMode, numSplits]);
 

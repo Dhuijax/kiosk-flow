@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM order_item_toppings WHERE order_item_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "483cd207a3c9132946b103b5098ef6b3d91c522fa9daab41a3ea08293b7eabc3"
+}

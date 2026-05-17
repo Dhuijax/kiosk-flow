@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE tables SET current_order_id = NULL, status = $1, updated_at = NOW() WHERE current_order_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "table_status",
+            "kind": {
+              "Enum": [
+                "available",
+                "occupied",
+                "reserved",
+                "cleaning"
+              ]
+            }
+          }
+        },
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d70d032e9eb61eb1eac3950233ce419e3ebdcb40c3809c124d804d1832013647"
+}

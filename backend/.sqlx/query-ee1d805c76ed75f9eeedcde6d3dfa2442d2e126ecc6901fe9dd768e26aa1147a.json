@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE tables SET current_order_id = $1, status = 'occupied', updated_at = NOW() WHERE id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ee1d805c76ed75f9eeedcde6d3dfa2442d2e126ecc6901fe9dd768e26aa1147a"
+}

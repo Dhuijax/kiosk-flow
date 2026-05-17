@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    INSERT INTO order_items (id, order_id, tenant_id, product_id, product_name, unit_price, quantity, subtotal, note, status)\n                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Varchar",
+        "Numeric",
+        "Int4",
+        "Numeric",
+        "Text",
+        {
+          "Custom": {
+            "name": "order_item_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "preparing",
+                "ready",
+                "served",
+                "cancelled"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "92abe78b3f32c5c6d36715e73d8705a040455d03db4aaa071f414e33730fb94d"
+}

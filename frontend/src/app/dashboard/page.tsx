@@ -16,7 +16,6 @@ import {
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { OrderService } from '@/gen/order_connect';
-import { InventoryService } from '@/gen/inventory_connect';
 import { ProductService } from '@/gen/product_connect';
 import { AuthService } from '@/gen/auth_connect';
 import { ReportService } from '@/gen/report_connect';
@@ -113,8 +112,6 @@ export default function DashboardPage() {
           orderClient.listOrders({ branchId: branchId || undefined, pagination: { page: 1, pageSize: 5 } }),
           alertClient.listStockAlerts({ branchId: branchId || '', includeRead: false })
         ]);
-
-        const productMap = new Map(prodRes.products.map(p => [p.id, p]));
 
         setStats({
           productCount: prodRes.pagination?.totalCount || 0,

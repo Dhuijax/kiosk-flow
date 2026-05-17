@@ -4,8 +4,6 @@ import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { AlertService } from '@/gen/procurement_connect';
 import {
   ListStockAlertsRequest,
-  MarkAlertAsReadRequest,
-  DismissAlertRequest,
 } from '@/gen/procurement_pb';
 
 export function useAlert() {

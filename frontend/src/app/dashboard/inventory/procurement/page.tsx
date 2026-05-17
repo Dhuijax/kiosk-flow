@@ -3,11 +3,9 @@
 import { useState, useEffect, useCallback, Fragment } from 'react';
 import { 
   ShoppingBag, 
-  Search, 
   PlusCircle, 
   Sparkles,
   RefreshCw,
-  Calendar,
   Users,
   ChevronDown,
   ChevronUp
@@ -39,7 +37,10 @@ export default function ProcurementPage() {
   }, [listPurchaseOrders, branchId]);
 
   useEffect(() => {
-    fetchPurchaseOrders();
+    const timer = setTimeout(() => {
+      fetchPurchaseOrders();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchPurchaseOrders]);
 
   const toggleExpand = (id: string) => {

@@ -22,8 +22,7 @@ import {
   Box,
   ShoppingCart,
   AlertTriangle,
-  AlertCircle,
-  CheckCircle
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAlert } from '@/hooks/useAlert';

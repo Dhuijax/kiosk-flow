@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { RecipeService } from '@/gen/recipe_connect';
-import { ProductIngredient, ProductIngredientInput } from '@/gen/recipe_pb';
+import { ProductIngredientInput } from '@/gen/recipe_pb';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 

@@ -6,7 +6,6 @@ import {
   RefreshCw, 
   CheckCheck, 
   X, 
-  Sparkles,
   Calendar,
   Layers,
   BellRing
@@ -38,7 +37,10 @@ export default function AlertsPage() {
   }, [listStockAlerts, branchId, includeRead]);
 
   useEffect(() => {
-    fetchAlerts();
+    const timer = setTimeout(() => {
+      fetchAlerts();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchAlerts]);
 
   const handleMarkAsRead = async (id: string) => {

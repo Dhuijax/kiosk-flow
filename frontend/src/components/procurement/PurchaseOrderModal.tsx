@@ -44,29 +44,33 @@ export default function PurchaseOrderModal({ isOpen, onClose, onSuccess }: Purch
   useEffect(() => {
     if (!isOpen) return;
 
-    const loadData = async () => {
-      try {
-        const [supRes, ingRes] = await Promise.all([
-          listSuppliers({ pagination: new PaginationRequest({ page: 1, pageSize: 100 }) }),
-          listIngredients({ pagination: new PaginationRequest({ page: 1, pageSize: 100 }) })
-        ]);
-        if (supRes && supRes.suppliers) {
-          setSuppliers(supRes.suppliers);
-          if (supRes.suppliers.length > 0) {
-            setSelectedSupplierId(supRes.suppliers[0].id);
+    const timer = setTimeout(() => {
+      const loadData = async () => {
+        try {
+          const [supRes, ingRes] = await Promise.all([
+            listSuppliers({ pagination: new PaginationRequest({ page: 1, pageSize: 100 }) }),
+            listIngredients({ pagination: new PaginationRequest({ page: 1, pageSize: 100 }) })
+          ]);
+          if (supRes && supRes.suppliers) {
+            setSuppliers(supRes.suppliers);
+            if (supRes.suppliers.length > 0) {
+              setSelectedSupplierId(supRes.suppliers[0].id);
+            }
           }
+          if (ingRes && ingRes.ingredients) {
+            setIngredients(ingRes.ingredients);
+          }
+        } catch (err) {
+          console.error('Failed to load PO creation metadata:', err);
         }
-        if (ingRes && ingRes.ingredients) {
-          setIngredients(ingRes.ingredients);
-        }
-      } catch (err) {
-        console.error('Failed to load PO creation metadata:', err);
-      }
-    };
+      };
 
-    loadData();
-    setItems([{ ingredientId: '', quantity: 1, unitPrice: 0 }]);
-    setError('');
+      loadData();
+      setItems([{ ingredientId: '', quantity: 1, unitPrice: 0 }]);
+      setError('');
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [isOpen, listSuppliers, listIngredients]);
 
   if (!isOpen) return null;

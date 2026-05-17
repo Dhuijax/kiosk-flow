@@ -36,7 +36,10 @@ export default function SuppliersPage() {
   }, [listSuppliers, searchQuery]);
 
   useEffect(() => {
-    fetchSuppliers();
+    const timer = setTimeout(() => {
+      fetchSuppliers();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchSuppliers]);
 
   const handleEditClick = (supplier: Supplier) => {

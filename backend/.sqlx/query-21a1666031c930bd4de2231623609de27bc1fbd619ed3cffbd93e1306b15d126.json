@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT id, tenant_id, branch_id, product_id, quantity, min_quantity, updated_at as \"updated_at!\"\n                FROM inventory\n                WHERE branch_id = $1\n                ORDER BY updated_at DESC\n                ",
+  "query": "\n                SELECT id, tenant_id, branch_id, product_id, ingredient_id, quantity, min_quantity, updated_at as \"updated_at!\"\n                FROM inventory\n                WHERE branch_id = $1\n                ORDER BY updated_at DESC\n                ",
   "describe": {
     "columns": [
       {
@@ -25,16 +25,21 @@
       },
       {
         "ordinal": 4,
+        "name": "ingredient_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
         "name": "quantity",
         "type_info": "Numeric"
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "min_quantity",
         "type_info": "Numeric"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "updated_at!",
         "type_info": "Timestamptz"
       }
@@ -48,11 +53,12 @@
       false,
       false,
       false,
-      false,
+      true,
+      true,
       false,
       false,
       true
     ]
   },
-  "hash": "249c862a250f9d1dba17b03915399f9b2fe416d801401726d59b6e2ceb9739a3"
+  "hash": "21a1666031c930bd4de2231623609de27bc1fbd619ed3cffbd93e1306b15d126"
 }

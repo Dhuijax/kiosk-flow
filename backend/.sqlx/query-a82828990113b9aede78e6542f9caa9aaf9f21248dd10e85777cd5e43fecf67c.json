@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT id, tenant_id, branch_id, product_id, type as \"type: _\", quantity_change, reference_id, note, created_by, created_at as \"created_at!\"\n            FROM inventory_transactions\n            WHERE branch_id = $1 AND product_id = $2\n            ORDER BY created_at DESC\n            ",
+  "query": "\n            SELECT id, tenant_id, branch_id, product_id, ingredient_id, type as \"type: _\", quantity_change, reference_id, note, created_by, created_at as \"created_at!\"\n            FROM inventory_transactions\n            WHERE branch_id = $1 \n              AND (product_id = $2 OR ($2 IS NULL AND product_id IS NULL))\n              AND (ingredient_id = $3 OR ($3 IS NULL AND ingredient_id IS NULL))\n            ORDER BY created_at DESC\n            ",
   "describe": {
     "columns": [
       {
@@ -25,6 +25,11 @@
       },
       {
         "ordinal": 4,
+        "name": "ingredient_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
         "name": "type: _",
         "type_info": {
           "Custom": {
@@ -42,33 +47,34 @@
         }
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "quantity_change",
         "type_info": "Numeric"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "reference_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "note",
         "type_info": "Text"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "created_by",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "created_at!",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
+        "Uuid",
         "Uuid",
         "Uuid"
       ]
@@ -77,7 +83,8 @@
       false,
       false,
       false,
-      false,
+      true,
+      true,
       false,
       false,
       true,
@@ -86,5 +93,5 @@
       true
     ]
   },
-  "hash": "64c10b105e0485478a8f203031be1c494f6473b5387c24f4ac0ca9813a04d69a"
+  "hash": "a82828990113b9aede78e6542f9caa9aaf9f21248dd10e85777cd5e43fecf67c"
 }

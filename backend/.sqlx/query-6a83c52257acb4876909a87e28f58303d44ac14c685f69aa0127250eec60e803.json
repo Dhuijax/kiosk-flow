@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO product_ingredients (tenant_id, product_id, ingredient_id, quantity, is_customizable) VALUES ($1, $2, $3, $4, $5)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Numeric",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6a83c52257acb4876909a87e28f58303d44ac14c685f69aa0127250eec60e803"
+}

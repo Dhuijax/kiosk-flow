@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            INSERT INTO inventory (tenant_id, branch_id, product_id, quantity)\n            VALUES ($1, $2, $3, $4)\n            ON CONFLICT (tenant_id, branch_id, product_id)\n            DO UPDATE SET quantity = inventory.quantity + EXCLUDED.quantity, updated_at = NOW()\n            RETURNING id, tenant_id, branch_id, product_id, quantity, min_quantity, updated_at as \"updated_at!\"\n            ",
+  "query": "\n                SELECT id, tenant_id, branch_id, product_id, ingredient_id, quantity, min_quantity, updated_at as \"updated_at!\"\n                FROM inventory\n                WHERE branch_id = $1 AND quantity <= min_quantity\n                ORDER BY updated_at DESC\n                ",
   "describe": {
     "columns": [
       {
@@ -25,37 +25,40 @@
       },
       {
         "ordinal": 4,
+        "name": "ingredient_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
         "name": "quantity",
         "type_info": "Numeric"
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "min_quantity",
         "type_info": "Numeric"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "updated_at!",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid",
-        "Uuid",
-        "Uuid",
-        "Numeric"
+        "Uuid"
       ]
     },
     "nullable": [
       false,
       false,
       false,
-      false,
+      true,
+      true,
       false,
       false,
       true
     ]
   },
-  "hash": "d9ee8e2c9f4c8d413c99e376c8943abd36058aef9b7ce0cd5d10bd90a01d05fd"
+  "hash": "92708d8eaf597e9456f5284e4c1e7f043aca53df20333701016fc49bd00d842e"
 }

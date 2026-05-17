@@ -1,10 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            INSERT INTO inventory_transactions (tenant_id, branch_id, product_id, type, quantity_change, reference_id, note, created_by)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n            ",
+  "query": "\n            INSERT INTO inventory_transactions (tenant_id, branch_id, product_id, ingredient_id, type, quantity_change, reference_id, note, created_by)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n            ",
   "describe": {
     "columns": [],
     "parameters": {
       "Left": [
+        "Uuid",
         "Uuid",
         "Uuid",
         "Uuid",
@@ -30,5 +31,5 @@
     },
     "nullable": []
   },
-  "hash": "4c4e25145b9d65f9d75cadb44fd5360930a8e00f85f481a5b9aac7aa3614b5b4"
+  "hash": "9bd81411bd8a6562e0e923b1baae948bc3f244a016efb64b24c225c94f07e26d"
 }

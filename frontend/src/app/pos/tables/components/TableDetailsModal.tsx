@@ -10,11 +10,13 @@ import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { 
   X, Users, DollarSign, Calendar, CreditCard, ChevronRight, 
-  ArrowRightLeft, Split, Plus, RefreshCw, AlertCircle, ShoppingBag
+  ArrowRightLeft, Split, Plus, RefreshCw, AlertCircle, ShoppingBag,
+  QrCode
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatVND } from '@/lib/utils/format';
 import { useRouter } from 'next/navigation';
+import { TableQrModal } from './TableQrModal';
 
 interface TableDetailsModalProps {
   table: Table | null;
@@ -43,6 +45,9 @@ export const TableDetailsModal: React.FC<TableDetailsModalProps> = ({
   const [showSplit, setShowSplit] = useState(false);
   const [splitQuantities, setSplitQuantities] = useState<Record<string, number>>({});
   const [splitting, setSplitting] = useState(false);
+  
+  // State for QR code viewing
+  const [showQr, setShowQr] = useState(false);
 
   const fetchOrderDetails = useCallback(async () => {
     if (!table?.currentOrderId || !tenantId) return;
@@ -185,12 +190,21 @@ export const TableDetailsModal: React.FC<TableDetailsModalProps> = ({
                 </div>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-3 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-2xl transition-all"
-            >
-              <X size={18} />
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowQr(true)}
+                className="p-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-2xl transition-all flex items-center justify-center"
+                title="Xem mã QR bàn"
+              >
+                <QrCode size={18} />
+              </button>
+              <button
+                onClick={onClose}
+                className="p-3 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-2xl transition-all"
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
           {/* Modal Body */}
@@ -453,6 +467,16 @@ export const TableDetailsModal: React.FC<TableDetailsModalProps> = ({
           </div>
         </motion.div>
       </div>
+
+      {showQr && (
+        <TableQrModal
+          floorPlanName="Bàn đang hoạt động"
+          tables={[table]}
+          tenantId={tenantId || '7a5eee4e-431a-4dc0-88d3-047314116e23'}
+          token={token || undefined}
+          onClose={() => setShowQr(false)}
+        />
+      )}
     </AnimatePresence>
   );
 };

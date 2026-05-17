@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 import { OrderCartProvider } from '@/lib/order/OrderCartContext';
+import QRAlertListener from '@/components/pos/QRAlertListener';
 
 export default function POSLayout({
   children,
@@ -22,6 +23,7 @@ export default function POSLayout({
     <OrderCartProvider>
       <div className="flex flex-col min-h-screen bg-background text-foreground font-sans">
         <POSHeader />
+        <QRAlertListener />
 
         {/* Main POS Workspace */}
         <main className="flex-1 flex flex-col overflow-hidden">

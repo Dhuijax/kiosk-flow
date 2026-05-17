@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CreateFloorPlanRequest, CreateTablesRequest, CreateTablesResponse, DeleteFloorPlanRequest, DeleteTableRequest, FloorPlan, ListFloorPlansRequest, ListFloorPlansResponse, ListTablesRequest, ListTablesResponse, Table, TransferTableRequest, TransferTableResponse, UpdateFloorPlanRequest, UpdateTableRequest, UpdateTableStatusRequest } from "./table_pb";
+import { CreateFloorPlanRequest, CreateTablesRequest, CreateTablesResponse, DeleteFloorPlanRequest, DeleteTableRequest, FloorPlan, GetTableQrRequest, GetTableQrResponse, GetTableRequest, ListFloorPlansRequest, ListFloorPlansResponse, ListTablesRequest, ListTablesResponse, Table, TransferTableRequest, TransferTableResponse, UpdateFloorPlanRequest, UpdateTableRequest, UpdateTableStatusRequest } from "./table_pb";
 import { Empty, MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -104,6 +104,24 @@ export const TableService = {
       name: "TransferTable",
       I: TransferTableRequest,
       O: TransferTableResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc table.TableService.GetTable
+     */
+    getTable: {
+      name: "GetTable",
+      I: GetTableRequest,
+      O: Table,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc table.TableService.GetTableQr
+     */
+    getTableQr: {
+      name: "GetTableQr",
+      I: GetTableQrRequest,
+      O: GetTableQrResponse,
       kind: MethodKind.Unary,
     },
   }

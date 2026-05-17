@@ -7,7 +7,8 @@ import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { TableMapCanvas } from './TableMapCanvas';
 import { TableDetailsModal } from './TableDetailsModal';
-import { Map as MapIcon, Edit3, Save, X, RefreshCw } from 'lucide-react';
+import { TableQrModal } from './TableQrModal';
+import { Map as MapIcon, Edit3, Save, X, RefreshCw, QrCode } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -20,6 +21,7 @@ export default function FloorPlanManager() {
   const [loading, setLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeModalTable, setActiveModalTable] = useState<Table | null>(null);
+  const [showQrManager, setShowQrManager] = useState(false);
 
   const fetchFloorPlans = useCallback(async () => {
     if (!tenantId) return;
@@ -158,6 +160,12 @@ export default function FloorPlanManager() {
                 <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
               </button>
               <button
+                onClick={() => setShowQrManager(true)}
+                className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all shadow-md border border-indigo-500/20"
+              >
+                <QrCode size={16} /> Mã QR Bàn
+              </button>
+              <button
                 onClick={() => setIsEditMode(true)}
                 className="flex items-center gap-2 px-5 py-2 bg-foreground text-background rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all border border-foreground/10 shadow-md hover:bg-interaction hover:text-white"
               >
@@ -192,6 +200,16 @@ export default function FloorPlanManager() {
           table={activeModalTable}
           onClose={() => setActiveModalTable(null)}
           onRefresh={fetchTables}
+        />
+      )}
+
+      {showQrManager && selectedPlanId && (
+        <TableQrModal
+          floorPlanName={floorPlans.find(p => p.id === selectedPlanId)?.name || 'Khu vực'}
+          tables={tables}
+          tenantId={tenantId || '7a5eee4e-431a-4dc0-88d3-047314116e23'}
+          token={token || undefined}
+          onClose={() => setShowQrManager(false)}
         />
       )}
     </div>

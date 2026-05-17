@@ -21,3 +21,4 @@ serde_json = { workspace = true }
 redis = { workspace = true, features = ["tokio-comp"] }
 tokio-stream = "0.1"
 futures-util = "0.3"
+qrcode = "0.14"

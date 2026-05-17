@@ -495,9 +495,9 @@ kiosk-flow/
 
 ## 7. Next Step
 
-> **Sprint S39: Self-Service Table QR Ordering (SaaS ERP)**
+> **Sprint S40: SaaS Tenant Billing, Advanced Analytics & Advanced Reporting**
 >
-> Khi bạn sẵn sàng, hãy nói "Bắt đầu S39" và tôi sẽ thực hiện **chỉ sprint đó**.
+> Khi bạn sẵn sàng, hãy nói "Bắt đầu S40" và tôi sẽ thực hiện **chỉ sprint đó**.
 > Mỗi sprint hoàn thành sẽ được đánh dấu `[x]` trong plan này.
 
 ---
@@ -549,5 +549,5 @@ kiosk-flow/
 | S35 | `[x]` Conversational AI Simulator (Landing Page) | 2026-05-17 |
 | S36 | `[x]` Loyalty & Combo Engine (POS Checkout) | 2026-05-17 |
 | S37 | `[x]` Interactive ROI & Sandbox Playground (Landing Page) | 2026-05-17 |
-| S38 | `[x]` Completed | 2026-05-17 |
-| S39 | `[ ]` Self-Service Table QR Ordering (SaaS ERP) | 2026-05-17 |
+| S39 | `[x]` Completed | 2026-05-17 |
+| S40 | `[ ]` SaaS Tenant Billing, Advanced Analytics & Advanced Reporting | 2026-05-17 |

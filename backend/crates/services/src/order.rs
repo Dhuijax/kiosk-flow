@@ -62,17 +62,25 @@ impl OrderServiceImpl {
     }
 
     fn get_context<T>(&self, request: &Request<T>) -> Result<(Uuid, Uuid), Status> {
-        let claims = request
-            .extensions()
-            .get::<Claims>()
-            .ok_or_else(|| Status::unauthenticated("Unauthorized: Missing or invalid token"))?;
+        if let Some(claims) = request.extensions().get::<Claims>() {
+            let tenant_id = Uuid::parse_str(&claims.tenant_id)
+                .map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
+            let user_id = Uuid::parse_str(&claims.sub)
+                .map_err(|_| Status::invalid_argument("Invalid user id"))?;
+            return Ok((tenant_id, user_id));
+        }
 
-        let tenant_id = Uuid::parse_str(&claims.tenant_id)
-            .map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
-        let user_id = Uuid::parse_str(&claims.sub)
-            .map_err(|_| Status::invalid_argument("Invalid user id"))?;
+        // Fallback for guest QR ordering (bypass auth)
+        if let Some(tenant_str) = request.extensions().get::<String>() {
+            let tenant_id = Uuid::parse_str(tenant_str)
+                .map_err(|_| Status::invalid_argument("Invalid tenant id in subdomain"))?;
+            let user_id = Uuid::nil(); // Nil UUID indicates guest order
+            return Ok((tenant_id, user_id));
+        }
 
-        Ok((tenant_id, user_id))
+        Err(Status::unauthenticated(
+            "Unauthorized: Missing or invalid token",
+        ))
     }
 
     async fn notify_order_update(
@@ -317,6 +325,9 @@ impl OrderService for OrderServiceImpl {
         &self,
         request: Request<UpdateOrderStatusRequest>,
     ) -> Result<Response<OrderResponse>, Status> {
+        let _claims = request.extensions().get::<Claims>().ok_or_else(|| {
+            Status::unauthenticated("Unauthorized: Staff/Admin permissions required")
+        })?;
         let (tenant_id, _) = self.get_context(&request)?;
         let req = request.into_inner();
         let id = Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid id"))?;
@@ -367,6 +378,9 @@ impl OrderService for OrderServiceImpl {
         &self,
         request: Request<CancelOrderRequest>,
     ) -> Result<Response<OrderResponse>, Status> {
+        let _claims = request.extensions().get::<Claims>().ok_or_else(|| {
+            Status::unauthenticated("Unauthorized: Staff/Admin permissions required")
+        })?;
         let (tenant_id, _) = self.get_context(&request)?;
         let req = request.into_inner();
         let id = Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid id"))?;
@@ -406,6 +420,9 @@ impl OrderService for OrderServiceImpl {
         &self,
         request: Request<StreamOrdersRequest>,
     ) -> Result<Response<Self::StreamOrdersStream>, Status> {
+        let _claims = request.extensions().get::<Claims>().ok_or_else(|| {
+            Status::unauthenticated("Unauthorized: Staff/Admin permissions required")
+        })?;
         let (tenant_id, _) = self.get_context(&request)?;
         let branch_id_str = request.into_inner().branch_id;
         let branch_id = Uuid::parse_str(&branch_id_str)
@@ -460,6 +477,9 @@ impl OrderService for OrderServiceImpl {
         &self,
         request: Request<MergeOrdersRequest>,
     ) -> Result<Response<OrderResponse>, Status> {
+        let _claims = request.extensions().get::<Claims>().ok_or_else(|| {
+            Status::unauthenticated("Unauthorized: Staff/Admin permissions required")
+        })?;
         let (tenant_id, _) = self.get_context(&request)?;
         let req = request.into_inner();
 
@@ -503,6 +523,9 @@ impl OrderService for OrderServiceImpl {
         &self,
         request: Request<SplitOrderItemsRequest>,
     ) -> Result<Response<SplitOrderItemsResponse>, Status> {
+        let _claims = request.extensions().get::<Claims>().ok_or_else(|| {
+            Status::unauthenticated("Unauthorized: Staff/Admin permissions required")
+        })?;
         let (tenant_id, _) = self.get_context(&request)?;
         let req = request.into_inner();
 

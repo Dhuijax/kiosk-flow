@@ -33,12 +33,19 @@ impl TableServiceImpl {
     }
 
     fn get_tenant_id<T>(&self, request: &Request<T>) -> Result<Uuid, Status> {
-        let claims = request
-            .extensions()
-            .get::<Claims>()
-            .ok_or_else(|| Status::unauthenticated("Unauthorized: Missing or invalid token"))?;
-        Uuid::parse_str(&claims.tenant_id)
-            .map_err(|_| Status::invalid_argument("Invalid tenant id in token"))
+        if let Some(claims) = request.extensions().get::<Claims>() {
+            return Uuid::parse_str(&claims.tenant_id)
+                .map_err(|_| Status::invalid_argument("Invalid tenant id in token"));
+        }
+
+        if let Some(tenant_str) = request.extensions().get::<String>() {
+            return Uuid::parse_str(tenant_str)
+                .map_err(|_| Status::invalid_argument("Invalid tenant id in subdomain"));
+        }
+
+        Err(Status::unauthenticated(
+            "Unauthorized: Missing tenant context",
+        ))
     }
 }
 
@@ -317,6 +324,64 @@ impl TableService for TableServiceImpl {
             source_table: Some(to_proto_table(src)),
             target_table: Some(to_proto_table(tgt)),
             merged_order_id: merged_order_id.map(|id| id.to_string()),
+        }))
+    }
+
+    async fn get_table(
+        &self,
+        request: Request<proto_gen::table::GetTableRequest>,
+    ) -> Result<Response<ProtoTable>, Status> {
+        let tenant_id = self.get_tenant_id(&request)?;
+        let id = Uuid::parse_str(&request.into_inner().id)
+            .map_err(|_| Status::invalid_argument("Invalid ID format"))?;
+
+        let table = self
+            .table_repo
+            .find_by_id(&tenant_id, &id)
+            .await
+            .map_err(|e| Status::internal(format!("DB error: {}", e)))?
+            .ok_or_else(|| Status::not_found("Table not found"))?;
+
+        Ok(Response::new(to_proto_table(table)))
+    }
+
+    async fn get_table_qr(
+        &self,
+        request: Request<proto_gen::table::GetTableQrRequest>,
+    ) -> Result<Response<proto_gen::table::GetTableQrResponse>, Status> {
+        let tenant_id = self.get_tenant_id(&request)?;
+        let req = request.into_inner();
+        let id =
+            Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid ID format"))?;
+
+        // Verify table exists
+        let _table = self
+            .table_repo
+            .find_by_id(&tenant_id, &id)
+            .await
+            .map_err(|e| Status::internal(format!("DB error: {}", e)))?
+            .ok_or_else(|| Status::not_found("Table not found"))?;
+
+        let base_domain =
+            std::env::var("BASE_DOMAIN").unwrap_or_else(|_| "localhost:3000".to_string());
+        let scheme = if base_domain.contains("localhost") {
+            "http"
+        } else {
+            "https"
+        };
+        let url = format!("{}://{}.{}/table/{}", scheme, tenant_id, base_domain, id);
+
+        let code = qrcode::QrCode::new(url.as_bytes())
+            .map_err(|e| Status::internal(format!("Failed to generate QR code: {}", e)))?;
+        let qr_code_svg = code
+            .render::<qrcode::render::svg::Color>()
+            .min_dimensions(256, 256)
+            .quiet_zone(true)
+            .build();
+
+        Ok(Response::new(proto_gen::table::GetTableQrResponse {
+            qr_code_svg,
+            url,
         }))
     }
 }

@@ -27,12 +27,19 @@ impl ProductServiceImpl {
     }
 
     fn get_tenant_id<T>(&self, request: &Request<T>) -> Result<Uuid, Status> {
-        let claims = request
-            .extensions()
-            .get::<Claims>()
-            .ok_or_else(|| Status::unauthenticated("Unauthorized: Missing or invalid token"))?;
-        Uuid::parse_str(&claims.tenant_id)
-            .map_err(|_| Status::invalid_argument("Invalid tenant id in token"))
+        if let Some(claims) = request.extensions().get::<Claims>() {
+            return Uuid::parse_str(&claims.tenant_id)
+                .map_err(|_| Status::invalid_argument("Invalid tenant id in token"));
+        }
+
+        if let Some(tenant_str) = request.extensions().get::<String>() {
+            return Uuid::parse_str(tenant_str)
+                .map_err(|_| Status::invalid_argument("Invalid tenant id in subdomain"));
+        }
+
+        Err(Status::unauthenticated(
+            "Unauthorized: Missing tenant context",
+        ))
     }
 }
 

@@ -845,3 +845,120 @@ export class TransferTableResponse extends Message<TransferTableResponse> {
   }
 }
 
+/**
+ * @generated from message table.GetTableRequest
+ */
+export class GetTableRequest extends Message<GetTableRequest> {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id = "";
+
+  constructor(data?: PartialMessage<GetTableRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "table.GetTableRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetTableRequest {
+    return new GetTableRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetTableRequest {
+    return new GetTableRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetTableRequest {
+    return new GetTableRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetTableRequest | PlainMessage<GetTableRequest> | undefined, b: GetTableRequest | PlainMessage<GetTableRequest> | undefined): boolean {
+    return proto3.util.equals(GetTableRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message table.GetTableQrRequest
+ */
+export class GetTableQrRequest extends Message<GetTableQrRequest> {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id = "";
+
+  constructor(data?: PartialMessage<GetTableQrRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "table.GetTableQrRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetTableQrRequest {
+    return new GetTableQrRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetTableQrRequest {
+    return new GetTableQrRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetTableQrRequest {
+    return new GetTableQrRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetTableQrRequest | PlainMessage<GetTableQrRequest> | undefined, b: GetTableQrRequest | PlainMessage<GetTableQrRequest> | undefined): boolean {
+    return proto3.util.equals(GetTableQrRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message table.GetTableQrResponse
+ */
+export class GetTableQrResponse extends Message<GetTableQrResponse> {
+  /**
+   * @generated from field: string qr_code_svg = 1;
+   */
+  qrCodeSvg = "";
+
+  /**
+   * @generated from field: string url = 2;
+   */
+  url = "";
+
+  constructor(data?: PartialMessage<GetTableQrResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "table.GetTableQrResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "qr_code_svg", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "url", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetTableQrResponse {
+    return new GetTableQrResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetTableQrResponse {
+    return new GetTableQrResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetTableQrResponse {
+    return new GetTableQrResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetTableQrResponse | PlainMessage<GetTableQrResponse> | undefined, b: GetTableQrResponse | PlainMessage<GetTableQrResponse> | undefined): boolean {
+    return proto3.util.equals(GetTableQrResponse, a, b);
+  }
+}
+

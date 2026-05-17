@@ -19,6 +19,8 @@ service TableService {
     rpc DeleteTable(DeleteTableRequest) returns (google.protobuf.Empty);
     rpc UpdateTableStatus(UpdateTableStatusRequest) returns (Table);
     rpc TransferTable(TransferTableRequest) returns (TransferTableResponse);
+    rpc GetTable(GetTableRequest) returns (Table);
+    rpc GetTableQr(GetTableQrRequest) returns (GetTableQrResponse);
 }
 
 enum TableStatus {
@@ -124,6 +126,19 @@ message TransferTableResponse {
     Table source_table = 1;
     Table target_table = 2;
     optional string merged_order_id = 3;
+}
+
+message GetTableRequest {
+    string id = 1;
+}
+
+message GetTableQrRequest {
+    string id = 1;
+}
+
+message GetTableQrResponse {
+    string qr_code_svg = 1;
+    string url = 2;
 }
 
 

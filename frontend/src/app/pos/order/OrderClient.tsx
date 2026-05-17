@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 import CategoryTabs from '@/components/pos/CategoryTabs';
 import MenuGrid from '@/components/pos/MenuGrid';
@@ -17,11 +17,18 @@ import PaymentModal from '@/components/pos/PaymentModal';
 import { Customer } from '@/gen/customer_pb';
 import { db } from '@/lib/offline/db';
 import { useOfflineSync } from '@/lib/offline/useOfflineSync';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function OrderClient() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const targetTableId = searchParams.get('tableId');
+  const existingOrderId = searchParams.get('orderId');
+
   const { token, tenantId, branchId } = useAuth();
-  const { items, clearCart, tableId, total } = useOrderCart();
+  const { items, clearCart, tableId, setTableId, total } = useOrderCart();
   const { pendingCount } = useOfflineSync();
+
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [status, setStatus] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -29,6 +36,32 @@ export default function OrderClient() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isOrderSummaryOpen, setIsOrderSummaryOpen] = useState(false);
+  const [existingOrder, setExistingOrder] = useState<any | null>(null);
+
+  // Sync targetTableId to cart context
+  useEffect(() => {
+    if (targetTableId) {
+      setTableId(targetTableId);
+    }
+  }, [targetTableId, setTableId]);
+
+  // Fetch existing order details if editing
+  useEffect(() => {
+    async function fetchExistingOrder() {
+      if (existingOrderId && tenantId && token) {
+        try {
+          const client = getAuthenticatedClient(OrderService, tenantId, token);
+          const response = await client.getOrder({ id: existingOrderId });
+          if (response.order) {
+            setExistingOrder(response.order);
+          }
+        } catch (err) {
+          console.error("Failed to fetch existing order:", err);
+        }
+      }
+    }
+    fetchExistingOrder();
+  }, [existingOrderId, tenantId, token]);
 
   const handleCheckout = () => {
     if (!token || !tenantId || !branchId || items.length === 0) {
@@ -36,7 +69,61 @@ export default function OrderClient() {
       setTimeout(() => setStatus(null), 3000);
       return;
     }
-    setIsPaymentModalOpen(true);
+    
+    if (existingOrderId) {
+      confirmAddItems();
+    } else {
+      setIsPaymentModalOpen(true);
+    }
+  };
+
+  const confirmAddItems = async () => {
+    if (!token || !tenantId || !branchId || items.length === 0 || !existingOrderId) return;
+    setIsSubmitting(true);
+    setStatus({ message: 'Đang thêm món vào bàn...', type: 'info' });
+    try {
+      const orderClient = getAuthenticatedClient(OrderService, tenantId, token!);
+
+      const orderItems = items.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        note: item.note,
+        toppingIds: item.selectedToppings.map(t => t.id)
+      }));
+
+      // 1. Create a temporary draft order with NO tableId (to avoid overwriting the table's active order link in repository)
+      const response = await orderClient.createOrder({
+        branchId,
+        tableId: "", // Leave blank so it doesn't overwrite table status
+        customerName: selectedCustomer?.name || "Bàn " + (existingOrder?.tableName || ""),
+        customerId: selectedCustomer?.id || "",
+        note: "Bổ sung món",
+        items: orderItems
+      });
+
+      if (!response.order) {
+        throw new Error("Không thể tạo đơn nháp bổ sung.");
+      }
+
+      // 2. Merge the temporary draft order into the existing table order
+      await orderClient.mergeOrders({
+        sourceOrderId: response.order.id,
+        targetOrderId: existingOrderId
+      });
+
+      setStatus({ message: 'Thêm món vào bàn thành công!', type: 'success' });
+      clearCart();
+      setTimeout(() => {
+        setStatus(null);
+        router.push('/pos/tables');
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to add items to existing order:', err);
+      setStatus({ message: 'Lỗi khi cập nhật bàn!', type: 'error' });
+      setTimeout(() => setStatus(null), 3000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const confirmPayment = async (method: PaymentMethod, receivedAmount?: number) => {
@@ -123,7 +210,7 @@ export default function OrderClient() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden relative bg-background">
+    <div className="flex flex-col h-full overflow-hidden relative bg-background text-foreground">
       <h1 className="sr-only">Hệ thống Kiosk AI - KioskFlow</h1>
       
       {/* Toast Status */}
@@ -144,6 +231,25 @@ export default function OrderClient() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Existing Order Alert Banner */}
+      {existingOrder && (
+        <div className="flex-none bg-primary/15 border-b border-primary/20 px-12 py-3 flex items-center justify-between text-primary font-bold text-xs uppercase tracking-wider italic">
+          <div className="flex items-center gap-3">
+            <span className="w-2.5 h-2.5 bg-primary rounded-full animate-pulse" />
+            <span>Đang thêm món cho: <strong className="text-foreground">{existingOrder.tableName || "Bàn cũ"}</strong> (Đơn: #{existingOrder.orderNumber})</span>
+          </div>
+          <button 
+            onClick={() => {
+              clearCart();
+              router.push('/pos/tables');
+            }} 
+            className="px-4 py-1 bg-primary/20 hover:bg-primary/30 text-[10px] font-black rounded-lg transition-all"
+          >
+            HỦY BỎ
+          </button>
+        </div>
+      )}
 
       {/* Adaptive Header / Search */}
       <div className="flex-none flex flex-col md:flex-row items-center bg-background border-b border-foreground/10 h-auto md:h-32 px-4 md:px-12 py-4 md:py-0 gap-4 md:gap-12">

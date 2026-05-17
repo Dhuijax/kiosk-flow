@@ -12,6 +12,8 @@ service OrderService {
   rpc UpdateOrderStatus (UpdateOrderStatusRequest) returns (OrderResponse);
   rpc CancelOrder (CancelOrderRequest) returns (OrderResponse);
   rpc StreamOrders (StreamOrdersRequest) returns (stream OrderResponse);
+  rpc MergeOrders (MergeOrdersRequest) returns (OrderResponse);
+  rpc SplitOrderItems (SplitOrderItemsRequest) returns (SplitOrderItemsResponse);
 }
 
 message StreamOrdersRequest {
@@ -119,4 +121,25 @@ message CancelOrderRequest {
 
 message OrderResponse {
   Order order = 1;
+}
+
+message MergeOrdersRequest {
+  string source_order_id = 1;
+  string target_order_id = 2;
+}
+
+message SplitOrderItemsRequest {
+  string source_order_id = 1;
+  string target_table_id = 2;
+  repeated SplitItemInfo items = 3;
+}
+
+message SplitItemInfo {
+  string order_item_id = 1;
+  int32 quantity = 2;
+}
+
+message SplitOrderItemsResponse {
+  Order source_order = 1;
+  Order target_order = 2;
 }

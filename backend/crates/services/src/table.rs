@@ -9,7 +9,7 @@ use proto_gen::table::{
     CreateTablesResponse, DeleteFloorPlanRequest, DeleteTableRequest, FloorPlan as ProtoFloorPlan,
     ListFloorPlansRequest, ListFloorPlansResponse, ListTablesRequest, ListTablesResponse,
     Table as ProtoTable, TableStatus as ProtoTableStatus, UpdateFloorPlanRequest,
-    UpdateTableRequest, UpdateTableStatusRequest,
+    UpdateTableRequest, UpdateTableStatusRequest, TransferTableRequest, TransferTableResponse,
 };
 use std::convert::TryFrom;
 use std::sync::Arc;
@@ -293,5 +293,30 @@ impl TableService for TableServiceImpl {
             .map_err(|e| Status::internal(format!("Status update failed: {}", e)))?;
 
         Ok(Response::new(to_proto_table(updated)))
+    }
+
+    async fn transfer_table(
+        &self,
+        request: Request<TransferTableRequest>,
+    ) -> Result<Response<TransferTableResponse>, Status> {
+        let tenant_id = self.get_tenant_id(&request)?;
+        let req = request.into_inner();
+
+        let source_uuid = Uuid::parse_str(&req.source_table_id)
+            .map_err(|_| Status::invalid_argument("Invalid source_table_id"))?;
+        let target_uuid = Uuid::parse_str(&req.target_table_id)
+            .map_err(|_| Status::invalid_argument("Invalid target_table_id"))?;
+
+        let (src, tgt, merged_order_id) = self
+            .table_repo
+            .transfer(&tenant_id, &source_uuid, &target_uuid)
+            .await
+            .map_err(|e| Status::internal(format!("Transfer failed: {}", e)))?;
+
+        Ok(Response::new(TransferTableResponse {
+            source_table: Some(to_proto_table(src)),
+            target_table: Some(to_proto_table(tgt)),
+            merged_order_id: merged_order_id.map(|id| id.to_string()),
+        }))
     }
 }

@@ -785,3 +785,181 @@ export class OrderResponse extends Message<OrderResponse> {
   }
 }
 
+/**
+ * @generated from message order.MergeOrdersRequest
+ */
+export class MergeOrdersRequest extends Message<MergeOrdersRequest> {
+  /**
+   * @generated from field: string source_order_id = 1;
+   */
+  sourceOrderId = "";
+
+  /**
+   * @generated from field: string target_order_id = 2;
+   */
+  targetOrderId = "";
+
+  constructor(data?: PartialMessage<MergeOrdersRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "order.MergeOrdersRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "source_order_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "target_order_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MergeOrdersRequest {
+    return new MergeOrdersRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MergeOrdersRequest {
+    return new MergeOrdersRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MergeOrdersRequest {
+    return new MergeOrdersRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: MergeOrdersRequest | PlainMessage<MergeOrdersRequest> | undefined, b: MergeOrdersRequest | PlainMessage<MergeOrdersRequest> | undefined): boolean {
+    return proto3.util.equals(MergeOrdersRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message order.SplitOrderItemsRequest
+ */
+export class SplitOrderItemsRequest extends Message<SplitOrderItemsRequest> {
+  /**
+   * @generated from field: string source_order_id = 1;
+   */
+  sourceOrderId = "";
+
+  /**
+   * @generated from field: string target_table_id = 2;
+   */
+  targetTableId = "";
+
+  /**
+   * @generated from field: repeated order.SplitItemInfo items = 3;
+   */
+  items: SplitItemInfo[] = [];
+
+  constructor(data?: PartialMessage<SplitOrderItemsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "order.SplitOrderItemsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "source_order_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "target_table_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "items", kind: "message", T: SplitItemInfo, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SplitOrderItemsRequest {
+    return new SplitOrderItemsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SplitOrderItemsRequest {
+    return new SplitOrderItemsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SplitOrderItemsRequest {
+    return new SplitOrderItemsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: SplitOrderItemsRequest | PlainMessage<SplitOrderItemsRequest> | undefined, b: SplitOrderItemsRequest | PlainMessage<SplitOrderItemsRequest> | undefined): boolean {
+    return proto3.util.equals(SplitOrderItemsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message order.SplitItemInfo
+ */
+export class SplitItemInfo extends Message<SplitItemInfo> {
+  /**
+   * @generated from field: string order_item_id = 1;
+   */
+  orderItemId = "";
+
+  /**
+   * @generated from field: int32 quantity = 2;
+   */
+  quantity = 0;
+
+  constructor(data?: PartialMessage<SplitItemInfo>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "order.SplitItemInfo";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "order_item_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "quantity", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SplitItemInfo {
+    return new SplitItemInfo().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SplitItemInfo {
+    return new SplitItemInfo().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SplitItemInfo {
+    return new SplitItemInfo().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: SplitItemInfo | PlainMessage<SplitItemInfo> | undefined, b: SplitItemInfo | PlainMessage<SplitItemInfo> | undefined): boolean {
+    return proto3.util.equals(SplitItemInfo, a, b);
+  }
+}
+
+/**
+ * @generated from message order.SplitOrderItemsResponse
+ */
+export class SplitOrderItemsResponse extends Message<SplitOrderItemsResponse> {
+  /**
+   * @generated from field: order.Order source_order = 1;
+   */
+  sourceOrder?: Order;
+
+  /**
+   * @generated from field: order.Order target_order = 2;
+   */
+  targetOrder?: Order;
+
+  constructor(data?: PartialMessage<SplitOrderItemsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "order.SplitOrderItemsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "source_order", kind: "message", T: Order },
+    { no: 2, name: "target_order", kind: "message", T: Order },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SplitOrderItemsResponse {
+    return new SplitOrderItemsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): SplitOrderItemsResponse {
+    return new SplitOrderItemsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): SplitOrderItemsResponse {
+    return new SplitOrderItemsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: SplitOrderItemsResponse | PlainMessage<SplitOrderItemsResponse> | undefined, b: SplitOrderItemsResponse | PlainMessage<SplitOrderItemsResponse> | undefined): boolean {
+    return proto3.util.equals(SplitOrderItemsResponse, a, b);
+  }
+}
+

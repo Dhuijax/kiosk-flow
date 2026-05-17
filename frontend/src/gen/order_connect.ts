@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CancelOrderRequest, CreateOrderRequest, GetOrderRequest, ListOrdersRequest, ListOrdersResponse, OrderResponse, StreamOrdersRequest, UpdateOrderStatusRequest } from "./order_pb";
+import { CancelOrderRequest, CreateOrderRequest, GetOrderRequest, ListOrdersRequest, ListOrdersResponse, MergeOrdersRequest, OrderResponse, SplitOrderItemsRequest, SplitOrderItemsResponse, StreamOrdersRequest, UpdateOrderStatusRequest } from "./order_pb";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -65,6 +65,24 @@ export const OrderService = {
       I: StreamOrdersRequest,
       O: OrderResponse,
       kind: MethodKind.ServerStreaming,
+    },
+    /**
+     * @generated from rpc order.OrderService.MergeOrders
+     */
+    mergeOrders: {
+      name: "MergeOrders",
+      I: MergeOrdersRequest,
+      O: OrderResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc order.OrderService.SplitOrderItems
+     */
+    splitOrderItems: {
+      name: "SplitOrderItems",
+      I: SplitOrderItemsRequest,
+      O: SplitOrderItemsResponse,
+      kind: MethodKind.Unary,
     },
   }
 } as const;

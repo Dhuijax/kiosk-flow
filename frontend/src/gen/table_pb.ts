@@ -753,3 +753,95 @@ export class UpdateTableStatusRequest extends Message<UpdateTableStatusRequest> 
   }
 }
 
+/**
+ * @generated from message table.TransferTableRequest
+ */
+export class TransferTableRequest extends Message<TransferTableRequest> {
+  /**
+   * @generated from field: string source_table_id = 1;
+   */
+  sourceTableId = "";
+
+  /**
+   * @generated from field: string target_table_id = 2;
+   */
+  targetTableId = "";
+
+  constructor(data?: PartialMessage<TransferTableRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "table.TransferTableRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "source_table_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "target_table_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TransferTableRequest {
+    return new TransferTableRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): TransferTableRequest {
+    return new TransferTableRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): TransferTableRequest {
+    return new TransferTableRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: TransferTableRequest | PlainMessage<TransferTableRequest> | undefined, b: TransferTableRequest | PlainMessage<TransferTableRequest> | undefined): boolean {
+    return proto3.util.equals(TransferTableRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message table.TransferTableResponse
+ */
+export class TransferTableResponse extends Message<TransferTableResponse> {
+  /**
+   * @generated from field: table.Table source_table = 1;
+   */
+  sourceTable?: Table;
+
+  /**
+   * @generated from field: table.Table target_table = 2;
+   */
+  targetTable?: Table;
+
+  /**
+   * @generated from field: optional string merged_order_id = 3;
+   */
+  mergedOrderId?: string;
+
+  constructor(data?: PartialMessage<TransferTableResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "table.TransferTableResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "source_table", kind: "message", T: Table },
+    { no: 2, name: "target_table", kind: "message", T: Table },
+    { no: 3, name: "merged_order_id", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TransferTableResponse {
+    return new TransferTableResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): TransferTableResponse {
+    return new TransferTableResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): TransferTableResponse {
+    return new TransferTableResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: TransferTableResponse | PlainMessage<TransferTableResponse> | undefined, b: TransferTableResponse | PlainMessage<TransferTableResponse> | undefined): boolean {
+    return proto3.util.equals(TransferTableResponse, a, b);
+  }
+}
+

@@ -930,6 +930,211 @@ impl TableRepository {
         tx.commit().await?;
         Ok(())
     }
+
+    pub async fn transfer(
+        &self,
+        tenant_id: &Uuid,
+        source_id: &Uuid,
+        target_id: &Uuid,
+    ) -> Result<(Table, Table, Option<Uuid>)> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        // 1. Fetch tables
+        let source = sqlx::query_as!(
+            Table,
+            r#"SELECT id, tenant_id, branch_id, floor_plan_id, name, capacity, position_x, position_y, status as "status: _", current_order_id, created_at as "created_at!", updated_at as "updated_at!" FROM tables WHERE id = $1"#,
+            source_id
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        let target = sqlx::query_as!(
+            Table,
+            r#"SELECT id, tenant_id, branch_id, floor_plan_id, name, capacity, position_x, position_y, status as "status: _", current_order_id, created_at as "created_at!", updated_at as "updated_at!" FROM tables WHERE id = $1"#,
+            target_id
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        let source_order_id = source
+            .current_order_id
+            .ok_or_else(|| anyhow::anyhow!("Source table has no active order"))?;
+
+        let mut merged_order_id = None;
+
+        if let Some(target_order_id) = target.current_order_id {
+            // TARGET IS OCCUPIED -> AUTO-MERGE source_order into target_order
+            merged_order_id = Some(target_order_id);
+
+            // Fetch source items and toppings
+            let source_items: Vec<OrderItem> = sqlx::query_as(
+                r#"SELECT id, order_id, tenant_id, product_id, product_name, unit_price, quantity, subtotal, note, status as "status: _", created_at FROM order_items WHERE order_id = $1"#
+            )
+            .bind(source_order_id)
+            .fetch_all(&mut *tx)
+            .await?;
+
+            let mut source_items_with_toppings = Vec::new();
+            for item in source_items {
+                let toppings: Vec<OrderItemTopping> = sqlx::query_as(
+                    r#"SELECT id, order_item_id, tenant_id, topping_id, name, price FROM order_item_toppings WHERE order_item_id = $1"#
+                )
+                .bind(item.id)
+                .fetch_all(&mut *tx)
+                .await?;
+                source_items_with_toppings.push((item, toppings));
+            }
+
+            // Fetch target items and toppings
+            let target_items: Vec<OrderItem> = sqlx::query_as(
+                r#"SELECT id, order_id, tenant_id, product_id, product_name, unit_price, quantity, subtotal, note, status as "status: _", created_at FROM order_items WHERE order_id = $1"#
+            )
+            .bind(target_order_id)
+            .fetch_all(&mut *tx)
+            .await?;
+
+            let mut target_items_with_toppings = Vec::new();
+            for item in target_items {
+                let toppings: Vec<OrderItemTopping> = sqlx::query_as(
+                    r#"SELECT id, order_item_id, tenant_id, topping_id, name, price FROM order_item_toppings WHERE order_item_id = $1"#
+                )
+                .bind(item.id)
+                .fetch_all(&mut *tx)
+                .await?;
+                target_items_with_toppings.push((item, toppings));
+            }
+
+            // Perform Smart Item Consolidation
+            for (s_item, s_toppings) in source_items_with_toppings {
+                let mut matched_target_index = None;
+                for (idx, (t_item, t_toppings)) in target_items_with_toppings.iter().enumerate() {
+                    if t_item.product_id == s_item.product_id && t_item.note == s_item.note {
+                        // Compare toppings list
+                        let mut s_top_ids: Vec<Uuid> = s_toppings.iter().map(|t| t.topping_id).collect();
+                        let mut t_top_ids: Vec<Uuid> = t_toppings.iter().map(|t| t.topping_id).collect();
+                        s_top_ids.sort();
+                        t_top_ids.sort();
+                        if s_top_ids == t_top_ids {
+                            matched_target_index = Some(idx);
+                            break;
+                        }
+                    }
+                }
+
+                if let Some(idx) = matched_target_index {
+                    // Match found -> Consolidate quantity
+                    let (t_item, _) = &mut target_items_with_toppings[idx];
+                    let new_qty = t_item.quantity + s_item.quantity;
+                    let new_subtotal = &t_item.unit_price * BigDecimal::from(new_qty);
+
+                    sqlx::query!(
+                        "UPDATE order_items SET quantity = $1, subtotal = $2 WHERE id = $3",
+                        new_qty,
+                        new_subtotal,
+                        t_item.id
+                    )
+                    .execute(&mut *tx)
+                    .await?;
+
+                    // Source item details are merged, so delete source item
+                    sqlx::query!("DELETE FROM order_item_toppings WHERE order_item_id = $1", s_item.id)
+                        .execute(&mut *tx)
+                        .await?;
+                    sqlx::query!("DELETE FROM order_items WHERE id = $1", s_item.id)
+                        .execute(&mut *tx)
+                        .await?;
+
+                    // Update local copy of target item for subsequent loops
+                    t_item.quantity = new_qty;
+                    t_item.subtotal = new_subtotal;
+                } else {
+                    // No match -> Move source item to target order
+                    sqlx::query!(
+                        "UPDATE order_items SET order_id = $1 WHERE id = $2",
+                        target_order_id,
+                        s_item.id
+                    )
+                    .execute(&mut *tx)
+                    .await?;
+                }
+            }
+
+            // Recalculate target order totals
+            let target_subtotal: BigDecimal = sqlx::query_scalar!(
+                "SELECT COALESCE(SUM(subtotal), 0) FROM order_items WHERE order_id = $1",
+                target_order_id
+            )
+            .fetch_one(&mut *tx)
+            .await?
+            .unwrap_or_else(|| BigDecimal::from(0));
+
+            sqlx::query!(
+                "UPDATE orders SET subtotal = $1, total = $1, updated_at = NOW() WHERE id = $2",
+                target_subtotal,
+                target_order_id
+            )
+            .execute(&mut *tx)
+            .await?;
+
+            // Delete source order
+            sqlx::query!("DELETE FROM orders WHERE id = $1", source_order_id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Update Tables
+            sqlx::query!(
+                "UPDATE tables SET current_order_id = NULL, status = $1, updated_at = NOW() WHERE id = $2",
+                TableStatus::Available as _,
+                source_id
+            )
+            .execute(&mut *tx)
+            .await?;
+
+            sqlx::query!(
+                "UPDATE tables SET current_order_id = $1, status = $2, updated_at = NOW() WHERE id = $3",
+                target_order_id,
+                TableStatus::Occupied as _,
+                target_id
+            )
+            .execute(&mut *tx)
+            .await?;
+
+        } else {
+            // TARGET IS EMPTY -> Simple Transfer
+            sqlx::query!(
+                "UPDATE orders SET table_id = $1, updated_at = NOW() WHERE id = $2",
+                target_id,
+                source_order_id
+            )
+            .execute(&mut *tx)
+            .await?;
+
+            sqlx::query!(
+                "UPDATE tables SET current_order_id = NULL, status = $1, updated_at = NOW() WHERE id = $2",
+                TableStatus::Available as _,
+                source_id
+            )
+            .execute(&mut *tx)
+            .await?;
+
+            sqlx::query!(
+                "UPDATE tables SET current_order_id = $1, status = $2, updated_at = NOW() WHERE id = $3",
+                source_order_id,
+                TableStatus::Occupied as _,
+                target_id
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        tx.commit().await?;
+
+        // Re-fetch final source and target tables for return
+        let updated_source = self.find_by_id(tenant_id, source_id).await?.unwrap();
+        let updated_target = self.find_by_id(tenant_id, target_id).await?.unwrap();
+
+        Ok((updated_source, updated_target, merged_order_id))
+    }
 }
 
 pub struct FloorPlanRepository {
@@ -1160,6 +1365,17 @@ impl OrderRepository {
             }
         }
 
+        // 4. Update Table current_order_id and status if table_id is set
+        if let Some(t_id) = order.table_id {
+            sqlx::query!(
+                "UPDATE tables SET current_order_id = $1, status = 'occupied', updated_at = NOW() WHERE id = $2",
+                created_order.id,
+                t_id
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
         tx.commit().await?;
         Ok(created_order)
     }
@@ -1336,6 +1552,354 @@ impl OrderRepository {
 
         tx.commit().await?;
         Ok(())
+    }
+
+    pub async fn merge_orders(
+        &self,
+        tenant_id: &Uuid,
+        source_order_id: &Uuid,
+        target_order_id: &Uuid,
+    ) -> Result<Order> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        // Fetch source items and toppings
+        let source_items: Vec<OrderItem> = sqlx::query_as(
+            r#"SELECT id, order_id, tenant_id, product_id, product_name, unit_price, quantity, subtotal, note, status as "status: _", created_at FROM order_items WHERE order_id = $1"#
+        )
+        .bind(source_order_id)
+        .fetch_all(&mut *tx)
+        .await?;
+
+        let mut source_items_with_toppings = Vec::new();
+        for item in source_items {
+            let toppings: Vec<OrderItemTopping> = sqlx::query_as(
+                r#"SELECT id, order_item_id, tenant_id, topping_id, name, price FROM order_item_toppings WHERE order_item_id = $1"#
+            )
+            .bind(item.id)
+            .fetch_all(&mut *tx)
+            .await?;
+            source_items_with_toppings.push((item, toppings));
+        }
+
+        // Fetch target items and toppings
+        let target_items: Vec<OrderItem> = sqlx::query_as(
+            r#"SELECT id, order_id, tenant_id, product_id, product_name, unit_price, quantity, subtotal, note, status as "status: _", created_at FROM order_items WHERE order_id = $1"#
+        )
+        .bind(target_order_id)
+        .fetch_all(&mut *tx)
+        .await?;
+
+        let mut target_items_with_toppings = Vec::new();
+        for item in target_items {
+            let toppings: Vec<OrderItemTopping> = sqlx::query_as(
+                r#"SELECT id, order_item_id, tenant_id, topping_id, name, price FROM order_item_toppings WHERE order_item_id = $1"#
+            )
+            .bind(item.id)
+            .fetch_all(&mut *tx)
+            .await?;
+            target_items_with_toppings.push((item, toppings));
+        }
+
+        // Perform Smart Item Consolidation
+        for (s_item, s_toppings) in source_items_with_toppings {
+            let mut matched_target_index = None;
+            for (idx, (t_item, t_toppings)) in target_items_with_toppings.iter().enumerate() {
+                if t_item.product_id == s_item.product_id && t_item.note == s_item.note {
+                    // Compare toppings list
+                    let mut s_top_ids: Vec<Uuid> = s_toppings.iter().map(|t| t.topping_id).collect();
+                    let mut t_top_ids: Vec<Uuid> = t_toppings.iter().map(|t| t.topping_id).collect();
+                    s_top_ids.sort();
+                    t_top_ids.sort();
+                    if s_top_ids == t_top_ids {
+                        matched_target_index = Some(idx);
+                        break;
+                    }
+                }
+            }
+
+            if let Some(idx) = matched_target_index {
+                // Match found -> Consolidate quantity
+                let (t_item, _) = &mut target_items_with_toppings[idx];
+                let new_qty = t_item.quantity + s_item.quantity;
+                let new_subtotal = &t_item.unit_price * BigDecimal::from(new_qty);
+
+                sqlx::query!(
+                    "UPDATE order_items SET quantity = $1, subtotal = $2 WHERE id = $3",
+                    new_qty,
+                    new_subtotal,
+                    t_item.id
+                )
+                .execute(&mut *tx)
+                .await?;
+
+                // Source item details are merged, so delete source item
+                sqlx::query!("DELETE FROM order_item_toppings WHERE order_item_id = $1", s_item.id)
+                    .execute(&mut *tx)
+                    .await?;
+                sqlx::query!("DELETE FROM order_items WHERE id = $1", s_item.id)
+                    .execute(&mut *tx)
+                    .await?;
+
+                // Update local copy of target item for subsequent loops
+                t_item.quantity = new_qty;
+                t_item.subtotal = new_subtotal;
+            } else {
+                // No match -> Move source item to target order
+                sqlx::query!(
+                    "UPDATE order_items SET order_id = $1 WHERE id = $2",
+                    target_order_id,
+                    s_item.id
+                )
+                .execute(&mut *tx)
+                .await?;
+            }
+        }
+
+        // Recalculate target order totals
+        let target_subtotal: BigDecimal = sqlx::query_scalar!(
+            "SELECT COALESCE(SUM(subtotal), 0) FROM order_items WHERE order_id = $1",
+            target_order_id
+        )
+        .fetch_one(&mut *tx)
+        .await?
+        .unwrap_or_else(|| BigDecimal::from(0));
+
+        sqlx::query!(
+            "UPDATE orders SET subtotal = $1, total = $1, updated_at = NOW() WHERE id = $2",
+            target_subtotal,
+            target_order_id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        // Free source table
+        sqlx::query!(
+            "UPDATE tables SET current_order_id = NULL, status = $1, updated_at = NOW() WHERE current_order_id = $2",
+            TableStatus::Available as _,
+            source_order_id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        // Delete source order
+        sqlx::query!("DELETE FROM orders WHERE id = $1", source_order_id)
+            .execute(&mut *tx)
+            .await?;
+
+        // Fetch final target order to return
+        let target_order: Order = sqlx::query_as(
+            r#"SELECT id, tenant_id, branch_id, table_id, order_number, status as "status: _", customer_name, customer_id, cashier_name, guest_id, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at FROM orders WHERE id = $1"#
+        )
+        .bind(target_order_id)
+        .fetch_one(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(target_order)
+    }
+
+    pub async fn split_order_items(
+        &self,
+        tenant_id: &Uuid,
+        source_order_id: &Uuid,
+        target_table_id: Option<Uuid>,
+        items_to_split: &[(Uuid, i32)],
+    ) -> Result<(Order, Order)> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+
+        // 1. Fetch source order
+        let source_order: Order = sqlx::query_as(
+            r#"SELECT id, tenant_id, branch_id, table_id, order_number, status as "status: _", customer_name, customer_id, cashier_name, guest_id, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at FROM orders WHERE id = $1"#
+        )
+        .bind(source_order_id)
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // 2. Generate target order ID and daily order number
+        let target_order_id = Uuid::new_v4();
+        let target_order_number = self.next_order_number(&mut tx, &source_order.branch_id).await?;
+
+        // 3. Create target order in Draft/same status
+        let _created_target_order: Order = sqlx::query_as(
+            r#"
+            INSERT INTO orders (id, tenant_id, branch_id, table_id, order_number, status, customer_name, customer_id, cashier_name, guest_id, subtotal, tax_amount, discount_amount, total, note, created_by)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+            RETURNING id, tenant_id, branch_id, table_id, order_number, status as "status: _", customer_name, customer_id, cashier_name, guest_id, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at
+            "#
+        )
+        .bind(target_order_id)
+        .bind(tenant_id)
+        .bind(source_order.branch_id)
+        .bind(target_table_id)
+        .bind(target_order_number)
+        .bind(OrderStatus::Draft)
+        .bind(&source_order.customer_name)
+        .bind(source_order.customer_id)
+        .bind(&source_order.cashier_name)
+        .bind(&source_order.guest_id)
+        .bind(BigDecimal::from(0))
+        .bind(BigDecimal::from(0))
+        .bind(BigDecimal::from(0))
+        .bind(BigDecimal::from(0))
+        .bind(Some(format!("Split from {}", source_order.order_number)))
+        .bind(source_order.created_by)
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // 4. Update table status if target table is specified
+        if let Some(t_table_id) = target_table_id {
+            sqlx::query!(
+                "UPDATE tables SET current_order_id = $1, status = $2, updated_at = NOW() WHERE id = $3",
+                target_order_id,
+                TableStatus::Occupied as _,
+                t_table_id
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // 5. Process each item to split
+        for &(order_item_id, split_qty) in items_to_split {
+            if split_qty <= 0 {
+                continue;
+            }
+
+            // Fetch the source order item
+            let source_item: OrderItem = sqlx::query_as(
+                r#"SELECT id, order_id, tenant_id, product_id, product_name, unit_price, quantity, subtotal, note, status as "status: _", created_at FROM order_items WHERE id = $1"#
+            )
+            .bind(order_item_id)
+            .fetch_one(&mut *tx)
+            .await?;
+
+            let remaining_qty = source_item.quantity - split_qty;
+            if remaining_qty < 0 {
+                return Err(anyhow::anyhow!("Split quantity exceeds item quantity"));
+            }
+
+            // Fetch toppings of this order item
+            let toppings: Vec<OrderItemTopping> = sqlx::query_as(
+                r#"SELECT id, order_item_id, tenant_id, topping_id, name, price FROM order_item_toppings WHERE order_item_id = $1"#
+            )
+            .bind(order_item_id)
+            .fetch_all(&mut *tx)
+            .await?;
+
+            if remaining_qty == 0 {
+                // MOVE item completely to target order
+                sqlx::query!(
+                    "UPDATE order_items SET order_id = $1 WHERE id = $2",
+                    target_order_id,
+                    order_item_id
+                )
+                .execute(&mut *tx)
+                .await?;
+            } else {
+                // SPLIT: Deduct quantity from original item, create new item for target order
+                let new_source_subtotal = &source_item.unit_price * BigDecimal::from(remaining_qty);
+                sqlx::query!(
+                    "UPDATE order_items SET quantity = $1, subtotal = $2 WHERE id = $3",
+                    remaining_qty,
+                    new_source_subtotal,
+                    order_item_id
+                )
+                .execute(&mut *tx)
+                .await?;
+
+                let new_target_item_id = Uuid::new_v4();
+                let new_target_subtotal = &source_item.unit_price * BigDecimal::from(split_qty);
+
+                sqlx::query!(
+                    r#"
+                    INSERT INTO order_items (id, order_id, tenant_id, product_id, product_name, unit_price, quantity, subtotal, note, status)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                    "#,
+                    new_target_item_id,
+                    target_order_id,
+                    tenant_id,
+                    source_item.product_id,
+                    &source_item.product_name,
+                    &source_item.unit_price,
+                    split_qty,
+                    new_target_subtotal,
+                    source_item.note.as_deref(),
+                    source_item.status as _
+                )
+                .execute(&mut *tx)
+                .await?;
+
+                // Clone toppings for target item
+                for topping in toppings {
+                    sqlx::query!(
+                        r#"
+                        INSERT INTO order_item_toppings (id, order_item_id, tenant_id, topping_id, name, price)
+                        VALUES ($1, $2, $3, $4, $5, $6)
+                        "#,
+                        Uuid::new_v4(),
+                        new_target_item_id,
+                        tenant_id,
+                        topping.topping_id,
+                        &topping.name,
+                        &topping.price
+                    )
+                    .execute(&mut *tx)
+                    .await?;
+                }
+            }
+        }
+
+        // 6. Recalculate source order totals
+        let source_subtotal: BigDecimal = sqlx::query_scalar!(
+            "SELECT COALESCE(SUM(subtotal), 0) FROM order_items WHERE order_id = $1",
+            source_order_id
+        )
+        .fetch_one(&mut *tx)
+        .await?
+        .unwrap_or_else(|| BigDecimal::from(0));
+
+        sqlx::query!(
+            "UPDATE orders SET subtotal = $1, total = $1, updated_at = NOW() WHERE id = $2",
+            source_subtotal,
+            source_order_id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        // 7. Recalculate target order totals
+        let target_subtotal: BigDecimal = sqlx::query_scalar!(
+            "SELECT COALESCE(SUM(subtotal), 0) FROM order_items WHERE order_id = $1",
+            target_order_id
+        )
+        .fetch_one(&mut *tx)
+        .await?
+        .unwrap_or_else(|| BigDecimal::from(0));
+
+        sqlx::query!(
+            "UPDATE orders SET subtotal = $1, total = $1, updated_at = NOW() WHERE id = $2",
+            target_subtotal,
+            target_order_id
+        )
+        .execute(&mut *tx)
+        .await?;
+
+        // Re-fetch final source order
+        let updated_source_order: Order = sqlx::query_as(
+            r#"SELECT id, tenant_id, branch_id, table_id, order_number, status as "status: _", customer_name, customer_id, cashier_name, guest_id, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at FROM orders WHERE id = $1"#
+        )
+        .bind(source_order_id)
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // Re-fetch final target order
+        let updated_target_order: Order = sqlx::query_as(
+            r#"SELECT id, tenant_id, branch_id, table_id, order_number, status as "status: _", customer_name, customer_id, cashier_name, guest_id, subtotal, tax_amount, discount_amount, total, note, created_by, created_at, updated_at, completed_at FROM orders WHERE id = $1"#
+        )
+        .bind(target_order_id)
+        .fetch_one(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok((updated_source_order, updated_target_order))
     }
 }
 

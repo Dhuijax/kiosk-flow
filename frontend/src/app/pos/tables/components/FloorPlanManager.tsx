@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { TableService } from '@/gen/table_connect';
-import { FloorPlan, Table } from '@/gen/table_pb';
+import { FloorPlan, Table, TableStatus } from '@/gen/table_pb';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { TableMapCanvas } from './TableMapCanvas';
+import { TableDetailsModal } from './TableDetailsModal';
 import { Map as MapIcon, Edit3, Save, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -18,6 +19,7 @@ export default function FloorPlanManager() {
   const [tables, setTables] = useState<Table[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [activeModalTable, setActiveModalTable] = useState<Table | null>(null);
 
   const fetchFloorPlans = useCallback(async () => {
     if (!tenantId) return;
@@ -93,7 +95,11 @@ export default function FloorPlanManager() {
   };
 
   const handleTableClick = (table: Table) => {
-    router.push(`/pos/order?tableId=${table.id}`);
+    if (table.status === TableStatus.OCCUPIED) {
+      setActiveModalTable(table);
+    } else {
+      router.push(`/pos/order?tableId=${table.id}`);
+    }
   };
 
   return (
@@ -180,6 +186,14 @@ export default function FloorPlanManager() {
           onTableClick={handleTableClick}
         />
       </div>
+
+      {activeModalTable && (
+        <TableDetailsModal
+          table={activeModalTable}
+          onClose={() => setActiveModalTable(null)}
+          onRefresh={fetchTables}
+        />
+      )}
     </div>
   );
 }

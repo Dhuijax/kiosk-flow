@@ -14,6 +14,7 @@ use proto_gen::order::{
     ListOrdersRequest, ListOrdersResponse, Order as ProtoOrder, OrderItem as ProtoOrderItem,
     OrderItemStatus as ProtoOrderItemStatus, OrderItemTopping as ProtoOrderItemTopping,
     OrderResponse, OrderStatus as ProtoOrderStatus, StreamOrdersRequest, UpdateOrderStatusRequest,
+    MergeOrdersRequest, SplitOrderItemsRequest, SplitOrderItemsResponse,
 };
 use redis::aio::ConnectionManager;
 use redis::AsyncCommands;
@@ -453,6 +454,104 @@ impl OrderService for OrderServiceImpl {
         Ok(Response::new(
             Box::pin(output_stream) as Self::StreamOrdersStream
         ))
+    }
+
+    async fn merge_orders(
+        &self,
+        request: Request<MergeOrdersRequest>,
+    ) -> Result<Response<OrderResponse>, Status> {
+        let (tenant_id, _) = self.get_context(&request)?;
+        let req = request.into_inner();
+
+        let source_uuid = Uuid::parse_str(&req.source_order_id)
+            .map_err(|_| Status::invalid_argument("Invalid source_order_id"))?;
+        let target_uuid = Uuid::parse_str(&req.target_order_id)
+            .map_err(|_| Status::invalid_argument("Invalid target_order_id"))?;
+
+        let merged = self
+            .order_repo
+            .merge_orders(&tenant_id, &source_uuid, &target_uuid)
+            .await
+            .map_err(|e| Status::internal(format!("Merge failed: {}", e)))?;
+
+        // Re-fetch the full order to get all items and toppings
+        let full_order = self
+            .order_repo
+            .find_by_id(&tenant_id, &merged.id)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?
+            .ok_or_else(|| Status::internal("Merged order not found after merge"))?;
+
+        // Notify client updates
+        let branch_id = merged.branch_id;
+        self.notify_order_update(tenant_id, branch_id, merged.id, DomainOrderStatus::Draft)
+            .await;
+        self.notify_order_update(tenant_id, branch_id, source_uuid, DomainOrderStatus::Cancelled)
+            .await;
+
+        Ok(Response::new(OrderResponse {
+            order: Some(map_domain_to_proto(full_order.0, full_order.1)),
+        }))
+    }
+
+    async fn split_order_items(
+        &self,
+        request: Request<SplitOrderItemsRequest>,
+    ) -> Result<Response<SplitOrderItemsResponse>, Status> {
+        let (tenant_id, _) = self.get_context(&request)?;
+        let req = request.into_inner();
+
+        let source_uuid = Uuid::parse_str(&req.source_order_id)
+            .map_err(|_| Status::invalid_argument("Invalid source_order_id"))?;
+
+        let target_table_uuid = if !req.target_table_id.is_empty() {
+            Some(
+                Uuid::parse_str(&req.target_table_id)
+                    .map_err(|_| Status::invalid_argument("Invalid target_table_id"))?,
+            )
+        } else {
+            None
+        };
+
+        let mut items_to_split = Vec::new();
+        for item_info in req.items {
+            let item_uuid = Uuid::parse_str(&item_info.order_item_id)
+                .map_err(|_| Status::invalid_argument("Invalid order_item_id"))?;
+            items_to_split.push((item_uuid, item_info.quantity));
+        }
+
+        let (src, tgt) = self
+            .order_repo
+            .split_order_items(&tenant_id, &source_uuid, target_table_uuid, &items_to_split)
+            .await
+            .map_err(|e| Status::internal(format!("Split failed: {}", e)))?;
+
+        // Re-fetch full source and target orders
+        let full_src = self
+            .order_repo
+            .find_by_id(&tenant_id, &src.id)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?
+            .ok_or_else(|| Status::internal("Source order not found after split"))?;
+
+        let full_tgt = self
+            .order_repo
+            .find_by_id(&tenant_id, &tgt.id)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?
+            .ok_or_else(|| Status::internal("Target order not found after split"))?;
+
+        // Notify client updates
+        let branch_id = src.branch_id;
+        self.notify_order_update(tenant_id, branch_id, src.id, DomainOrderStatus::Draft)
+            .await;
+        self.notify_order_update(tenant_id, branch_id, tgt.id, DomainOrderStatus::Draft)
+            .await;
+
+        Ok(Response::new(SplitOrderItemsResponse {
+            source_order: Some(map_domain_to_proto(full_src.0, full_src.1)),
+            target_order: Some(map_domain_to_proto(full_tgt.0, full_tgt.1)),
+        }))
     }
 }
 

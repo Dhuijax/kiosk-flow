@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CreateFloorPlanRequest, CreateTablesRequest, CreateTablesResponse, DeleteFloorPlanRequest, DeleteTableRequest, FloorPlan, ListFloorPlansRequest, ListFloorPlansResponse, ListTablesRequest, ListTablesResponse, Table, UpdateFloorPlanRequest, UpdateTableRequest, UpdateTableStatusRequest } from "./table_pb";
+import { CreateFloorPlanRequest, CreateTablesRequest, CreateTablesResponse, DeleteFloorPlanRequest, DeleteTableRequest, FloorPlan, ListFloorPlansRequest, ListFloorPlansResponse, ListTablesRequest, ListTablesResponse, Table, TransferTableRequest, TransferTableResponse, UpdateFloorPlanRequest, UpdateTableRequest, UpdateTableStatusRequest } from "./table_pb";
 import { Empty, MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -95,6 +95,15 @@ export const TableService = {
       name: "UpdateTableStatus",
       I: UpdateTableStatusRequest,
       O: Table,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc table.TableService.TransferTable
+     */
+    transferTable: {
+      name: "TransferTable",
+      I: TransferTableRequest,
+      O: TransferTableResponse,
       kind: MethodKind.Unary,
     },
   }

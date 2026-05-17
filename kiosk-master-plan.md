@@ -546,3 +546,5 @@ kiosk-flow/
 | S32 | `[x]` Completed | 2026-05-16 |
 | S33 | `[x]` Completed | 2026-05-16 |
 | S34 | `[x]` Completed | 2026-05-17 |
+| S35 | `[x]` Conversational AI Simulator (Landing Page) | 2026-05-17 |
+| S36 | `[x]` Loyalty & Combo Engine (POS Checkout) | 2026-05-17 |

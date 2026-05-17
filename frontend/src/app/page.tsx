@@ -428,10 +428,10 @@ export default function LandingPage() {
       <section className="py-24 px-8 bg-surface/50 border-t border-b border-foreground/5 relative">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-            <span className="px-4 py-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-black uppercase tracking-widest rounded-full">
+            <div className="inline-block px-4 py-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-black uppercase tracking-widest rounded-full mb-2">
               Tối ưu hóa Lợi nhuận
-            </span>
-            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic">
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic leading-tight">
               Công cụ tính <span className="text-interaction">Hiệu quả đầu tư (ROI)</span>
             </h2>
             <p className="font-bold opacity-75">
@@ -555,10 +555,10 @@ export default function LandingPage() {
       <section className="py-24 px-8 bg-background relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-            <span className="px-4 py-1.5 bg-interaction/10 border border-interaction/20 text-interaction text-xs font-black uppercase tracking-widest rounded-full">
+            <div className="inline-block px-4 py-1.5 bg-interaction/10 border border-interaction/20 text-interaction text-xs font-black uppercase tracking-widest rounded-full mb-2">
               Trải nghiệm thực tế
-            </span>
-            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic">
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic leading-tight">
               Bảng điều khiển <span className="text-primary">Sandbox Playground</span>
             </h2>
             <p className="font-bold opacity-75">

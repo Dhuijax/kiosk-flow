@@ -16,12 +16,24 @@ interface OrderSummaryProps {
 }
 
 export default function OrderSummary({ onCheckout, selectedCustomer, onCustomerSelect }: OrderSummaryProps) {
-  const { items, removeItem, updateQuantity, subtotal, total, tax } = useOrderCart();
+  const { items, removeItem, updateQuantity, subtotal } = useOrderCart();
   const [isListening, setIsListening] = React.useState(false);
 
   const formatCurrency = (value: number) => {
     return formatVND(value);
   };
+
+  // Loyalty & Combo Discount logic
+  const hasPastry = items.some(i => i.name.toLowerCase().includes('bánh') || i.name.toLowerCase().includes('croissant') || i.name.toLowerCase().includes('muffin') || i.name.toLowerCase().includes('cookie') || i.name.toLowerCase().includes('bánh sừng bò'));
+  const hasBeverage = items.some(i => i.name.toLowerCase().includes('trà') || i.name.toLowerCase().includes('coffee') || i.name.toLowerCase().includes('latte') || i.name.toLowerCase().includes('ly') || i.name.toLowerCase().includes('sữa') || i.name.toLowerCase().includes('matcha'));
+  const hasCombo = hasPastry && hasBeverage;
+
+  const comboDiscount = hasCombo ? subtotal * 0.15 : 0;
+  const memberDiscount = selectedCustomer ? subtotal * 0.05 : 0;
+  const totalDiscount = comboDiscount + memberDiscount;
+  
+  const finalTax = (subtotal - totalDiscount) * 0.1;
+  const finalTotal = subtotal - totalDiscount + finalTax;
 
   return (
     <div aria-label="Tóm tắt đơn hàng" className="w-[480px] bg-surface flex flex-col hidden lg:flex h-full border-l border-foreground/10 relative">
@@ -82,6 +94,24 @@ export default function OrderSummary({ onCheckout, selectedCustomer, onCustomerS
           selectedCustomer={selectedCustomer}
           onSelect={onCustomerSelect}
         />
+        
+        {/* Loyalty details */}
+        {selectedCustomer && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 bg-primary/10 border border-primary/20 rounded-2xl p-4 flex items-center justify-between text-xs font-black uppercase tracking-tighter"
+          >
+            <div className="space-y-1 text-left">
+              <p className="text-primary">Hạng: VÀNG (Gold Member)</p>
+              <p className="opacity-65">Tích lũy: {selectedCustomer.points} Điểm</p>
+            </div>
+            <div className="text-right">
+              <p className="text-green-600 font-black">+ {Math.round(finalTotal / 1000)} ĐIỂM</p>
+              <p className="text-[10px] opacity-40">Tích lũy từ đơn này</p>
+            </div>
+          </motion.div>
+        )}
       </div>
       
       {/* Items List */}
@@ -105,6 +135,37 @@ export default function OrderSummary({ onCheckout, selectedCustomer, onCustomerS
             </motion.div>
           ) : (
             <div className="space-y-6">
+              {/* Combo Alerts */}
+              {hasCombo ? (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="p-4 bg-green-50 border border-green-200/50 rounded-2xl flex items-center gap-3 text-left"
+                >
+                  <Sparkles className="w-5 h-5 text-green-600 animate-pulse flex-none" />
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-tighter text-green-700">Đã áp dụng Combo Giảm Giá 15%!</p>
+                    <p className="text-[10px] font-bold text-green-600/70 leading-normal">
+                      Sự kết hợp nước và bánh giúp tiết kiệm {formatCurrency(comboDiscount)}.
+                    </p>
+                  </div>
+                </motion.div>
+              ) : items.length > 0 && !hasPastry && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="p-4 bg-accent/15 border border-accent/30 rounded-2xl flex items-center gap-3 text-left animate-in fade-in"
+                >
+                  <Sparkles className="w-5 h-5 text-primary flex-none animate-bounce" />
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-tighter text-foreground">Gợi ý Combo Ăn Sáng!</p>
+                    <p className="text-[10px] font-bold opacity-60 leading-normal">
+                      Thêm bánh ngọt bất kỳ để nhận ưu đãi giảm 15% tổng hóa đơn.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
               {items.map((item) => (
                 <motion.div
                   key={item.id}
@@ -170,13 +231,28 @@ export default function OrderSummary({ onCheckout, selectedCustomer, onCustomerS
             <span>Tạm tính</span>
             <span className="">{formatCurrency(subtotal)}</span>
           </div>
+
+          {hasCombo && (
+            <div className="flex justify-between text-green-600 font-black uppercase text-sm tracking-tighter">
+              <span>Ưu đãi Combo (15%)</span>
+              <span>- {formatCurrency(comboDiscount)}</span>
+            </div>
+          )}
+          
+          {selectedCustomer && (
+            <div className="flex justify-between text-green-600 font-black uppercase text-sm tracking-tighter">
+              <span>Chiết khấu Thành viên (5%)</span>
+              <span>- {formatCurrency(memberDiscount)}</span>
+            </div>
+          )}
+
           <div className="flex justify-between text-foreground/60 font-black uppercase text-sm tracking-tighter">
             <span>Thuế (10%)</span>
-            <span className="">{formatCurrency(tax)}</span>
+            <span className="">{formatCurrency(finalTax)}</span>
           </div>
           <div className="flex justify-between text-foreground font-black text-4xl pt-6 mt-2 border-t border-foreground/10 uppercase italic tracking-tighter">
             <span>TỔNG</span>
-            <span className="text-interaction">{formatCurrency(total)}</span>
+            <span className="text-interaction">{formatCurrency(finalTotal)}</span>
           </div>
         </div>
         

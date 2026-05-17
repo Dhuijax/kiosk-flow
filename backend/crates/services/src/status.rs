@@ -1,7 +1,5 @@
+use proto_gen::status::{status_service_server::StatusService, Empty, HealthResponse};
 use tonic::{Request, Response, Status};
-use proto_gen::status::{
-    status_service_server::StatusService, HealthResponse, Empty
-};
 
 pub struct StatusServiceImpl {}
 

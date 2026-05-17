@@ -1,6 +1,6 @@
-use uuid::Uuid;
 use bigdecimal::BigDecimal;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProductIngredient {

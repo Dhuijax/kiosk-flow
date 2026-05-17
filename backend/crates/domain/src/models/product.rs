@@ -1,6 +1,6 @@
-use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use sqlx::types::BigDecimal;
+use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct Product {

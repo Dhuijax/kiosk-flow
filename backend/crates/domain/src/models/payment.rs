@@ -1,8 +1,8 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use sqlx::types::BigDecimal;
 use sqlx::FromRow;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
-use sqlx::types::BigDecimal;
 
 #[derive(Debug, Clone, sqlx::Type, Serialize, Deserialize)]
 #[sqlx(type_name = "payment_method", rename_all = "lowercase")]

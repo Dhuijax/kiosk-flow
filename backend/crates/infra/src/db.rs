@@ -2,13 +2,12 @@ use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
 use std::env;
 use std::time::Duration;
-use tracing::{info, error};
+use tracing::{error, info};
 
 pub type DbPool = Pool<Postgres>;
 
 pub async fn create_pool() -> anyhow::Result<DbPool> {
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set in .env");
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env");
 
     info!("Connecting to database...");
 
@@ -29,7 +28,7 @@ pub async fn create_pool() -> anyhow::Result<DbPool> {
 
 pub async fn run_migrations(pool: &DbPool) -> anyhow::Result<()> {
     info!("Running database migrations...");
-    
+
     sqlx::migrate!("../../migrations")
         .run(pool)
         .await

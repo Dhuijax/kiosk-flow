@@ -272,7 +272,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'info' | 'recipe')}
                 className={cn(
                   "px-6 py-4 text-[10px] font-black uppercase italic tracking-[0.2em] flex items-center gap-2 transition-all border-b-2",
                   activeTab === tab.id 

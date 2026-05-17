@@ -1,16 +1,16 @@
-use proto_gen::ingredient::{
-    ingredient_service_server::IngredientService,
-    CreateIngredientRequest, DeleteIngredientRequest, GetIngredientRequest, Ingredient as ProtoIngredient,
-    ListIngredientsRequest, ListIngredientsResponse, UpdateIngredientRequest,
-};
+use bigdecimal::BigDecimal;
 use domain::models::ingredient::Ingredient as DomainIngredient;
 use infra::repository::IngredientRepository;
-use std::sync::Arc;
+use proto_gen::common::{Money, PaginationResponse, SuccessResponse};
+use proto_gen::ingredient::{
+    ingredient_service_server::IngredientService, CreateIngredientRequest, DeleteIngredientRequest,
+    GetIngredientRequest, Ingredient as ProtoIngredient, ListIngredientsRequest,
+    ListIngredientsResponse, UpdateIngredientRequest,
+};
 use std::str::FromStr;
+use std::sync::Arc;
 use tonic::{Request, Response, Status};
 use uuid::Uuid;
-use bigdecimal::BigDecimal;
-use proto_gen::common::{Money, SuccessResponse, PaginationResponse};
 
 pub struct IngredientServiceImpl {
     repo: Arc<IngredientRepository>,
@@ -176,7 +176,8 @@ impl IngredientService for IngredientServiceImpl {
         .map_err(|_| Status::invalid_argument("Invalid Tenant ID format"))?;
 
         let req = request.into_inner();
-        let id = Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid ID format"))?;
+        let id =
+            Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid ID format"))?;
 
         let cost_price = if let Some(_) = req.cost_price {
             Some(self.from_money_proto(req.cost_price))
@@ -186,7 +187,14 @@ impl IngredientService for IngredientServiceImpl {
 
         let updated = self
             .repo
-            .update(&tenant_id, &id, req.name, req.unit, cost_price, req.is_active)
+            .update(
+                &tenant_id,
+                &id,
+                req.name,
+                req.unit,
+                cost_price,
+                req.is_active,
+            )
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 

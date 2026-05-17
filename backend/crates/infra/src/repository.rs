@@ -1,18 +1,18 @@
-use sqlx::{PgPool, Postgres, Transaction};
-use domain::models::user::{User, UserRole};
+use anyhow::Result;
+use bigdecimal::BigDecimal;
+use chrono::{DateTime, Utc};
 use domain::models::category::Category;
-use domain::models::product::{Product, Topping};
-use domain::models::table::{FloorPlan, Table, TableStatus};
-use domain::models::order::{Order, OrderItem, OrderItemTopping, OrderStatus};
-use domain::models::payment::Payment;
-use domain::models::inventory::{Inventory, InventoryTransaction, InventoryTransactionType};
-use domain::models::tenant::{Tenant, TenantSettings, Branch};
 use domain::models::customer::Customer;
 use domain::models::ingredient::Ingredient;
-use anyhow::Result;
+use domain::models::inventory::{Inventory, InventoryTransaction, InventoryTransactionType};
+use domain::models::order::{Order, OrderItem, OrderItemTopping, OrderStatus};
+use domain::models::payment::Payment;
+use domain::models::product::{Product, Topping};
+use domain::models::table::{FloorPlan, Table, TableStatus};
+use domain::models::tenant::{Branch, Tenant, TenantSettings};
+use domain::models::user::{User, UserRole};
+use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
-use bigdecimal::BigDecimal;
 
 pub struct ReportRepository {
     pool: PgPool,
@@ -52,7 +52,7 @@ impl ReportRepository {
               AND paid_at >= $2 
               AND paid_at <= $3
               AND status = 'completed'
-            "#
+            "#,
         )
         .bind(branch_id)
         .bind(start_date)
@@ -91,7 +91,7 @@ impl ReportRepository {
             GROUP BY p.id, p.name
             ORDER BY quantity_sold DESC
             LIMIT $4
-            "#
+            "#,
         )
         .bind(branch_id)
         .bind(start_date)
@@ -120,9 +120,8 @@ impl ReportRepository {
             _ => "day",
         };
 
-        let rows: Vec<(String, BigDecimal, i64)> = sqlx::query_as(
-            &format!(
-                r#"
+        let rows: Vec<(String, BigDecimal, i64)> = sqlx::query_as(&format!(
+            r#"
                 SELECT 
                     TO_CHAR(DATE_TRUNC('{}', paid_at), 'YYYY-MM-DD') as period_label,
                     SUM(amount) as revenue,
@@ -135,9 +134,8 @@ impl ReportRepository {
                 GROUP BY 1
                 ORDER BY 1 ASC
                 "#,
-                date_trunc
-            )
-        )
+            date_trunc
+        ))
         .bind(branch_id)
         .bind(start_date)
         .bind(end_date)
@@ -215,7 +213,7 @@ impl UserRepository {
 
     pub async fn find_by_id(&self, tenant_id: &Uuid, id: &Uuid) -> Result<Option<User>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
-        
+
         let user = sqlx::query_as!(
             User,
             r#"
@@ -251,7 +249,11 @@ impl UserRepository {
         Ok(user)
     }
 
-    pub async fn list_by_tenant(&self, tenant_id: &Uuid, branch_id: Option<Uuid>) -> Result<Vec<User>> {
+    pub async fn list_by_tenant(
+        &self,
+        tenant_id: &Uuid,
+        branch_id: Option<Uuid>,
+    ) -> Result<Vec<User>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let users = if let Some(b_id) = branch_id {
@@ -308,7 +310,14 @@ impl UserRepository {
         Ok(created_user)
     }
 
-    pub async fn update(&self, tenant_id: &Uuid, user_id: &Uuid, full_name: Option<String>, role: Option<UserRole>, is_active: Option<bool>) -> Result<User> {
+    pub async fn update(
+        &self,
+        tenant_id: &Uuid,
+        user_id: &Uuid,
+        full_name: Option<String>,
+        role: Option<UserRole>,
+        is_active: Option<bool>,
+    ) -> Result<User> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         // Dynamic update using COALESCE patterns for simplicity in query_as!
@@ -425,13 +434,19 @@ impl CategoryRepository {
         Ok(categories)
     }
 
-    pub async fn update(&self, tenant_id: &Uuid, id: &Uuid, name: Option<String>, parent_id: Option<Option<Uuid>>) -> Result<Category> {
+    pub async fn update(
+        &self,
+        tenant_id: &Uuid,
+        id: &Uuid,
+        name: Option<String>,
+        parent_id: Option<Option<Uuid>>,
+    ) -> Result<Category> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         // Note: parent_id logic where None means no change, Some(None) means set to NULL, Some(Some(u)) means set to u
         // In SQLx with COALESCE it might be tricky. We can build dynamic or just execute two queries.
         // For simplicity, we just do a select then update, OR we can execute direct query.
-        
+
         let existing = sqlx::query_as!(
             Category,
             r#"
@@ -439,10 +454,12 @@ impl CategoryRepository {
             FROM categories WHERE id = $1
             "#,
             id
-        ).fetch_one(&mut *tx).await?;
+        )
+        .fetch_one(&mut *tx)
+        .await?;
 
         let new_name = name.unwrap_or(existing.name);
-        
+
         let new_parent_id = match parent_id {
             Some(pid) => pid,
             None => existing.parent_id,
@@ -558,7 +575,12 @@ impl ProductRepository {
         Ok(product)
     }
 
-    pub async fn list_by_tenant(&self, tenant_id: &Uuid, category_id: Option<Uuid>, search_query: Option<String>) -> Result<Vec<Product>> {
+    pub async fn list_by_tenant(
+        &self,
+        tenant_id: &Uuid,
+        category_id: Option<Uuid>,
+        search_query: Option<String>,
+    ) -> Result<Vec<Product>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let search_pattern = search_query.map(|s| format!("%{}%", s));
@@ -583,7 +605,13 @@ impl ProductRepository {
         Ok(products)
     }
 
-    pub async fn update(&self, tenant_id: &Uuid, id: &Uuid, product: &Product, topping_ids: Option<&[Uuid]>) -> Result<Product> {
+    pub async fn update(
+        &self,
+        tenant_id: &Uuid,
+        id: &Uuid,
+        product: &Product,
+        topping_ids: Option<&[Uuid]>,
+    ) -> Result<Product> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let updated = sqlx::query_as!(
@@ -616,7 +644,7 @@ impl ProductRepository {
             sqlx::query!("DELETE FROM product_toppings WHERE product_id = $1", id)
                 .execute(&mut *tx)
                 .await?;
-            
+
             // Insert new
             for tid in tids {
                 sqlx::query!(
@@ -754,7 +782,9 @@ impl TableRepository {
     }
 
     pub async fn create_batch(&self, tables: &[Table]) -> Result<Vec<Table>> {
-        if tables.is_empty() { return Ok(vec![]); }
+        if tables.is_empty() {
+            return Ok(vec![]);
+        }
         let tenant_id = tables[0].tenant_id;
         let mut tx = self.tx_with_tenant(&tenant_id).await?;
 
@@ -805,7 +835,11 @@ impl TableRepository {
         Ok(table)
     }
 
-    pub async fn list_by_floor_plan(&self, tenant_id: &Uuid, floor_plan_id: &Uuid) -> Result<Vec<Table>> {
+    pub async fn list_by_floor_plan(
+        &self,
+        tenant_id: &Uuid,
+        floor_plan_id: &Uuid,
+    ) -> Result<Vec<Table>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let tables = sqlx::query_as!(
@@ -825,7 +859,15 @@ impl TableRepository {
         Ok(tables)
     }
 
-    pub async fn update(&self, tenant_id: &Uuid, id: &Uuid, name: Option<String>, capacity: Option<i32>, pos_x: Option<i32>, pos_y: Option<i32>) -> Result<Table> {
+    pub async fn update(
+        &self,
+        tenant_id: &Uuid,
+        id: &Uuid,
+        name: Option<String>,
+        capacity: Option<i32>,
+        pos_x: Option<i32>,
+        pos_y: Option<i32>,
+    ) -> Result<Table> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let updated = sqlx::query_as!(
@@ -854,7 +896,12 @@ impl TableRepository {
         Ok(updated)
     }
 
-    pub async fn update_status(&self, tenant_id: &Uuid, id: &Uuid, status: TableStatus) -> Result<Table> {
+    pub async fn update_status(
+        &self,
+        tenant_id: &Uuid,
+        id: &Uuid,
+        status: TableStatus,
+    ) -> Result<Table> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let updated = sqlx::query_as!(
@@ -926,7 +973,11 @@ impl FloorPlanRepository {
         Ok(created)
     }
 
-    pub async fn list_by_branch(&self, tenant_id: &Uuid, branch_id: &Uuid) -> Result<Vec<FloorPlan>> {
+    pub async fn list_by_branch(
+        &self,
+        tenant_id: &Uuid,
+        branch_id: &Uuid,
+    ) -> Result<Vec<FloorPlan>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let plans = sqlx::query_as!(
@@ -946,7 +997,13 @@ impl FloorPlanRepository {
         Ok(plans)
     }
 
-    pub async fn update(&self, tenant_id: &Uuid, id: &Uuid, name: Option<String>, layout_data: Option<serde_json::Value>) -> Result<FloorPlan> {
+    pub async fn update(
+        &self,
+        tenant_id: &Uuid,
+        id: &Uuid,
+        name: Option<String>,
+        layout_data: Option<serde_json::Value>,
+    ) -> Result<FloorPlan> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let updated = sqlx::query_as!(
@@ -1000,9 +1057,13 @@ impl OrderRepository {
     }
 
     /// Generate daily order number: ORD-YYYYMMDD-XXX
-    async fn next_order_number(&self, tx: &mut Transaction<'_, Postgres>, branch_id: &Uuid) -> Result<String> {
+    async fn next_order_number(
+        &self,
+        tx: &mut Transaction<'_, Postgres>,
+        branch_id: &Uuid,
+    ) -> Result<String> {
         let today = chrono::Utc::now().date_naive();
-        
+
         // Using functional query to bypass compile-time check for missing tables
         let row: (i32,) = sqlx::query_as(
             r#"
@@ -1011,7 +1072,7 @@ impl OrderRepository {
             ON CONFLICT (branch_id, seq_date)
             DO UPDATE SET last_value = daily_sequences.last_value + 1
             RETURNING last_value
-            "#
+            "#,
         )
         .bind(branch_id)
         .bind(today)
@@ -1022,7 +1083,11 @@ impl OrderRepository {
         Ok(format!("ORD-{}-{:03}", date_str, row.0))
     }
 
-    pub async fn create(&self, order: &Order, items: &[(OrderItem, Vec<OrderItemTopping>)]) -> Result<Order> {
+    pub async fn create(
+        &self,
+        order: &Order,
+        items: &[(OrderItem, Vec<OrderItemTopping>)],
+    ) -> Result<Order> {
         let mut tx = self.tx_with_tenant(&order.tenant_id).await?;
 
         // 1. Generate Order Number
@@ -1099,7 +1164,11 @@ impl OrderRepository {
         Ok(created_order)
     }
 
-    pub async fn find_by_id(&self, tenant_id: &Uuid, id: &Uuid) -> Result<Option<(Order, Vec<(OrderItem, Vec<OrderItemTopping>)>)>> {
+    pub async fn find_by_id(
+        &self,
+        tenant_id: &Uuid,
+        id: &Uuid,
+    ) -> Result<Option<(Order, Vec<(OrderItem, Vec<OrderItemTopping>)>)>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let order: Option<Order> = sqlx::query_as(
@@ -1129,7 +1198,7 @@ impl OrderRepository {
                     r#"
                     SELECT id, order_item_id, tenant_id, topping_id, name, price
                     FROM order_item_toppings WHERE order_item_id = $1
-                    "#
+                    "#,
                 )
                 .bind(item.id)
                 .fetch_all(&mut *tx)
@@ -1145,9 +1214,14 @@ impl OrderRepository {
         }
     }
 
-    pub async fn update_status(&self, tenant_id: &Uuid, id: &Uuid, status: OrderStatus) -> Result<Order> {
+    pub async fn update_status(
+        &self,
+        tenant_id: &Uuid,
+        id: &Uuid,
+        status: OrderStatus,
+    ) -> Result<Order> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
-        
+
         let completed_at = if matches!(status, OrderStatus::Completed) {
             Some(chrono::Utc::now())
         } else {
@@ -1172,7 +1246,14 @@ impl OrderRepository {
         Ok(updated)
     }
 
-    pub async fn list_by_branch(&self, tenant_id: &Uuid, branch_id: &Uuid, status: Option<OrderStatus>, limit: i64, offset: i64) -> Result<Vec<Order>> {
+    pub async fn list_by_branch(
+        &self,
+        tenant_id: &Uuid,
+        branch_id: &Uuid,
+        status: Option<OrderStatus>,
+        limit: i64,
+        offset: i64,
+    ) -> Result<Vec<Order>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let orders: Vec<Order> = if let Some(s) = status {
@@ -1212,7 +1293,12 @@ impl OrderRepository {
         Ok(orders)
     }
 
-    pub async fn list_by_customer(&self, tenant_id: &Uuid, customer_id: &Uuid, start_date: DateTime<Utc>) -> Result<Vec<Order>> {
+    pub async fn list_by_customer(
+        &self,
+        tenant_id: &Uuid,
+        customer_id: &Uuid,
+        start_date: DateTime<Utc>,
+    ) -> Result<Vec<Order>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let orders: Vec<Order> = sqlx::query_as(
@@ -1232,7 +1318,12 @@ impl OrderRepository {
         Ok(orders)
     }
 
-    pub async fn update_cashier_name(&self, tenant_id: &Uuid, id: &Uuid, cashier_name: &str) -> Result<()> {
+    pub async fn update_cashier_name(
+        &self,
+        tenant_id: &Uuid,
+        id: &Uuid,
+        cashier_name: &str,
+    ) -> Result<()> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         sqlx::query!(
@@ -1266,7 +1357,11 @@ impl PaymentRepository {
         Ok(tx)
     }
 
-    pub async fn create_with_order_status(&self, payment: &Payment, next_order_status: OrderStatus) -> Result<Payment> {
+    pub async fn create_with_order_status(
+        &self,
+        payment: &Payment,
+        next_order_status: OrderStatus,
+    ) -> Result<Payment> {
         let mut tx = self.tx_with_tenant(&payment.tenant_id).await?;
 
         // 1. Create Payment
@@ -1293,13 +1388,11 @@ impl PaymentRepository {
         .await?;
 
         // 2. Update Order Status
-        sqlx::query(
-            "UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2"
-        )
-        .bind(next_order_status)
-        .bind(payment.order_id)
-        .execute(&mut *tx)
-        .await?;
+        sqlx::query("UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2")
+            .bind(next_order_status)
+            .bind(payment.order_id)
+            .execute(&mut *tx)
+            .await?;
 
         tx.commit().await?;
         Ok(created)
@@ -1351,7 +1444,11 @@ impl PaymentRepository {
         Ok(payment)
     }
 
-    pub async fn find_by_order_id(&self, tenant_id: &Uuid, order_id: &Uuid) -> Result<Option<Payment>> {
+    pub async fn find_by_order_id(
+        &self,
+        tenant_id: &Uuid,
+        order_id: &Uuid,
+    ) -> Result<Option<Payment>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let payment: Option<Payment> = sqlx::query_as(
@@ -1368,7 +1465,13 @@ impl PaymentRepository {
         Ok(payment)
     }
 
-    pub async fn list_by_branch(&self, tenant_id: &Uuid, branch_id: &Uuid, limit: i64, offset: i64) -> Result<Vec<Payment>> {
+    pub async fn list_by_branch(
+        &self,
+        tenant_id: &Uuid,
+        branch_id: &Uuid,
+        limit: i64,
+        offset: i64,
+    ) -> Result<Vec<Payment>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let payments: Vec<Payment> = sqlx::query_as(
@@ -1391,7 +1494,6 @@ impl PaymentRepository {
     }
 }
 
-
 pub struct InventoryRepository {
     pool: PgPool,
 }
@@ -1410,7 +1512,13 @@ impl InventoryRepository {
         Ok(tx)
     }
 
-    pub async fn get_stock(&self, tenant_id: &Uuid, branch_id: &Uuid, product_id: Option<Uuid>, ingredient_id: Option<Uuid>) -> Result<Option<Inventory>> {
+    pub async fn get_stock(
+        &self,
+        tenant_id: &Uuid,
+        branch_id: &Uuid,
+        product_id: Option<Uuid>,
+        ingredient_id: Option<Uuid>,
+    ) -> Result<Option<Inventory>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let inventory = sqlx::query_as!(
@@ -1511,7 +1619,12 @@ impl InventoryRepository {
         Ok(inventory)
     }
 
-    pub async fn list_stock(&self, tenant_id: &Uuid, branch_id: &Uuid, low_stock_only: bool) -> Result<Vec<Inventory>> {
+    pub async fn list_stock(
+        &self,
+        tenant_id: &Uuid,
+        branch_id: &Uuid,
+        low_stock_only: bool,
+    ) -> Result<Vec<Inventory>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let items = if low_stock_only {
@@ -1546,7 +1659,13 @@ impl InventoryRepository {
         Ok(items)
     }
 
-    pub async fn get_history(&self, tenant_id: &Uuid, branch_id: &Uuid, product_id: Option<Uuid>, ingredient_id: Option<Uuid>) -> Result<Vec<InventoryTransaction>> {
+    pub async fn get_history(
+        &self,
+        tenant_id: &Uuid,
+        branch_id: &Uuid,
+        product_id: Option<Uuid>,
+        ingredient_id: Option<Uuid>,
+    ) -> Result<Vec<InventoryTransaction>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let history = sqlx::query_as!(
@@ -1569,7 +1688,8 @@ impl InventoryRepository {
         tx.commit().await?;
         Ok(history)
     }
-}pub struct CustomerRepository {
+}
+pub struct CustomerRepository {
     pool: PgPool,
 }
 
@@ -1682,7 +1802,12 @@ impl CustomerRepository {
         Ok(customers)
     }
 
-    pub async fn update_points(&self, tenant_id: &Uuid, id: &Uuid, points_to_add: i32) -> Result<Customer> {
+    pub async fn update_points(
+        &self,
+        tenant_id: &Uuid,
+        id: &Uuid,
+        points_to_add: i32,
+    ) -> Result<Customer> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let updated = sqlx::query_as!(
@@ -1703,7 +1828,13 @@ impl CustomerRepository {
         Ok(updated)
     }
 
-    pub async fn update(&self, tenant_id: &Uuid, id: &Uuid, name: Option<String>, phone: Option<String>) -> Result<Customer> {
+    pub async fn update(
+        &self,
+        tenant_id: &Uuid,
+        id: &Uuid,
+        name: Option<String>,
+        phone: Option<String>,
+    ) -> Result<Customer> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let updated = sqlx::query_as!(
@@ -1765,7 +1896,7 @@ impl StoreRepository {
 
     pub async fn get_main_branch(&self, tenant_id: &Uuid) -> Result<Branch> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
-        
+
         let branch = sqlx::query_as!(
             Branch,
             r#"
@@ -1798,7 +1929,13 @@ impl StoreRepository {
         Ok(branch)
     }
 
-    pub async fn update_main_branch(&self, tenant_id: &Uuid, name: String, address: String, phone: String) -> Result<Branch> {
+    pub async fn update_main_branch(
+        &self,
+        tenant_id: &Uuid,
+        name: String,
+        address: String,
+        phone: String,
+    ) -> Result<Branch> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let updated = sqlx::query_as!(
@@ -1856,7 +1993,16 @@ impl StoreRepository {
         Ok(created)
     }
 
-    pub async fn update_branch(&self, tenant_id: &Uuid, id: &Uuid, name: Option<String>, address: Option<String>, phone: Option<String>, is_main: Option<bool>, is_active: Option<bool>) -> Result<Branch> {
+    pub async fn update_branch(
+        &self,
+        tenant_id: &Uuid,
+        id: &Uuid,
+        name: Option<String>,
+        address: Option<String>,
+        phone: Option<String>,
+        is_main: Option<bool>,
+        is_active: Option<bool>,
+    ) -> Result<Branch> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         if let Some(true) = is_main {
@@ -1952,7 +2098,6 @@ impl StoreRepository {
         Ok(branch)
     }
 
-
     pub async fn get_settings(&self, tenant_id: &Uuid) -> Result<TenantSettings> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
@@ -1987,7 +2132,14 @@ impl StoreRepository {
         Ok(settings)
     }
 
-    pub async fn update_settings(&self, tenant_id: &Uuid, theme_color: String, kiosk_timeout: i32, language: String, currency: String) -> Result<TenantSettings> {
+    pub async fn update_settings(
+        &self,
+        tenant_id: &Uuid,
+        theme_color: String,
+        kiosk_timeout: i32,
+        language: String,
+        currency: String,
+    ) -> Result<TenantSettings> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let updated = sqlx::query_as!(
@@ -2073,7 +2225,11 @@ impl IngredientRepository {
         Ok(ingredient)
     }
 
-    pub async fn list_by_tenant(&self, tenant_id: &Uuid, search: Option<String>) -> Result<Vec<Ingredient>> {
+    pub async fn list_by_tenant(
+        &self,
+        tenant_id: &Uuid,
+        search: Option<String>,
+    ) -> Result<Vec<Ingredient>> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let search_pattern = format!("%{}%", search.unwrap_or_default());
@@ -2094,7 +2250,15 @@ impl IngredientRepository {
         Ok(ingredients)
     }
 
-    pub async fn update(&self, tenant_id: &Uuid, id: &Uuid, name: Option<String>, unit: Option<String>, cost_price: Option<BigDecimal>, is_active: Option<bool>) -> Result<Ingredient> {
+    pub async fn update(
+        &self,
+        tenant_id: &Uuid,
+        id: &Uuid,
+        name: Option<String>,
+        unit: Option<String>,
+        cost_price: Option<BigDecimal>,
+        is_active: Option<bool>,
+    ) -> Result<Ingredient> {
         let mut tx = self.tx_with_tenant(tenant_id).await?;
 
         let updated = sqlx::query_as!(

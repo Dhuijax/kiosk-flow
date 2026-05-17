@@ -1,7 +1,7 @@
-use domain::models::procurement::{Supplier, PurchaseOrder, PurchaseOrderItem, StockAlert};
+use domain::models::procurement::{PurchaseOrder, PurchaseOrderItem, StockAlert, Supplier};
+use sqlx::types::BigDecimal;
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
-use sqlx::types::BigDecimal;
 
 pub struct ProcurementRepository {
     pool: PgPool,
@@ -26,7 +26,7 @@ impl ProcurementRepository {
             INSERT INTO suppliers (tenant_id, name, phone, email, address)
             VALUES ($1, $2, $3, $4, $5)
             RETURNING *
-            "#
+            "#,
         )
         .bind(tenant_id)
         .bind(name)
@@ -39,11 +39,15 @@ impl ProcurementRepository {
         Ok(supplier)
     }
 
-    pub async fn get_supplier(&self, tenant_id: Uuid, supplier_id: Uuid) -> Result<Supplier, sqlx::Error> {
+    pub async fn get_supplier(
+        &self,
+        tenant_id: Uuid,
+        supplier_id: Uuid,
+    ) -> Result<Supplier, sqlx::Error> {
         let supplier = sqlx::query_as::<_, Supplier>(
             r#"
             SELECT * FROM suppliers WHERE tenant_id = $1 AND id = $2
-            "#
+            "#,
         )
         .bind(tenant_id)
         .bind(supplier_id)
@@ -53,7 +57,13 @@ impl ProcurementRepository {
         Ok(supplier)
     }
 
-    pub async fn list_suppliers(&self, tenant_id: Uuid, search: Option<&str>, limit: i64, offset: i64) -> Result<Vec<Supplier>, sqlx::Error> {
+    pub async fn list_suppliers(
+        &self,
+        tenant_id: Uuid,
+        search: Option<&str>,
+        limit: i64,
+        offset: i64,
+    ) -> Result<Vec<Supplier>, sqlx::Error> {
         let suppliers = if let Some(search_term) = search {
             let search_pattern = format!("%{}%", search_term);
             sqlx::query_as::<_, Supplier>(
@@ -61,7 +71,7 @@ impl ProcurementRepository {
                 SELECT * FROM suppliers 
                 WHERE tenant_id = $1 AND name ILIKE $2
                 ORDER BY created_at DESC LIMIT $3 OFFSET $4
-                "#
+                "#,
             )
             .bind(tenant_id)
             .bind(search_pattern)
@@ -75,7 +85,7 @@ impl ProcurementRepository {
                 SELECT * FROM suppliers 
                 WHERE tenant_id = $1
                 ORDER BY created_at DESC LIMIT $2 OFFSET $3
-                "#
+                "#,
             )
             .bind(tenant_id)
             .bind(limit)
@@ -106,7 +116,7 @@ impl ProcurementRepository {
                 updated_at = NOW()
             WHERE tenant_id = $1 AND id = $2
             RETURNING *
-            "#
+            "#,
         )
         .bind(tenant_id)
         .bind(supplier_id)
@@ -120,11 +130,15 @@ impl ProcurementRepository {
         Ok(supplier)
     }
 
-    pub async fn delete_supplier(&self, tenant_id: Uuid, supplier_id: Uuid) -> Result<(), sqlx::Error> {
+    pub async fn delete_supplier(
+        &self,
+        tenant_id: Uuid,
+        supplier_id: Uuid,
+    ) -> Result<(), sqlx::Error> {
         sqlx::query(
             r#"
             DELETE FROM suppliers WHERE tenant_id = $1 AND id = $2
-            "#
+            "#,
         )
         .bind(tenant_id)
         .bind(supplier_id)
@@ -191,11 +205,15 @@ impl ProcurementRepository {
         Ok(item)
     }
 
-    pub async fn get_purchase_order(&self, tenant_id: Uuid, po_id: Uuid) -> Result<PurchaseOrder, sqlx::Error> {
+    pub async fn get_purchase_order(
+        &self,
+        tenant_id: Uuid,
+        po_id: Uuid,
+    ) -> Result<PurchaseOrder, sqlx::Error> {
         let po = sqlx::query_as::<_, PurchaseOrder>(
             r#"
             SELECT * FROM purchase_orders WHERE tenant_id = $1 AND id = $2
-            "#
+            "#,
         )
         .bind(tenant_id)
         .bind(po_id)
@@ -205,11 +223,15 @@ impl ProcurementRepository {
         Ok(po)
     }
 
-    pub async fn get_purchase_order_items(&self, tenant_id: Uuid, po_id: Uuid) -> Result<Vec<PurchaseOrderItem>, sqlx::Error> {
+    pub async fn get_purchase_order_items(
+        &self,
+        tenant_id: Uuid,
+        po_id: Uuid,
+    ) -> Result<Vec<PurchaseOrderItem>, sqlx::Error> {
         let items = sqlx::query_as::<_, PurchaseOrderItem>(
             r#"
             SELECT * FROM purchase_order_items WHERE tenant_id = $1 AND purchase_order_id = $2
-            "#
+            "#,
         )
         .bind(tenant_id)
         .bind(po_id)
@@ -219,13 +241,19 @@ impl ProcurementRepository {
         Ok(items)
     }
 
-    pub async fn list_purchase_orders(&self, tenant_id: Uuid, branch_id: Uuid, limit: i64, offset: i64) -> Result<Vec<PurchaseOrder>, sqlx::Error> {
+    pub async fn list_purchase_orders(
+        &self,
+        tenant_id: Uuid,
+        branch_id: Uuid,
+        limit: i64,
+        offset: i64,
+    ) -> Result<Vec<PurchaseOrder>, sqlx::Error> {
         let pos = sqlx::query_as::<_, PurchaseOrder>(
             r#"
             SELECT * FROM purchase_orders 
             WHERE tenant_id = $1 AND branch_id = $2
             ORDER BY created_at DESC LIMIT $3 OFFSET $4
-            "#
+            "#,
         )
         .bind(tenant_id)
         .bind(branch_id)
@@ -250,7 +278,7 @@ impl ProcurementRepository {
             INSERT INTO stock_alerts (tenant_id, branch_id, ingredient_id, message)
             VALUES ($1, $2, $3, $4)
             RETURNING *
-            "#
+            "#,
         )
         .bind(tenant_id)
         .bind(branch_id)
@@ -262,14 +290,21 @@ impl ProcurementRepository {
         Ok(alert)
     }
 
-    pub async fn list_stock_alerts(&self, tenant_id: Uuid, branch_id: Uuid, include_read: bool, limit: i64, offset: i64) -> Result<Vec<StockAlert>, sqlx::Error> {
+    pub async fn list_stock_alerts(
+        &self,
+        tenant_id: Uuid,
+        branch_id: Uuid,
+        include_read: bool,
+        limit: i64,
+        offset: i64,
+    ) -> Result<Vec<StockAlert>, sqlx::Error> {
         let alerts = if include_read {
             sqlx::query_as::<_, StockAlert>(
                 r#"
                 SELECT * FROM stock_alerts 
                 WHERE tenant_id = $1 AND branch_id = $2
                 ORDER BY created_at DESC LIMIT $3 OFFSET $4
-                "#
+                "#,
             )
             .bind(tenant_id)
             .bind(branch_id)
@@ -283,7 +318,7 @@ impl ProcurementRepository {
                 SELECT * FROM stock_alerts 
                 WHERE tenant_id = $1 AND branch_id = $2 AND is_read = false
                 ORDER BY created_at DESC LIMIT $3 OFFSET $4
-                "#
+                "#,
             )
             .bind(tenant_id)
             .bind(branch_id)
@@ -296,11 +331,15 @@ impl ProcurementRepository {
         Ok(alerts)
     }
 
-    pub async fn mark_alert_as_read(&self, tenant_id: Uuid, alert_id: Uuid) -> Result<(), sqlx::Error> {
+    pub async fn mark_alert_as_read(
+        &self,
+        tenant_id: Uuid,
+        alert_id: Uuid,
+    ) -> Result<(), sqlx::Error> {
         sqlx::query(
             r#"
             UPDATE stock_alerts SET is_read = true WHERE tenant_id = $1 AND id = $2
-            "#
+            "#,
         )
         .bind(tenant_id)
         .bind(alert_id)
@@ -314,7 +353,7 @@ impl ProcurementRepository {
         sqlx::query(
             r#"
             DELETE FROM stock_alerts WHERE tenant_id = $1 AND id = $2
-            "#
+            "#,
         )
         .bind(tenant_id)
         .bind(alert_id)
@@ -341,7 +380,7 @@ impl ProcurementRepository {
             VALUES ($1, $2, $3, $4)
             ON CONFLICT (tenant_id, branch_id, ingredient_id) WHERE ingredient_id IS NOT NULL
             DO UPDATE SET quantity = inventory.quantity + EXCLUDED.quantity, updated_at = NOW()
-            "#
+            "#,
         )
         .bind(tenant_id)
         .bind(branch_id)

@@ -1,14 +1,14 @@
+use domain::models::tenant::Branch as DomainBranch;
+use infra::repository::StoreRepository;
+use infra::security::Claims;
+use proto_gen::branch::{
+    branch_service_server::BranchService, Branch, CreateBranchRequest, DeleteBranchRequest,
+    GetBranchRequest, ListBranchesRequest, ListBranchesResponse, UpdateBranchRequest,
+};
+use proto_gen::common::SuccessResponse;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 use uuid::Uuid;
-use proto_gen::branch::{
-    branch_service_server::BranchService,
-    Branch, ListBranchesRequest, ListBranchesResponse, CreateBranchRequest, UpdateBranchRequest, DeleteBranchRequest, GetBranchRequest
-};
-use proto_gen::common::SuccessResponse;
-use infra::repository::StoreRepository;
-use infra::security::Claims;
-use domain::models::tenant::Branch as DomainBranch;
 
 pub struct BranchServiceImpl {
     store_repo: Arc<StoreRepository>,
@@ -24,8 +24,9 @@ impl BranchServiceImpl {
             .extensions()
             .get::<Claims>()
             .ok_or_else(|| Status::unauthenticated("Unauthorized"))?;
-        
-        Uuid::parse_str(&claims.tenant_id).map_err(|_| Status::invalid_argument("Invalid tenant id"))
+
+        Uuid::parse_str(&claims.tenant_id)
+            .map_err(|_| Status::invalid_argument("Invalid tenant id"))
     }
 }
 
@@ -36,21 +37,27 @@ impl BranchService for BranchServiceImpl {
         request: Request<ListBranchesRequest>,
     ) -> Result<Response<ListBranchesResponse>, Status> {
         let tenant_id = self.get_context(&request)?;
-        
-        let branches = self.store_repo.list_branches(&tenant_id).await
+
+        let branches = self
+            .store_repo
+            .list_branches(&tenant_id)
+            .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(ListBranchesResponse {
-            branches: branches.into_iter().map(|b| Branch {
-                id: b.id.to_string(),
-                tenant_id: b.tenant_id.to_string(),
-                name: b.name,
-                address: b.address,
-                phone: b.phone,
-                is_main: b.is_main,
-                is_active: b.is_active,
-                created_at: b.created_at.to_rfc3339(),
-            }).collect(),
+            branches: branches
+                .into_iter()
+                .map(|b| Branch {
+                    id: b.id.to_string(),
+                    tenant_id: b.tenant_id.to_string(),
+                    name: b.name,
+                    address: b.address,
+                    phone: b.phone,
+                    is_main: b.is_main,
+                    is_active: b.is_active,
+                    created_at: b.created_at.to_rfc3339(),
+                })
+                .collect(),
             pagination: None,
         }))
     }
@@ -73,7 +80,10 @@ impl BranchService for BranchServiceImpl {
             created_at: chrono::Utc::now(),
         };
 
-        let created = self.store_repo.create_branch(&branch).await
+        let created = self
+            .store_repo
+            .create_branch(&branch)
+            .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(Branch {
@@ -94,17 +104,22 @@ impl BranchService for BranchServiceImpl {
     ) -> Result<Response<Branch>, Status> {
         let tenant_id = self.get_context(&request)?;
         let req = request.into_inner();
-        let id = Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid branch id"))?;
+        let id =
+            Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid branch id"))?;
 
-        let updated = self.store_repo.update_branch(
-            &tenant_id,
-            &id,
-            req.name,
-            req.address,
-            req.phone,
-            req.is_main,
-            req.is_active,
-        ).await.map_err(|e| Status::internal(e.to_string()))?;
+        let updated = self
+            .store_repo
+            .update_branch(
+                &tenant_id,
+                &id,
+                req.name,
+                req.address,
+                req.phone,
+                req.is_main,
+                req.is_active,
+            )
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(Branch {
             id: updated.id.to_string(),
@@ -124,9 +139,12 @@ impl BranchService for BranchServiceImpl {
     ) -> Result<Response<SuccessResponse>, Status> {
         let tenant_id = self.get_context(&request)?;
         let req = request.into_inner();
-        let id = Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid branch id"))?;
+        let id =
+            Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid branch id"))?;
 
-        self.store_repo.delete_branch(&tenant_id, &id).await
+        self.store_repo
+            .delete_branch(&tenant_id, &id)
+            .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(SuccessResponse {
@@ -141,9 +159,13 @@ impl BranchService for BranchServiceImpl {
     ) -> Result<Response<Branch>, Status> {
         let tenant_id = self.get_context(&request)?;
         let req = request.into_inner();
-        let id = Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid branch id"))?;
+        let id =
+            Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid branch id"))?;
 
-        let branch = self.store_repo.get_branch(&tenant_id, &id).await
+        let branch = self
+            .store_repo
+            .get_branch(&tenant_id, &id)
+            .await
             .map_err(|e| Status::internal(e.to_string()))?
             .ok_or_else(|| Status::not_found("Branch not found"))?;
 

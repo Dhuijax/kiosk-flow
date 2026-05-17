@@ -1,19 +1,21 @@
+use bigdecimal::{BigDecimal, ToPrimitive};
+use chrono::Utc;
+use domain::models::order::OrderStatus as DomainOrderStatus;
+use domain::models::payment::{
+    Payment as DomainPayment, PaymentMethod as DomainPaymentMethod,
+    PaymentStatus as DomainPaymentStatus,
+};
+use infra::repository::{CustomerRepository, OrderRepository, PaymentRepository, UserRepository};
+use infra::security::Claims;
+use proto_gen::common::Money;
+use proto_gen::payment::{
+    payment_service_server::PaymentService, GetPaymentRequest, ListPaymentsRequest,
+    ListPaymentsResponse, Payment as ProtoPayment, PaymentMethod as ProtoPaymentMethod,
+    PaymentResponse, PaymentStatus as ProtoPaymentStatus, ProcessPaymentRequest,
+};
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 use uuid::Uuid;
-use chrono::Utc;
-use bigdecimal::{BigDecimal, ToPrimitive};
-use proto_gen::payment::{
-    payment_service_server::PaymentService,
-    ProcessPaymentRequest, GetPaymentRequest, ListPaymentsRequest,
-    PaymentResponse, ListPaymentsResponse,
-    Payment as ProtoPayment, PaymentMethod as ProtoPaymentMethod, PaymentStatus as ProtoPaymentStatus
-};
-use proto_gen::common::Money;
-use infra::repository::{PaymentRepository, OrderRepository, CustomerRepository, UserRepository};
-use domain::models::payment::{Payment as DomainPayment, PaymentMethod as DomainPaymentMethod, PaymentStatus as DomainPaymentStatus};
-use domain::models::order::OrderStatus as DomainOrderStatus;
-use infra::security::Claims;
 
 pub struct PaymentServiceImpl {
     payment_repo: Arc<PaymentRepository>,
@@ -23,8 +25,18 @@ pub struct PaymentServiceImpl {
 }
 
 impl PaymentServiceImpl {
-    pub fn new(payment_repo: Arc<PaymentRepository>, order_repo: Arc<OrderRepository>, customer_repo: Arc<CustomerRepository>, user_repo: Arc<UserRepository>) -> Self {
-        Self { payment_repo, order_repo, customer_repo, user_repo }
+    pub fn new(
+        payment_repo: Arc<PaymentRepository>,
+        order_repo: Arc<OrderRepository>,
+        customer_repo: Arc<CustomerRepository>,
+        user_repo: Arc<UserRepository>,
+    ) -> Self {
+        Self {
+            payment_repo,
+            order_repo,
+            customer_repo,
+            user_repo,
+        }
     }
 
     fn get_context<T>(&self, request: &Request<T>) -> Result<(Uuid, Uuid), Status> {
@@ -32,31 +44,44 @@ impl PaymentServiceImpl {
             .extensions()
             .get::<Claims>()
             .ok_or_else(|| Status::unauthenticated("Unauthorized: Missing or invalid token"))?;
-        
-        let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
-        let _user_id = Uuid::parse_str(&claims.sub).map_err(|_| Status::invalid_argument("Invalid user id"))?;
-        
+
+        let tenant_id = Uuid::parse_str(&claims.tenant_id)
+            .map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
+        let _user_id = Uuid::parse_str(&claims.sub)
+            .map_err(|_| Status::invalid_argument("Invalid user id"))?;
+
         Ok((tenant_id, _user_id))
     }
 }
 
 #[tonic::async_trait]
 impl PaymentService for PaymentServiceImpl {
-    async fn process_payment(&self, request: Request<ProcessPaymentRequest>) -> Result<Response<PaymentResponse>, Status> {
+    async fn process_payment(
+        &self,
+        request: Request<ProcessPaymentRequest>,
+    ) -> Result<Response<PaymentResponse>, Status> {
         let (tenant_id, user_id) = self.get_context(&request)?;
         let req = request.into_inner();
 
-        let order_id = Uuid::parse_str(&req.order_id).map_err(|_| Status::invalid_argument("Invalid order_id"))?;
-        
+        let order_id = Uuid::parse_str(&req.order_id)
+            .map_err(|_| Status::invalid_argument("Invalid order_id"))?;
+
         // 1. Fetch Order
-        let (order, _) = self.order_repo.find_by_id(&tenant_id, &order_id).await
+        let (order, _) = self
+            .order_repo
+            .find_by_id(&tenant_id, &order_id)
+            .await
             .map_err(|e| Status::internal(e.to_string()))?
             .ok_or_else(|| Status::not_found("Order not found"))?;
 
         // 2. Validate status
         match order.status {
-            DomainOrderStatus::Paid | DomainOrderStatus::Completed | DomainOrderStatus::Cancelled => {
-                return Err(Status::failed_precondition("Order is already paid, completed or cancelled"));
+            DomainOrderStatus::Paid
+            | DomainOrderStatus::Completed
+            | DomainOrderStatus::Cancelled => {
+                return Err(Status::failed_precondition(
+                    "Order is already paid, completed or cancelled",
+                ));
             }
             _ => {}
         }
@@ -80,7 +105,9 @@ impl PaymentService for PaymentServiceImpl {
             tenant_id,
             branch_id: Some(order.branch_id),
             order_id,
-            method: map_proto_method_to_domain(ProtoPaymentMethod::try_from(req.method).unwrap_or(ProtoPaymentMethod::Cash)),
+            method: map_proto_method_to_domain(
+                ProtoPaymentMethod::try_from(req.method).unwrap_or(ProtoPaymentMethod::Cash),
+            ),
             amount: order.total.clone(),
             received_amount,
             change_amount,
@@ -91,24 +118,37 @@ impl PaymentService for PaymentServiceImpl {
         };
 
         // 4. Create Payment and Update Order Status Atomically
-        let created = self.payment_repo.create_with_order_status(&domain_payment, DomainOrderStatus::Paid).await
+        let created = self
+            .payment_repo
+            .create_with_order_status(&domain_payment, DomainOrderStatus::Paid)
+            .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
         // 5. Update Order with Cashier Name and Customer Points (Post-payment hooks)
-        let cashier_name = self.user_repo.find_by_id(&tenant_id, &domain_payment.created_by).await
-            .ok().flatten()
+        let cashier_name = self
+            .user_repo
+            .find_by_id(&tenant_id, &domain_payment.created_by)
+            .await
+            .ok()
+            .flatten()
             .map(|u| u.full_name);
-        
+
         // Update order with cashier name
         if let Some(name) = cashier_name {
-            let _ = self.order_repo.update_cashier_name(&tenant_id, &order_id, &name).await;
+            let _ = self
+                .order_repo
+                .update_cashier_name(&tenant_id, &order_id, &name)
+                .await;
         }
 
         // 6. Point Accumulation
         if let Some(customer_id) = order.customer_id {
             let points = (order.total.to_f32().unwrap_or(0.0) / 10000.0) as i32;
             if points > 0 {
-                let _ = self.customer_repo.update_points(&tenant_id, &customer_id, points).await;
+                let _ = self
+                    .customer_repo
+                    .update_points(&tenant_id, &customer_id, points)
+                    .await;
             }
         }
 
@@ -117,40 +157,66 @@ impl PaymentService for PaymentServiceImpl {
         }))
     }
 
-    async fn get_payment(&self, request: Request<GetPaymentRequest>) -> Result<Response<PaymentResponse>, Status> {
+    async fn get_payment(
+        &self,
+        request: Request<GetPaymentRequest>,
+    ) -> Result<Response<PaymentResponse>, Status> {
         let (tenant_id, _) = self.get_context(&request)?;
         let req = request.into_inner();
 
         let payment = match req.query {
             Some(proto_gen::payment::get_payment_request::Query::Id(id)) => {
-                let uid = Uuid::parse_str(&id).map_err(|_| Status::invalid_argument("Invalid id"))?;
-                self.payment_repo.find_by_id(&tenant_id, &uid).await
+                let uid =
+                    Uuid::parse_str(&id).map_err(|_| Status::invalid_argument("Invalid id"))?;
+                self.payment_repo
+                    .find_by_id(&tenant_id, &uid)
+                    .await
                     .map_err(|e| Status::internal(e.to_string()))?
             }
             Some(proto_gen::payment::get_payment_request::Query::OrderId(oid)) => {
-                let uuid = Uuid::parse_str(&oid).map_err(|_| Status::invalid_argument("Invalid order_id"))?;
-                self.payment_repo.find_by_order_id(&tenant_id, &uuid).await
+                let uuid = Uuid::parse_str(&oid)
+                    .map_err(|_| Status::invalid_argument("Invalid order_id"))?;
+                self.payment_repo
+                    .find_by_order_id(&tenant_id, &uuid)
+                    .await
                     .map_err(|e| Status::internal(e.to_string()))?
             }
             None => return Err(Status::invalid_argument("Missing query")),
         };
 
         match payment {
-            Some(p) => Ok(Response::new(PaymentResponse { payment: Some(map_domain_to_proto(p)) })),
+            Some(p) => Ok(Response::new(PaymentResponse {
+                payment: Some(map_domain_to_proto(p)),
+            })),
             None => Err(Status::not_found("Payment not found")),
         }
     }
 
-    async fn list_payments(&self, request: Request<ListPaymentsRequest>) -> Result<Response<ListPaymentsResponse>, Status> {
+    async fn list_payments(
+        &self,
+        request: Request<ListPaymentsRequest>,
+    ) -> Result<Response<ListPaymentsResponse>, Status> {
         let (tenant_id, _) = self.get_context(&request)?;
         let req = request.into_inner();
 
-        let branch_id = Uuid::parse_str(&req.branch_id).map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
+        let branch_id = Uuid::parse_str(&req.branch_id)
+            .map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
         let pagination = req.pagination.unwrap_or_default();
-        let limit = if pagination.page_size > 0 { pagination.page_size } else { 10 };
-        let offset = (if pagination.page > 0 { pagination.page - 1 } else { 0 }) * limit;
+        let limit = if pagination.page_size > 0 {
+            pagination.page_size
+        } else {
+            10
+        };
+        let offset = (if pagination.page > 0 {
+            pagination.page - 1
+        } else {
+            0
+        }) * limit;
 
-        let payments = self.payment_repo.list_by_branch(&tenant_id, &branch_id, limit as i64, offset as i64).await
+        let payments = self
+            .payment_repo
+            .list_by_branch(&tenant_id, &branch_id, limit as i64, offset as i64)
+            .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(ListPaymentsResponse {

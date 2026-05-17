@@ -28,29 +28,35 @@ pub fn extract_tenant_from_request<T>(request: &Request<T>) -> Result<String, St
 }
 
 /// A Tonic Interceptor that verifies JWT and injects tenant/user context.
-pub fn get_auth_interceptor(secret: String) -> impl Fn(Request<()>) -> Result<Request<()>, Status> + Clone {
+pub fn get_auth_interceptor(
+    secret: String,
+) -> impl Fn(Request<()>) -> Result<Request<()>, Status> + Clone {
     let security = std::sync::Arc::new(SecurityService::new(&secret));
-    
+
     move |mut req: Request<()>| {
         if let Some(auth_header) = req.metadata().get("authorization") {
-            let auth_str = auth_header.to_str()
+            let auth_str = auth_header
+                .to_str()
                 .map_err(|_| Status::unauthenticated("Invalid authorization header encoding"))?;
-            
+
             if !auth_str.starts_with("Bearer ") {
-                return Err(Status::unauthenticated("Authorization header must start with 'Bearer '"));
+                return Err(Status::unauthenticated(
+                    "Authorization header must start with 'Bearer '",
+                ));
             }
 
             let token = &auth_str[7..];
-            let claims = security.verify_token(token)
+            let claims = security
+                .verify_token(token)
                 .map_err(|e| Status::unauthenticated(format!("Invalid token: {}", e)))?;
-                
+
             req.extensions_mut().insert(claims);
         }
-        
+
         // Use a block to handle the error from extract_tenant_from_request
         let tenant = extract_tenant_from_request(&req)?;
         req.extensions_mut().insert(tenant);
-        
+
         Ok(req)
     }
 }
@@ -62,8 +68,9 @@ mod tests {
     #[test]
     fn test_extract_tenant_from_x_tenant_id() {
         let mut req = Request::new(());
-        req.metadata_mut().insert("x-tenant-id", "alpha".parse().unwrap());
-        
+        req.metadata_mut()
+            .insert("x-tenant-id", "alpha".parse().unwrap());
+
         let tenant = extract_tenant_from_request(&req).unwrap();
         assert_eq!(tenant, "alpha");
     }
@@ -71,10 +78,10 @@ mod tests {
     #[test]
     fn test_extract_tenant_from_host() {
         let mut req = Request::new(());
-        req.metadata_mut().insert("host", "beta.mylocalpos.com".parse().unwrap());
-        
+        req.metadata_mut()
+            .insert("host", "beta.mylocalpos.com".parse().unwrap());
+
         let tenant = extract_tenant_from_request(&req).unwrap();
         assert_eq!(tenant, "beta");
     }
 }
-

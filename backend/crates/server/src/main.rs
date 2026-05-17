@@ -1,52 +1,59 @@
 #![allow(clippy::result_large_err)]
 #![allow(clippy::too_many_arguments)]
-use tonic::transport::Server;
 use http::header::{HeaderName, HeaderValue};
 use std::net::SocketAddr;
+use tonic::transport::Server;
 
 use proto_gen::auth::auth_service_server::AuthServiceServer;
-use proto_gen::store::{store_service_server::StoreServiceServer, tenant_settings_service_server::TenantSettingsServiceServer};
-use proto_gen::inventory::inventory_service_server::InventoryServiceServer;
-use proto_gen::product::product_service_server::ProductServiceServer;
-use services::auth::AuthServiceImpl;
-use services::store::{StoreServiceImpl, TenantSettingsServiceImpl};
-use services::inventory::InventoryServiceImpl;
-use services::category::CategoryServiceImpl;
-use services::product::ProductServiceImpl;
-use services::table::TableServiceImpl;
-use services::order::OrderServiceImpl;
+use proto_gen::branch::branch_service_server::BranchServiceServer;
 use proto_gen::category::category_service_server::CategoryServiceServer;
-use proto_gen::table::table_service_server::TableServiceServer;
+use proto_gen::customer::customer_service_server::CustomerServiceServer;
+use proto_gen::ingredient::ingredient_service_server::IngredientServiceServer;
+use proto_gen::inventory::inventory_service_server::InventoryServiceServer;
 use proto_gen::order::order_service_server::OrderServiceServer;
 use proto_gen::payment::payment_service_server::PaymentServiceServer;
+use proto_gen::procurement::alert_service_server::AlertServiceServer;
+use proto_gen::procurement::procurement_service_server::ProcurementServiceServer;
+use proto_gen::procurement::supplier_service_server::SupplierServiceServer;
+use proto_gen::product::product_service_server::ProductServiceServer;
+use proto_gen::recipe::recipe_service_server::RecipeServiceServer;
 use proto_gen::report::report_service_server::ReportServiceServer;
+use proto_gen::status::status_service_server::StatusServiceServer;
+use proto_gen::store::{
+    store_service_server::StoreServiceServer,
+    tenant_settings_service_server::TenantSettingsServiceServer,
+};
+use proto_gen::table::table_service_server::TableServiceServer;
+use services::auth::AuthServiceImpl;
+use services::branch::BranchServiceImpl;
+use services::category::CategoryServiceImpl;
+use services::customer::CustomerServiceImpl;
+use services::deduction::DeductionService;
+use services::ingredient::IngredientServiceImpl;
+use services::inventory::InventoryServiceImpl;
+use services::order::OrderServiceImpl;
 use services::payment::PaymentServiceImpl;
+use services::procurement::{AlertServiceImpl, ProcurementServiceImpl, SupplierServiceImpl};
+use services::product::ProductServiceImpl;
+use services::recipe::RecipeServiceImpl;
 use services::report::ReportServiceImpl;
 use services::status::StatusServiceImpl;
-use proto_gen::status::status_service_server::StatusServiceServer;
-use proto_gen::customer::customer_service_server::CustomerServiceServer;
-use services::customer::CustomerServiceImpl;
-use proto_gen::branch::branch_service_server::BranchServiceServer;
-use services::branch::BranchServiceImpl;
-use proto_gen::ingredient::ingredient_service_server::IngredientServiceServer;
-use services::ingredient::IngredientServiceImpl;
-use proto_gen::recipe::recipe_service_server::RecipeServiceServer;
-use services::recipe::RecipeServiceImpl;
-use services::deduction::DeductionService;
-use proto_gen::procurement::supplier_service_server::SupplierServiceServer;
-use proto_gen::procurement::procurement_service_server::ProcurementServiceServer;
-use proto_gen::procurement::alert_service_server::AlertServiceServer;
-use services::procurement::{SupplierServiceImpl, ProcurementServiceImpl, AlertServiceImpl};
+use services::store::{StoreServiceImpl, TenantSettingsServiceImpl};
+use services::table::TableServiceImpl;
 
 use infra::middleware::get_auth_interceptor;
 
+use dotenvy::dotenv;
 use infra::db::create_pool;
-use infra::repository::{UserRepository, TenantRepository, CategoryRepository, ProductRepository, ToppingRepository, TableRepository, FloorPlanRepository, OrderRepository, PaymentRepository, InventoryRepository, ReportRepository, CustomerRepository, StoreRepository, IngredientRepository};
-use infra::recipe_repository::RecipeRepository;
 use infra::procurement_repository::ProcurementRepository;
+use infra::recipe_repository::RecipeRepository;
+use infra::repository::{
+    CategoryRepository, CustomerRepository, FloorPlanRepository, IngredientRepository,
+    InventoryRepository, OrderRepository, PaymentRepository, ProductRepository, ReportRepository,
+    StoreRepository, TableRepository, TenantRepository, ToppingRepository, UserRepository,
+};
 use infra::security::SecurityService;
 use std::sync::Arc;
-use dotenvy::dotenv;
 
 mod config;
 use config::Config;
@@ -60,13 +67,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 1. Initialize DB Pool
     let pool = create_pool().await?;
-    
+
     // Initialize Redis Manager
     let redis_manager = infra::cache::create_redis_manager().await?;
-    
+
     // Run Migrations
     infra::db::run_migrations(&pool).await?;
-    
+
     // 2. Initialize Shared Components
     let security = Arc::new(SecurityService::new(&config.jwt_secret));
     let tenant_repo = Arc::new(TenantRepository::new(pool.clone()));
@@ -85,18 +92,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ingredient_repo = Arc::new(IngredientRepository::new(pool.clone()));
     let recipe_repo = Arc::new(RecipeRepository::new(pool.clone()));
     let procurement_repo = Arc::new(ProcurementRepository::new(pool.clone()));
-    let deduction_service = Arc::new(DeductionService::new(order_repo.clone(), inventory_repo.clone(), recipe_repo.clone()));
+    let deduction_service = Arc::new(DeductionService::new(
+        order_repo.clone(),
+        inventory_repo.clone(),
+        recipe_repo.clone(),
+    ));
 
     // 3. Initialize Services
-    let auth_service = AuthServiceImpl::new(user_repo.clone(), tenant_repo.clone(), security.clone());
+    let auth_service =
+        AuthServiceImpl::new(user_repo.clone(), tenant_repo.clone(), security.clone());
     let store_service = StoreServiceImpl::new(store_repo.clone());
     let settings_service = TenantSettingsServiceImpl::new(store_repo.clone());
     let inventory_service = InventoryServiceImpl::new(inventory_repo.clone());
     let category_service = CategoryServiceImpl::new(category_repo.clone());
     let product_service = ProductServiceImpl::new(product_repo.clone(), topping_repo.clone());
     let table_service = TableServiceImpl::new(table_repo.clone(), floor_plan_repo.clone());
-    let order_service = OrderServiceImpl::new(order_repo.clone(), product_repo.clone(), topping_repo.clone(), table_repo.clone(), deduction_service.clone(), redis_manager.clone());
-    let payment_service = PaymentServiceImpl::new(payment_repo.clone(), order_repo.clone(), customer_repo.clone(), user_repo.clone());
+    let order_service = OrderServiceImpl::new(
+        order_repo.clone(),
+        product_repo.clone(),
+        topping_repo.clone(),
+        table_repo.clone(),
+        deduction_service.clone(),
+        redis_manager.clone(),
+    );
+    let payment_service = PaymentServiceImpl::new(
+        payment_repo.clone(),
+        order_repo.clone(),
+        customer_repo.clone(),
+        user_repo.clone(),
+    );
     let report_service = ReportServiceImpl::new(report_repo.clone());
     let customer_service = CustomerServiceImpl::new(customer_repo.clone(), order_repo.clone());
     let branch_service = BranchServiceImpl::new(store_repo.clone());
@@ -108,24 +132,40 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let status_service = StatusServiceImpl::new();
 
     let auth_interceptor = get_auth_interceptor(config.jwt_secret.clone());
-    
+
     let auth_server = AuthServiceServer::with_interceptor(auth_service, auth_interceptor.clone());
-    let store_server = StoreServiceServer::with_interceptor(store_service, auth_interceptor.clone());
-    let settings_server = TenantSettingsServiceServer::with_interceptor(settings_service, auth_interceptor.clone());
-    let inventory_server = InventoryServiceServer::with_interceptor(inventory_service, auth_interceptor.clone());
-    let category_server = CategoryServiceServer::with_interceptor(category_service, auth_interceptor.clone());
-    let product_server = ProductServiceServer::with_interceptor(product_service, auth_interceptor.clone());
-    let table_server = TableServiceServer::with_interceptor(table_service, auth_interceptor.clone());
-    let order_server = OrderServiceServer::with_interceptor(order_service, auth_interceptor.clone());
-    let payment_server = PaymentServiceServer::with_interceptor(payment_service, auth_interceptor.clone());
-    let report_server = ReportServiceServer::with_interceptor(report_service, auth_interceptor.clone());
-    let customer_server = CustomerServiceServer::with_interceptor(customer_service, auth_interceptor.clone());
-    let branch_server = BranchServiceServer::with_interceptor(branch_service, auth_interceptor.clone());
-    let ingredient_server = IngredientServiceServer::with_interceptor(ingredient_service, auth_interceptor.clone());
-    let recipe_server = RecipeServiceServer::with_interceptor(recipe_service, auth_interceptor.clone());
-    let supplier_server = SupplierServiceServer::with_interceptor(supplier_service, auth_interceptor.clone());
-    let procurement_server = ProcurementServiceServer::with_interceptor(procurement_service, auth_interceptor.clone());
-    let alert_server = AlertServiceServer::with_interceptor(alert_service, auth_interceptor.clone());
+    let store_server =
+        StoreServiceServer::with_interceptor(store_service, auth_interceptor.clone());
+    let settings_server =
+        TenantSettingsServiceServer::with_interceptor(settings_service, auth_interceptor.clone());
+    let inventory_server =
+        InventoryServiceServer::with_interceptor(inventory_service, auth_interceptor.clone());
+    let category_server =
+        CategoryServiceServer::with_interceptor(category_service, auth_interceptor.clone());
+    let product_server =
+        ProductServiceServer::with_interceptor(product_service, auth_interceptor.clone());
+    let table_server =
+        TableServiceServer::with_interceptor(table_service, auth_interceptor.clone());
+    let order_server =
+        OrderServiceServer::with_interceptor(order_service, auth_interceptor.clone());
+    let payment_server =
+        PaymentServiceServer::with_interceptor(payment_service, auth_interceptor.clone());
+    let report_server =
+        ReportServiceServer::with_interceptor(report_service, auth_interceptor.clone());
+    let customer_server =
+        CustomerServiceServer::with_interceptor(customer_service, auth_interceptor.clone());
+    let branch_server =
+        BranchServiceServer::with_interceptor(branch_service, auth_interceptor.clone());
+    let ingredient_server =
+        IngredientServiceServer::with_interceptor(ingredient_service, auth_interceptor.clone());
+    let recipe_server =
+        RecipeServiceServer::with_interceptor(recipe_service, auth_interceptor.clone());
+    let supplier_server =
+        SupplierServiceServer::with_interceptor(supplier_service, auth_interceptor.clone());
+    let procurement_server =
+        ProcurementServiceServer::with_interceptor(procurement_service, auth_interceptor.clone());
+    let alert_server =
+        AlertServiceServer::with_interceptor(alert_service, auth_interceptor.clone());
     let status_server = StatusServiceServer::new(status_service);
 
     // 4. Setup gRPC Reflection
@@ -160,14 +200,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cors = cors.expose_headers([
         HeaderName::from_static("grpc-status"),
         HeaderName::from_static("grpc-message"),
-        HeaderName::from_static("grpc-status-details-bin")
+        HeaderName::from_static("grpc-status-details-bin"),
     ]);
 
     println!("Starting server with gRPC-Web and CORS enabled...");
 
-    let server = Server::builder()
-        .accept_http1(true)
-        .layer(cors);
+    let server = Server::builder().accept_http1(true).layer(cors);
 
     // Apply tonic-web to all services
     let mut router = server;

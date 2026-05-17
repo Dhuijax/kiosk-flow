@@ -1,19 +1,19 @@
+use bigdecimal::{FromPrimitive, ToPrimitive};
 use infra::procurement_repository::ProcurementRepository;
+use infra::security::Claims;
 use proto_gen::common::{Money, PaginationRequest, PaginationResponse, SuccessResponse};
 use proto_gen::procurement::{
     alert_service_server::AlertService, procurement_service_server::ProcurementService,
     supplier_service_server::SupplierService, CreatePurchaseOrderRequest, CreateSupplierRequest,
-    DeleteSupplierRequest, DismissAlertRequest, GetPurchaseOrderRequest,
-    GetSupplierRequest, ListPurchaseOrdersRequest, ListPurchaseOrdersResponse,
-    ListStockAlertsRequest, ListStockAlertsResponse, ListSuppliersRequest, ListSuppliersResponse,
-    MarkAlertAsReadRequest, PurchaseOrder as ProtoPurchaseOrder, PurchaseOrderItem as ProtoPurchaseOrderItem,
+    DeleteSupplierRequest, DismissAlertRequest, GetPurchaseOrderRequest, GetSupplierRequest,
+    ListPurchaseOrdersRequest, ListPurchaseOrdersResponse, ListStockAlertsRequest,
+    ListStockAlertsResponse, ListSuppliersRequest, ListSuppliersResponse, MarkAlertAsReadRequest,
+    PurchaseOrder as ProtoPurchaseOrder, PurchaseOrderItem as ProtoPurchaseOrderItem,
     StockAlert as ProtoStockAlert, Supplier as ProtoSupplier, UpdateSupplierRequest,
 };
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 use uuid::Uuid;
-use infra::security::Claims;
-use bigdecimal::{ToPrimitive, FromPrimitive};
 
 pub struct SupplierServiceImpl {
     repo: Arc<ProcurementRepository>,
@@ -198,7 +198,10 @@ impl SupplierService for SupplierServiceImpl {
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        Ok(Response::new(SuccessResponse { success: true, message: "".to_string() }))
+        Ok(Response::new(SuccessResponse {
+            success: true,
+            message: "".to_string(),
+        }))
     }
 }
 
@@ -282,8 +285,8 @@ impl ProcurementService for ProcurementServiceImpl {
             .ok_or_else(|| Status::unauthenticated("Missing tenant ID"))?;
 
         let req = request.into_inner();
-        let po_id = Uuid::parse_str(&req.id)
-            .map_err(|_| Status::invalid_argument("Invalid PO ID"))?;
+        let po_id =
+            Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid PO ID"))?;
 
         let po = self
             .repo
@@ -337,7 +340,7 @@ impl ProcurementService for ProcurementServiceImpl {
             .get::<Uuid>()
             .copied()
             .ok_or_else(|| Status::unauthenticated("Missing tenant ID"))?;
-        
+
         let user_id = request
             .extensions()
             .get::<Claims>()
@@ -353,7 +356,9 @@ impl ProcurementService for ProcurementServiceImpl {
         let mut total_amount = sqlx::types::BigDecimal::default();
         for item in &req.items {
             let qty = sqlx::types::BigDecimal::from_f64(item.quantity).unwrap_or_default();
-            let price = sqlx::types::BigDecimal::from(item.unit_price.as_ref().map(|m| m.units).unwrap_or(0));
+            let price = sqlx::types::BigDecimal::from(
+                item.unit_price.as_ref().map(|m| m.units).unwrap_or(0),
+            );
             total_amount += qty * price;
         }
 
@@ -380,7 +385,9 @@ impl ProcurementService for ProcurementServiceImpl {
             let ingredient_id = Uuid::parse_str(&item.ingredient_id)
                 .map_err(|_| Status::invalid_argument("Invalid ingredient ID"))?;
             let qty = sqlx::types::BigDecimal::from_f64(item.quantity).unwrap_or_default();
-            let price = sqlx::types::BigDecimal::from(item.unit_price.as_ref().map(|m| m.units).unwrap_or(0));
+            let price = sqlx::types::BigDecimal::from(
+                item.unit_price.as_ref().map(|m| m.units).unwrap_or(0),
+            );
 
             let po_item = ProcurementRepository::create_purchase_order_item(
                 &mut tx,
@@ -511,15 +518,18 @@ impl AlertService for AlertServiceImpl {
             .ok_or_else(|| Status::unauthenticated("Missing tenant ID"))?;
 
         let req = request.into_inner();
-        let alert_id = Uuid::parse_str(&req.id)
-            .map_err(|_| Status::invalid_argument("Invalid alert ID"))?;
+        let alert_id =
+            Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid alert ID"))?;
 
         self.repo
             .mark_alert_as_read(tenant_id, alert_id)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        Ok(Response::new(SuccessResponse { success: true, message: "".to_string() }))
+        Ok(Response::new(SuccessResponse {
+            success: true,
+            message: "".to_string(),
+        }))
     }
 
     async fn dismiss_alert(
@@ -533,14 +543,17 @@ impl AlertService for AlertServiceImpl {
             .ok_or_else(|| Status::unauthenticated("Missing tenant ID"))?;
 
         let req = request.into_inner();
-        let alert_id = Uuid::parse_str(&req.id)
-            .map_err(|_| Status::invalid_argument("Invalid alert ID"))?;
+        let alert_id =
+            Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid alert ID"))?;
 
         self.repo
             .dismiss_alert(tenant_id, alert_id)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        Ok(Response::new(SuccessResponse { success: true, message: "".to_string() }))
+        Ok(Response::new(SuccessResponse {
+            success: true,
+            message: "".to_string(),
+        }))
     }
 }

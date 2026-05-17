@@ -1,14 +1,13 @@
-use proto_gen::recipe::{
-    recipe_service_server::RecipeService,
-    GetRecipeRequest, GetRecipeResponse, SetRecipeRequest, SetRecipeResponse,
-    ProductIngredient as ProtoProductIngredient,
-};
+use bigdecimal::BigDecimal;
 use infra::recipe_repository::RecipeRepository;
+use proto_gen::common::SuccessResponse;
+use proto_gen::recipe::{
+    recipe_service_server::RecipeService, GetRecipeRequest, GetRecipeResponse,
+    ProductIngredient as ProtoProductIngredient, SetRecipeRequest, SetRecipeResponse,
+};
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 use uuid::Uuid;
-use bigdecimal::BigDecimal;
-use proto_gen::common::SuccessResponse;
 
 pub struct RecipeServiceImpl {
     repo: Arc<RecipeRepository>,

@@ -1,7 +1,7 @@
-use sqlx::FromRow;
-use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use sqlx::types::BigDecimal;
+use sqlx::FromRow;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, sqlx::Type, PartialEq, Eq)]
 #[sqlx(type_name = "order_status", rename_all = "lowercase")]

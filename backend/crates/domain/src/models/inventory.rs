@@ -1,8 +1,8 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use sqlx::types::BigDecimal;
 use sqlx::FromRow;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
-use sqlx::types::BigDecimal;
 
 #[derive(Debug, Serialize, Deserialize, Clone, FromRow)]
 pub struct Inventory {

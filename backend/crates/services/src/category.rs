@@ -1,14 +1,14 @@
-use tonic::{Request, Response, Status};
+use domain::models::category::Category as DomainCategory;
+use infra::repository::CategoryRepository;
+use infra::security::Claims;
 use proto_gen::category::{
-    category_service_server::CategoryService,
-    Category, ListCategoriesResponse, GetCategoryRequest, CreateCategoryRequest, UpdateCategoryRequest, DeleteCategoryRequest
+    category_service_server::CategoryService, Category, CreateCategoryRequest,
+    DeleteCategoryRequest, GetCategoryRequest, ListCategoriesResponse, UpdateCategoryRequest,
 };
 use proto_gen::common::{PaginationRequest, PaginationResponse, SuccessResponse};
 use std::sync::Arc;
-use infra::repository::CategoryRepository;
-use domain::models::category::Category as DomainCategory;
+use tonic::{Request, Response, Status};
 use uuid::Uuid;
-use infra::security::Claims;
 
 pub struct CategoryServiceImpl {
     category_repo: Arc<CategoryRepository>,
@@ -24,7 +24,8 @@ impl CategoryServiceImpl {
             .extensions()
             .get::<Claims>()
             .ok_or_else(|| Status::unauthenticated("Unauthorized: Missing or invalid token"))?;
-        Uuid::parse_str(&claims.tenant_id).map_err(|_| Status::invalid_argument("Invalid tenant id in token"))
+        Uuid::parse_str(&claims.tenant_id)
+            .map_err(|_| Status::invalid_argument("Invalid tenant id in token"))
     }
 }
 
@@ -43,9 +44,12 @@ impl CategoryService for CategoryServiceImpl {
         request: Request<PaginationRequest>,
     ) -> Result<Response<ListCategoriesResponse>, Status> {
         let tenant_id = self.get_tenant_id(&request)?;
-        let categories = self.category_repo.list_by_tenant(&tenant_id).await
+        let categories = self
+            .category_repo
+            .list_by_tenant(&tenant_id)
+            .await
             .map_err(|e| Status::internal(format!("Failed to list categories: {}", e)))?;
-            
+
         Ok(Response::new(ListCategoriesResponse {
             categories: categories.into_iter().map(to_proto_category).collect(),
             pagination: Some(PaginationResponse {
@@ -62,9 +66,13 @@ impl CategoryService for CategoryServiceImpl {
     ) -> Result<Response<Category>, Status> {
         let tenant_id = self.get_tenant_id(&request)?;
         let req = request.into_inner();
-        let id = Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid ID format"))?;
+        let id =
+            Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid ID format"))?;
 
-        let category = self.category_repo.find_by_id(&tenant_id, &id).await
+        let category = self
+            .category_repo
+            .find_by_id(&tenant_id, &id)
+            .await
             .map_err(|e| Status::internal(format!("DB error: {}", e)))?
             .ok_or_else(|| Status::not_found("Category not found"))?;
 
@@ -79,7 +87,10 @@ impl CategoryService for CategoryServiceImpl {
         let req = request.into_inner();
 
         let parent_id = match req.parent_id {
-            Some(pid) if !pid.is_empty() => Some(Uuid::parse_str(&pid).map_err(|_| Status::invalid_argument("Invalid parent_id format"))?),
+            Some(pid) if !pid.is_empty() => Some(
+                Uuid::parse_str(&pid)
+                    .map_err(|_| Status::invalid_argument("Invalid parent_id format"))?,
+            ),
             _ => None,
         };
 
@@ -91,7 +102,10 @@ impl CategoryService for CategoryServiceImpl {
             created_at: chrono::Utc::now(),
         };
 
-        let created = self.category_repo.create(&new_cat).await
+        let created = self
+            .category_repo
+            .create(&new_cat)
+            .await
             .map_err(|e| Status::internal(format!("Failed to create category: {}", e)))?;
 
         Ok(Response::new(to_proto_category(created)))
@@ -103,15 +117,23 @@ impl CategoryService for CategoryServiceImpl {
     ) -> Result<Response<Category>, Status> {
         let tenant_id = self.get_tenant_id(&request)?;
         let req = request.into_inner();
-        let id = Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid ID format"))?;
+        let id =
+            Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid ID format"))?;
 
         let parent_id_opt = match req.parent_id {
             Some(pid) if pid.is_empty() => Some(None),
-            Some(pid) => Some(Some(Uuid::parse_str(&pid).map_err(|_| Status::invalid_argument("Invalid parent_id format"))?)),
+            Some(pid) => {
+                Some(Some(Uuid::parse_str(&pid).map_err(|_| {
+                    Status::invalid_argument("Invalid parent_id format")
+                })?))
+            }
             None => None,
         };
 
-        let updated = self.category_repo.update(&tenant_id, &id, req.name, parent_id_opt).await
+        let updated = self
+            .category_repo
+            .update(&tenant_id, &id, req.name, parent_id_opt)
+            .await
             .map_err(|e| Status::internal(format!("Failed to update category: {}", e)))?;
 
         Ok(Response::new(to_proto_category(updated)))
@@ -122,9 +144,12 @@ impl CategoryService for CategoryServiceImpl {
         request: Request<DeleteCategoryRequest>,
     ) -> Result<Response<SuccessResponse>, Status> {
         let tenant_id = self.get_tenant_id(&request)?;
-        let id = Uuid::parse_str(&request.into_inner().id).map_err(|_| Status::invalid_argument("Invalid ID format"))?;
+        let id = Uuid::parse_str(&request.into_inner().id)
+            .map_err(|_| Status::invalid_argument("Invalid ID format"))?;
 
-        self.category_repo.delete(&tenant_id, &id).await
+        self.category_repo
+            .delete(&tenant_id, &id)
+            .await
             .map_err(|_| Status::internal("Failed to delete category"))?;
 
         Ok(Response::new(SuccessResponse {

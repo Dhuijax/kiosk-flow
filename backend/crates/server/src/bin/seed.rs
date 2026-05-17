@@ -1,9 +1,9 @@
+use dotenvy::dotenv;
 use infra::db::create_pool;
 use infra::security::SecurityService;
-use uuid::Uuid;
-use dotenvy::dotenv;
 use rand::Rng;
-use sqlx::{Pool, Postgres, Row, types::BigDecimal};
+use sqlx::{types::BigDecimal, Pool, Postgres, Row};
+use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -13,14 +13,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Seeding Data for Demo...");
 
     let tenant_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001")?;
-    
+
     // 1. Ensure Tenant & Admin
     ensure_tenant_and_admin(&pool, tenant_id).await?;
 
     // 2. Get Branches
-    let branches = sqlx::query("SELECT id FROM branches WHERE tenant_id = $1").bind(tenant_id).fetch_all(&pool).await?;
+    let branches = sqlx::query("SELECT id FROM branches WHERE tenant_id = $1")
+        .bind(tenant_id)
+        .fetch_all(&pool)
+        .await?;
     let branch_ids: Vec<Uuid> = branches.into_iter().map(|r| r.get(0)).collect();
-    
+
     if branch_ids.is_empty() {
         println!("❌ No branches found.");
         return Ok(());
@@ -46,13 +49,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn ensure_tenant_and_admin(pool: &Pool<Postgres>, tenant_id: Uuid) -> anyhow::Result<()> {
-    sqlx::query("DELETE FROM tenants WHERE subdomain = 'demo' OR id = $1").bind(tenant_id).execute(pool).await?;
-    let exists = sqlx::query("SELECT id FROM tenants WHERE id = $1").bind(tenant_id).fetch_optional(pool).await?;
+    sqlx::query("DELETE FROM tenants WHERE subdomain = 'demo' OR id = $1")
+        .bind(tenant_id)
+        .execute(pool)
+        .await?;
+    let exists = sqlx::query("SELECT id FROM tenants WHERE id = $1")
+        .bind(tenant_id)
+        .fetch_optional(pool)
+        .await?;
     if exists.is_none() {
-        sqlx::query("INSERT INTO tenants (id, name, subdomain) VALUES ($1, $2, $3)").bind(tenant_id).bind("Demo Store").bind("demo").execute(pool).await?;
+        sqlx::query("INSERT INTO tenants (id, name, subdomain) VALUES ($1, $2, $3)")
+            .bind(tenant_id)
+            .bind("Demo Store")
+            .bind("demo")
+            .execute(pool)
+            .await?;
     }
     let email = "admin@demo.com";
-    let user_exists = sqlx::query("SELECT id FROM users WHERE email = $1 AND tenant_id = $2").bind(email).bind(tenant_id).fetch_optional(pool).await?;
+    let user_exists = sqlx::query("SELECT id FROM users WHERE email = $1 AND tenant_id = $2")
+        .bind(email)
+        .bind(tenant_id)
+        .fetch_optional(pool)
+        .await?;
     if user_exists.is_none() {
         let hash = SecurityService::hash_password("password123")?;
         sqlx::query("INSERT INTO users (id, tenant_id, email, password_hash, full_name, role, is_active) VALUES ($1, $2, $3, $4, $5, 'owner', true)")
@@ -62,14 +80,17 @@ async fn ensure_tenant_and_admin(pool: &Pool<Postgres>, tenant_id: Uuid) -> anyh
 }
 
 async fn seed_products(pool: &Pool<Postgres>, tenant_id: Uuid) -> anyhow::Result<()> {
-    let exists = sqlx::query("SELECT id FROM products WHERE tenant_id = $1 LIMIT 1").bind(tenant_id).fetch_optional(pool).await?;
+    let exists = sqlx::query("SELECT id FROM products WHERE tenant_id = $1 LIMIT 1")
+        .bind(tenant_id)
+        .fetch_optional(pool)
+        .await?;
     if exists.is_some() {
         println!("  - Products already seeded.");
         return Ok(());
     }
 
     println!("  - Seeding products...");
-    
+
     // Create categories first
     let categories = [
         ("Cà phê", Uuid::new_v4()),
@@ -79,7 +100,11 @@ async fn seed_products(pool: &Pool<Postgres>, tenant_id: Uuid) -> anyhow::Result
 
     for (name, id) in &categories {
         sqlx::query("INSERT INTO categories (id, tenant_id, name) VALUES ($1, $2, $3)")
-            .bind(id).bind(tenant_id).bind(name).execute(pool).await?;
+            .bind(id)
+            .bind(tenant_id)
+            .bind(name)
+            .execute(pool)
+            .await?;
     }
 
     let products = [
@@ -98,11 +123,17 @@ async fn seed_products(pool: &Pool<Postgres>, tenant_id: Uuid) -> anyhow::Result
     Ok(())
 }
 
-async fn seed_employees(pool: &Pool<Postgres>, tenant_id: Uuid, branch_ids: &[Uuid], count: usize) -> anyhow::Result<()> {
-    let current_count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM users WHERE tenant_id = $1 AND role != 'owner'")
-        .bind(tenant_id)
-        .fetch_one(pool)
-        .await?;
+async fn seed_employees(
+    pool: &Pool<Postgres>,
+    tenant_id: Uuid,
+    branch_ids: &[Uuid],
+    count: usize,
+) -> anyhow::Result<()> {
+    let current_count: (i64,) =
+        sqlx::query_as("SELECT COUNT(*) FROM users WHERE tenant_id = $1 AND role != 'owner'")
+            .bind(tenant_id)
+            .fetch_one(pool)
+            .await?;
 
     if current_count.0 >= count as i64 {
         println!("  - Users already seeded ({} found)", current_count.0);
@@ -111,8 +142,12 @@ async fn seed_employees(pool: &Pool<Postgres>, tenant_id: Uuid, branch_ids: &[Uu
 
     println!("  - Seeding {} employees...", count);
     let roles = ["manager", "cashier", "waiter", "chef"];
-    let first_names = ["Thanh", "Hoang", "Mai", "Lan", "Son", "Phuong", "Tuan", "Huong", "Viet", "Trang"];
-    let last_names = ["Nguyen", "Tran", "Le", "Pham", "Hoang", "Vu", "Phan", "Dang", "Bui", "Do"];
+    let first_names = [
+        "Thanh", "Hoang", "Mai", "Lan", "Son", "Phuong", "Tuan", "Huong", "Viet", "Trang",
+    ];
+    let last_names = [
+        "Nguyen", "Tran", "Le", "Pham", "Hoang", "Vu", "Phan", "Dang", "Bui", "Do",
+    ];
     let mut rng = rand::thread_rng();
     let password_hash = SecurityService::hash_password("password123")?;
 
@@ -141,11 +176,16 @@ async fn seed_employees(pool: &Pool<Postgres>, tenant_id: Uuid, branch_ids: &[Uu
     Ok(())
 }
 
-async fn seed_customers(pool: &Pool<Postgres>, tenant_id: Uuid, count: usize) -> anyhow::Result<()> {
-    let current_count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM customers WHERE tenant_id = $1")
-        .bind(tenant_id)
-        .fetch_one(pool)
-        .await?;
+async fn seed_customers(
+    pool: &Pool<Postgres>,
+    tenant_id: Uuid,
+    count: usize,
+) -> anyhow::Result<()> {
+    let current_count: (i64,) =
+        sqlx::query_as("SELECT COUNT(*) FROM customers WHERE tenant_id = $1")
+            .bind(tenant_id)
+            .fetch_one(pool)
+            .await?;
 
     if current_count.0 >= count as i64 {
         println!("  - Customers already seeded ({} found)", current_count.0);
@@ -154,13 +194,21 @@ async fn seed_customers(pool: &Pool<Postgres>, tenant_id: Uuid, count: usize) ->
 
     println!("  - Seeding {} customers...", count);
     let mut rng = rand::thread_rng();
-    let first_names = ["Minh", "An", "Binh", "Chi", "Duy", "Giang", "Hanh", "Khoa", "Linh", "Nam"];
-    let last_names = ["Nguyen", "Tran", "Le", "Pham", "Hoang", "Phan", "Vu", "Dang", "Bui", "Do"];
+    let first_names = [
+        "Minh", "An", "Binh", "Chi", "Duy", "Giang", "Hanh", "Khoa", "Linh", "Nam",
+    ];
+    let last_names = [
+        "Nguyen", "Tran", "Le", "Pham", "Hoang", "Phan", "Vu", "Dang", "Bui", "Do",
+    ];
 
     for i in 1..=count {
-        let name = format!("{} {}", last_names[rng.gen_range(0..10)], first_names[rng.gen_range(0..10)]);
+        let name = format!(
+            "{} {}",
+            last_names[rng.gen_range(0..10)],
+            first_names[rng.gen_range(0..10)]
+        );
         let phone = format!("0987654{:03}", i);
-        
+
         sqlx::query("INSERT INTO customers (id, tenant_id, name, phone, points) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING")
             .bind(Uuid::new_v4())
             .bind(tenant_id)
@@ -173,8 +221,15 @@ async fn seed_customers(pool: &Pool<Postgres>, tenant_id: Uuid, count: usize) ->
     Ok(())
 }
 
-async fn seed_inventory(pool: &Pool<Postgres>, tenant_id: Uuid, branch_ids: &[Uuid]) -> anyhow::Result<()> {
-    let products = sqlx::query("SELECT id FROM products WHERE tenant_id = $1").bind(tenant_id).fetch_all(pool).await?;
+async fn seed_inventory(
+    pool: &Pool<Postgres>,
+    tenant_id: Uuid,
+    branch_ids: &[Uuid],
+) -> anyhow::Result<()> {
+    let products = sqlx::query("SELECT id FROM products WHERE tenant_id = $1")
+        .bind(tenant_id)
+        .fetch_all(pool)
+        .await?;
     let product_ids: Vec<Uuid> = products.into_iter().map(|r| r.get(0)).collect();
 
     if product_ids.is_empty() {
@@ -182,10 +237,11 @@ async fn seed_inventory(pool: &Pool<Postgres>, tenant_id: Uuid, branch_ids: &[Uu
         return Ok(());
     }
 
-    let current_count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM inventory WHERE tenant_id = $1")
-        .bind(tenant_id)
-        .fetch_one(pool)
-        .await?;
+    let current_count: (i64,) =
+        sqlx::query_as("SELECT COUNT(*) FROM inventory WHERE tenant_id = $1")
+            .bind(tenant_id)
+            .fetch_one(pool)
+            .await?;
 
     if current_count.0 >= (product_ids.len() * branch_ids.len()) as i64 {
         println!("  - Inventory already seeded.");
@@ -199,7 +255,7 @@ async fn seed_inventory(pool: &Pool<Postgres>, tenant_id: Uuid, branch_ids: &[Uu
         for product_id in &product_ids {
             let quantity = rng.gen_range(5..150) as i64;
             let min_quantity = rng.gen_range(10..30) as i64;
-            
+
             let res = sqlx::query(
                 "INSERT INTO inventory (id, tenant_id, branch_id, product_id, quantity, min_quantity) 
                  VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (tenant_id, branch_id, product_id) DO NOTHING"
@@ -232,15 +288,28 @@ async fn seed_inventory(pool: &Pool<Postgres>, tenant_id: Uuid, branch_ids: &[Uu
     Ok(())
 }
 
-async fn seed_orders(pool: &Pool<Postgres>, tenant_id: Uuid, branch_ids: &[Uuid]) -> anyhow::Result<()> {
-    let products = sqlx::query("SELECT id, name, price FROM products WHERE tenant_id = $1").bind(tenant_id).fetch_all(pool).await?;
+async fn seed_orders(
+    pool: &Pool<Postgres>,
+    tenant_id: Uuid,
+    branch_ids: &[Uuid],
+) -> anyhow::Result<()> {
+    let products = sqlx::query("SELECT id, name, price FROM products WHERE tenant_id = $1")
+        .bind(tenant_id)
+        .fetch_all(pool)
+        .await?;
     if products.is_empty() {
         println!("  - Cannot seed orders: no products found.");
         return Ok(());
     }
 
-    let customers = sqlx::query("SELECT id, name FROM customers WHERE tenant_id = $1").bind(tenant_id).fetch_all(pool).await?;
-    let users = sqlx::query("SELECT id, full_name FROM users WHERE tenant_id = $1").bind(tenant_id).fetch_all(pool).await?;
+    let customers = sqlx::query("SELECT id, name FROM customers WHERE tenant_id = $1")
+        .bind(tenant_id)
+        .fetch_all(pool)
+        .await?;
+    let users = sqlx::query("SELECT id, full_name FROM users WHERE tenant_id = $1")
+        .bind(tenant_id)
+        .fetch_all(pool)
+        .await?;
 
     let current_count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM orders WHERE tenant_id = $1")
         .bind(tenant_id)
@@ -257,16 +326,22 @@ async fn seed_orders(pool: &Pool<Postgres>, tenant_id: Uuid, branch_ids: &[Uuid]
 
     for i in 1..=30 {
         let branch_id = branch_ids[rng.gen_range(0..branch_ids.len())];
-        
+
         let (customer_id, customer_name) = if customers.is_empty() {
             (None, None)
         } else {
             let customer = &customers[rng.gen_range(0..customers.len())];
-            (Some(customer.get::<Uuid, _>(0)), Some(customer.get::<String, _>(1)))
+            (
+                Some(customer.get::<Uuid, _>(0)),
+                Some(customer.get::<String, _>(1)),
+            )
         };
 
         let (user_id, cashier_name) = if users.is_empty() {
-            let admin_id: Uuid = sqlx::query("SELECT id FROM users WHERE email = 'admin@demo.com'").fetch_one(pool).await?.get(0);
+            let admin_id: Uuid = sqlx::query("SELECT id FROM users WHERE email = 'admin@demo.com'")
+                .fetch_one(pool)
+                .await?
+                .get(0);
             (admin_id, "Admin".to_string())
         } else {
             let user = &users[rng.gen_range(0..users.len())];
@@ -279,14 +354,14 @@ async fn seed_orders(pool: &Pool<Postgres>, tenant_id: Uuid, branch_ids: &[Uuid]
         // Generate items
         let num_items = rng.gen_range(1..5);
         let mut subtotal: i64 = 0;
-        
+
         for _ in 0..num_items {
             let product = &products[rng.gen_range(0..products.len())];
             let product_id: Uuid = product.get(0);
             let product_name: String = product.get(1);
             let unit_price: BigDecimal = product.get(2);
             let price_i64 = unit_price.to_string().parse::<f64>().unwrap_or(0.0) as i64;
-            
+
             let qty = rng.gen_range(1..4);
             let item_subtotal = price_i64 * qty as i64;
             subtotal += item_subtotal;

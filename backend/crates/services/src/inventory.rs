@@ -1,15 +1,15 @@
-use tonic::{Request, Response, Status};
-use proto_gen::inventory::{
-    inventory_service_server::InventoryService,
-    StockItem, GetStockRequest, UpdateStockRequest, ListStockRequest, ListStockResponse,
-    GetStockHistoryRequest, StockHistoryResponse, StockHistoryEntry
-};
-use std::sync::Arc;
-use infra::repository::InventoryRepository;
 use domain::models::inventory::{Inventory, InventoryTransaction};
-use uuid::Uuid;
+use infra::repository::InventoryRepository;
 use infra::security::Claims;
+use proto_gen::inventory::{
+    inventory_service_server::InventoryService, GetStockHistoryRequest, GetStockRequest,
+    ListStockRequest, ListStockResponse, StockHistoryEntry, StockHistoryResponse, StockItem,
+    UpdateStockRequest,
+};
 use sqlx::types::BigDecimal;
+use std::sync::Arc;
+use tonic::{Request, Response, Status};
+use uuid::Uuid;
 
 pub struct InventoryServiceImpl {
     inventory_repo: Arc<InventoryRepository>,
@@ -25,10 +25,12 @@ impl InventoryServiceImpl {
             .extensions()
             .get::<Claims>()
             .ok_or_else(|| Status::unauthenticated("Unauthorized"))?;
-        
-        let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
-        let user_id = Uuid::parse_str(&claims.sub).map_err(|_| Status::invalid_argument("Invalid user id"))?;
-        
+
+        let tenant_id = Uuid::parse_str(&claims.tenant_id)
+            .map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
+        let user_id = Uuid::parse_str(&claims.sub)
+            .map_err(|_| Status::invalid_argument("Invalid user id"))?;
+
         Ok((tenant_id, user_id))
     }
 }
@@ -65,11 +67,16 @@ impl InventoryService for InventoryServiceImpl {
     ) -> Result<Response<StockItem>, Status> {
         let (tenant_id, _) = self.get_auth_info(&request)?;
         let req = request.into_inner();
-        
-        let branch_id = Uuid::parse_str(&req.branch_id).map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
-        let product_id = Uuid::parse_str(&req.product_id).map_err(|_| Status::invalid_argument("Invalid product_id"))?;
 
-        let stock = self.inventory_repo.get_stock(&tenant_id, &branch_id, Some(product_id), None).await
+        let branch_id = Uuid::parse_str(&req.branch_id)
+            .map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
+        let product_id = Uuid::parse_str(&req.product_id)
+            .map_err(|_| Status::invalid_argument("Invalid product_id"))?;
+
+        let stock = self
+            .inventory_repo
+            .get_stock(&tenant_id, &branch_id, Some(product_id), None)
+            .await
             .map_err(|e| Status::internal(format!("DB error: {}", e)))?
             .ok_or_else(|| Status::not_found("Stock record not found"))?;
 
@@ -83,9 +90,11 @@ impl InventoryService for InventoryServiceImpl {
         let (tenant_id, user_id) = self.get_auth_info(&request)?;
         let req = request.into_inner();
 
-        let branch_id = Uuid::parse_str(&req.branch_id).map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
-        let product_id = Uuid::parse_str(&req.product_id).map_err(|_| Status::invalid_argument("Invalid product_id"))?;
-        
+        let branch_id = Uuid::parse_str(&req.branch_id)
+            .map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
+        let product_id = Uuid::parse_str(&req.product_id)
+            .map_err(|_| Status::invalid_argument("Invalid product_id"))?;
+
         // Convert f64 to BigDecimal via string to preserve precision
         use std::str::FromStr;
         let change = BigDecimal::from_str(&req.quantity_change.to_string())
@@ -101,17 +110,21 @@ impl InventoryService for InventoryServiceImpl {
             _ => return Err(Status::invalid_argument("Invalid transaction type")),
         };
 
-        let updated = self.inventory_repo.update_stock(
-            &tenant_id,
-            &branch_id,
-            Some(product_id),
-            None,
-            &change,
-            trx_type,
-            None,
-            req.note,
-            Some(user_id)
-        ).await.map_err(|e| Status::internal(format!("Failed to update stock: {}", e)))?;
+        let updated = self
+            .inventory_repo
+            .update_stock(
+                &tenant_id,
+                &branch_id,
+                Some(product_id),
+                None,
+                &change,
+                trx_type,
+                None,
+                req.note,
+                Some(user_id),
+            )
+            .await
+            .map_err(|e| Status::internal(format!("Failed to update stock: {}", e)))?;
 
         Ok(Response::new(to_proto_stock(updated)))
     }
@@ -122,9 +135,13 @@ impl InventoryService for InventoryServiceImpl {
     ) -> Result<Response<ListStockResponse>, Status> {
         let (tenant_id, _) = self.get_auth_info(&request)?;
         let req = request.into_inner();
-        let branch_id = Uuid::parse_str(&req.branch_id).map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
+        let branch_id = Uuid::parse_str(&req.branch_id)
+            .map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
 
-        let items = self.inventory_repo.list_stock(&tenant_id, &branch_id, req.low_stock_only.unwrap_or(false)).await
+        let items = self
+            .inventory_repo
+            .list_stock(&tenant_id, &branch_id, req.low_stock_only.unwrap_or(false))
+            .await
             .map_err(|e| Status::internal(format!("Failed to list stock: {}", e)))?;
 
         Ok(Response::new(ListStockResponse {
@@ -142,11 +159,16 @@ impl InventoryService for InventoryServiceImpl {
         // I'll proceed with StockHistoryResponse and fix if needed.
         let (tenant_id, _) = self.get_auth_info(&request)?;
         let req = request.into_inner();
-        
-        let branch_id = Uuid::parse_str(&req.branch_id).map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
-        let product_id = Uuid::parse_str(&req.product_id).map_err(|_| Status::invalid_argument("Invalid product_id"))?;
 
-        let history = self.inventory_repo.get_history(&tenant_id, &branch_id, Some(product_id), None).await
+        let branch_id = Uuid::parse_str(&req.branch_id)
+            .map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
+        let product_id = Uuid::parse_str(&req.product_id)
+            .map_err(|_| Status::invalid_argument("Invalid product_id"))?;
+
+        let history = self
+            .inventory_repo
+            .get_history(&tenant_id, &branch_id, Some(product_id), None)
+            .await
             .map_err(|e| Status::internal(format!("Failed to fetch history: {}", e)))?;
 
         Ok(Response::new(StockHistoryResponse {

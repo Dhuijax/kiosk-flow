@@ -1,7 +1,7 @@
+use bigdecimal::BigDecimal;
+use domain::models::recipe::ProductIngredient;
 use sqlx::PgPool;
 use uuid::Uuid;
-use domain::models::recipe::ProductIngredient;
-use bigdecimal::BigDecimal;
 
 pub struct RecipeRepository {
     pool: PgPool,

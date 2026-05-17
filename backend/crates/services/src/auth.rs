@@ -1,16 +1,16 @@
-use tonic::{Request, Response, Status};
+use domain::models::tenant::Tenant;
+use domain::models::user::{User, UserRole};
+use infra::repository::{TenantRepository, UserRepository};
+use infra::security::{Claims, SecurityService};
 use proto_gen::auth::{
-    auth_service_server::AuthService, AuthResponse, LoginRequest, RegisterRequest,
-    RefreshRequest, User as ProtoUser, Empty, CreateStaffRequest, ListStaffRequest, 
-    ListStaffResponse, UpdateStaffRequest, DeleteStaffRequest
+    auth_service_server::AuthService, AuthResponse, CreateStaffRequest, DeleteStaffRequest, Empty,
+    ListStaffRequest, ListStaffResponse, LoginRequest, RefreshRequest, RegisterRequest,
+    UpdateStaffRequest, User as ProtoUser,
 };
 use proto_gen::common::SuccessResponse;
-use infra::repository::{UserRepository, TenantRepository};
-use infra::security::{SecurityService, Claims};
 use std::sync::Arc;
+use tonic::{Request, Response, Status};
 use uuid::Uuid;
-use domain::models::user::{User, UserRole};
-use domain::models::tenant::Tenant;
 
 pub struct AuthServiceImpl {
     user_repo: Arc<UserRepository>,
@@ -20,11 +20,15 @@ pub struct AuthServiceImpl {
 
 impl AuthServiceImpl {
     pub fn new(
-        user_repo: Arc<UserRepository>, 
+        user_repo: Arc<UserRepository>,
         tenant_repo: Arc<TenantRepository>,
-        security: Arc<SecurityService>
+        security: Arc<SecurityService>,
     ) -> Self {
-        Self { user_repo, tenant_repo, security }
+        Self {
+            user_repo,
+            tenant_repo,
+            security,
+        }
     }
 
     /// Helper to get claims from request extensions (injected by interceptor)
@@ -55,7 +59,7 @@ impl AuthService for AuthServiceImpl {
         request: Request<RegisterRequest>,
     ) -> Result<Response<AuthResponse>, Status> {
         let req = request.into_inner();
-        
+
         // 1. Create Tenant first
         let tenant_id = Uuid::new_v4();
         let new_tenant = Tenant {
@@ -66,7 +70,8 @@ impl AuthService for AuthServiceImpl {
             created_at: chrono::Utc::now(),
         };
 
-        self.tenant_repo.create(&new_tenant)
+        self.tenant_repo
+            .create(&new_tenant)
             .await
             .map_err(|e| Status::internal(format!("Failed to create tenant: {}", e)))?;
 
@@ -86,22 +91,27 @@ impl AuthService for AuthServiceImpl {
             updated_at: chrono::Utc::now(),
         };
 
-        let created = self.user_repo.create(&user_model)
+        let created = self
+            .user_repo
+            .create(&user_model)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
         let (token, refresh_token) = {
-            let access = self.security.create_token(
-                &created.id.to_string(),
-                &created.tenant_id.to_string(),
-                vec![created.role.to_string()],
-            ).map_err(|e| Status::internal(e.to_string()))?;
-            
-            let refresh = self.security.create_refresh_token(
-                &created.id.to_string(),
-                &created.tenant_id.to_string(),
-            ).map_err(|e| Status::internal(e.to_string()))?;
-            
+            let access = self
+                .security
+                .create_token(
+                    &created.id.to_string(),
+                    &created.tenant_id.to_string(),
+                    vec![created.role.to_string()],
+                )
+                .map_err(|e| Status::internal(e.to_string()))?;
+
+            let refresh = self
+                .security
+                .create_refresh_token(&created.id.to_string(), &created.tenant_id.to_string())
+                .map_err(|e| Status::internal(e.to_string()))?;
+
             (access, refresh)
         };
 
@@ -117,16 +127,20 @@ impl AuthService for AuthServiceImpl {
         request: Request<LoginRequest>,
     ) -> Result<Response<AuthResponse>, Status> {
         let req = request.into_inner();
-        
+
         // Resolve tenant_id from slug
-        let tenant = self.tenant_repo.find_by_subdomain(&req.tenant_slug)
+        let tenant = self
+            .tenant_repo
+            .find_by_subdomain(&req.tenant_slug)
             .await
             .map_err(|e| Status::internal(e.to_string()))?
             .ok_or_else(|| Status::not_found(format!("Tenant '{}' not found", req.tenant_slug)))?;
 
         let tenant_id = tenant.id;
 
-        let user = self.user_repo.find_by_email(&tenant_id, &req.email)
+        let user = self
+            .user_repo
+            .find_by_email(&tenant_id, &req.email)
             .await
             .map_err(|e| Status::internal(e.to_string()))?
             .ok_or_else(|| Status::unauthenticated("Invalid credentials"))?;
@@ -139,17 +153,20 @@ impl AuthService for AuthServiceImpl {
         }
 
         let (token, refresh_token) = {
-            let access = self.security.create_token(
-                &user.id.to_string(),
-                &user.tenant_id.to_string(),
-                vec![user.role.to_string()],
-            ).map_err(|e| Status::internal(e.to_string()))?;
-            
-            let refresh = self.security.create_refresh_token(
-                &user.id.to_string(),
-                &user.tenant_id.to_string(),
-            ).map_err(|e| Status::internal(e.to_string()))?;
-            
+            let access = self
+                .security
+                .create_token(
+                    &user.id.to_string(),
+                    &user.tenant_id.to_string(),
+                    vec![user.role.to_string()],
+                )
+                .map_err(|e| Status::internal(e.to_string()))?;
+
+            let refresh = self
+                .security
+                .create_refresh_token(&user.id.to_string(), &user.tenant_id.to_string())
+                .map_err(|e| Status::internal(e.to_string()))?;
+
             (access, refresh)
         };
 
@@ -165,8 +182,10 @@ impl AuthService for AuthServiceImpl {
         request: Request<RefreshRequest>,
     ) -> Result<Response<AuthResponse>, Status> {
         let req = request.into_inner();
-        
-        let claims = self.security.verify_token(&req.refresh_token)
+
+        let claims = self
+            .security
+            .verify_token(&req.refresh_token)
             .map_err(|e| Status::unauthenticated(format!("Invalid refresh token: {}", e)))?;
 
         // Verify it's actually a refresh token
@@ -179,23 +198,28 @@ impl AuthService for AuthServiceImpl {
         let tenant_id = Uuid::parse_str(&claims.tenant_id)
             .map_err(|_| Status::invalid_argument("Invalid tenant id in token"))?;
 
-        let user = self.user_repo.find_by_id(&tenant_id, &user_id)
+        let user = self
+            .user_repo
+            .find_by_id(&tenant_id, &user_id)
             .await
             .map_err(|e| Status::internal(e.to_string()))?
             .ok_or_else(|| Status::not_found("User not found"))?;
 
         let (token, refresh_token) = {
-            let access = self.security.create_token(
-                &user.id.to_string(),
-                &user.tenant_id.to_string(),
-                vec![user.role.to_string()],
-            ).map_err(|e| Status::internal(e.to_string()))?;
-            
-            let refresh = self.security.create_refresh_token(
-                &user.id.to_string(),
-                &user.tenant_id.to_string(),
-            ).map_err(|e| Status::internal(e.to_string()))?;
-            
+            let access = self
+                .security
+                .create_token(
+                    &user.id.to_string(),
+                    &user.tenant_id.to_string(),
+                    vec![user.role.to_string()],
+                )
+                .map_err(|e| Status::internal(e.to_string()))?;
+
+            let refresh = self
+                .security
+                .create_refresh_token(&user.id.to_string(), &user.tenant_id.to_string())
+                .map_err(|e| Status::internal(e.to_string()))?;
+
             (access, refresh)
         };
 
@@ -211,10 +235,14 @@ impl AuthService for AuthServiceImpl {
         request: Request<Empty>,
     ) -> Result<Response<ProtoUser>, Status> {
         let claims = self.get_claims(&request)?;
-        let user_id = Uuid::parse_str(&claims.sub).map_err(|_| Status::invalid_argument("Invalid user id"))?;
-        let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
+        let user_id = Uuid::parse_str(&claims.sub)
+            .map_err(|_| Status::invalid_argument("Invalid user id"))?;
+        let tenant_id = Uuid::parse_str(&claims.tenant_id)
+            .map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
 
-        let user = self.user_repo.find_by_id(&tenant_id, &user_id)
+        let user = self
+            .user_repo
+            .find_by_id(&tenant_id, &user_id)
             .await
             .map_err(|e| Status::internal(e.to_string()))?
             .ok_or_else(|| Status::not_found("User not found"))?;
@@ -229,8 +257,9 @@ impl AuthService for AuthServiceImpl {
         request: Request<CreateStaffRequest>,
     ) -> Result<Response<ProtoUser>, Status> {
         let claims = self.get_claims(&request)?;
-        let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
-        
+        let tenant_id = Uuid::parse_str(&claims.tenant_id)
+            .map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
+
         let req = request.into_inner();
         let password_hash = SecurityService::hash_password(&req.password)
             .map_err(|e| Status::internal(e.to_string()))?;
@@ -248,7 +277,9 @@ impl AuthService for AuthServiceImpl {
             updated_at: chrono::Utc::now(),
         };
 
-        let created = self.user_repo.create(&user_model)
+        let created = self
+            .user_repo
+            .create(&user_model)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -260,11 +291,17 @@ impl AuthService for AuthServiceImpl {
         request: Request<ListStaffRequest>,
     ) -> Result<Response<ListStaffResponse>, Status> {
         let claims = self.get_claims(&request)?;
-        let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
-        
-        let branch_id = request.into_inner().branch_id.and_then(|id| Uuid::parse_str(&id).ok());
+        let tenant_id = Uuid::parse_str(&claims.tenant_id)
+            .map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
 
-        let users = self.user_repo.list_by_tenant(&tenant_id, branch_id)
+        let branch_id = request
+            .into_inner()
+            .branch_id
+            .and_then(|id| Uuid::parse_str(&id).ok());
+
+        let users = self
+            .user_repo
+            .list_by_tenant(&tenant_id, branch_id)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -278,20 +315,24 @@ impl AuthService for AuthServiceImpl {
         request: Request<UpdateStaffRequest>,
     ) -> Result<Response<ProtoUser>, Status> {
         let claims = self.get_claims(&request)?;
-        let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
-        
-        let req = request.into_inner();
-        let user_id = Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid user id"))?;
+        let tenant_id = Uuid::parse_str(&claims.tenant_id)
+            .map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
 
-        let updated = self.user_repo.update(
-            &tenant_id, 
-            &user_id, 
-            req.full_name, 
-            req.role.map(UserRole::from), 
-            req.is_active
-        )
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        let req = request.into_inner();
+        let user_id =
+            Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid user id"))?;
+
+        let updated = self
+            .user_repo
+            .update(
+                &tenant_id,
+                &user_id,
+                req.full_name,
+                req.role.map(UserRole::from),
+                req.is_active,
+            )
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(self.to_proto_user(updated)))
     }
@@ -301,11 +342,14 @@ impl AuthService for AuthServiceImpl {
         request: Request<DeleteStaffRequest>,
     ) -> Result<Response<SuccessResponse>, Status> {
         let claims = self.get_claims(&request)?;
-        let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
-        
-        let user_id = Uuid::parse_str(&request.into_inner().id).map_err(|_| Status::invalid_argument("Invalid user id"))?;
+        let tenant_id = Uuid::parse_str(&claims.tenant_id)
+            .map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
 
-        self.user_repo.delete(&tenant_id, &user_id)
+        let user_id = Uuid::parse_str(&request.into_inner().id)
+            .map_err(|_| Status::invalid_argument("Invalid user id"))?;
+
+        self.user_repo
+            .delete(&tenant_id, &user_id)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 

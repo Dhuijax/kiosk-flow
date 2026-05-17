@@ -1,18 +1,17 @@
-use tonic::{Request, Response, Status};
-use proto_gen::product::{
-    product_service_server::ProductService,
-    Product as ProtoProduct, Topping as ProtoTopping,
-    ListProductsRequest, ListProductsResponse, GetProductRequest,
-    CreateProductRequest, UpdateProductRequest, DeleteProductRequest,
-    ListToppingsResponse, CreateToppingRequest, DeleteToppingRequest,
-};
-use proto_gen::common::{PaginationRequest, PaginationResponse, Money, SuccessResponse};
-use std::sync::Arc;
-use infra::repository::{ProductRepository, ToppingRepository};
 use domain::models::product::{Product as DomainProduct, Topping as DomainTopping};
-use uuid::Uuid;
+use infra::repository::{ProductRepository, ToppingRepository};
 use infra::security::Claims;
+use proto_gen::common::{Money, PaginationRequest, PaginationResponse, SuccessResponse};
+use proto_gen::product::{
+    product_service_server::ProductService, CreateProductRequest, CreateToppingRequest,
+    DeleteProductRequest, DeleteToppingRequest, GetProductRequest, ListProductsRequest,
+    ListProductsResponse, ListToppingsResponse, Product as ProtoProduct, Topping as ProtoTopping,
+    UpdateProductRequest,
+};
 use std::str::FromStr;
+use std::sync::Arc;
+use tonic::{Request, Response, Status};
+use uuid::Uuid;
 
 pub struct ProductServiceImpl {
     product_repo: Arc<ProductRepository>,
@@ -21,7 +20,10 @@ pub struct ProductServiceImpl {
 
 impl ProductServiceImpl {
     pub fn new(product_repo: Arc<ProductRepository>, topping_repo: Arc<ToppingRepository>) -> Self {
-        Self { product_repo, topping_repo }
+        Self {
+            product_repo,
+            topping_repo,
+        }
     }
 
     fn get_tenant_id<T>(&self, request: &Request<T>) -> Result<Uuid, Status> {
@@ -29,7 +31,8 @@ impl ProductServiceImpl {
             .extensions()
             .get::<Claims>()
             .ok_or_else(|| Status::unauthenticated("Unauthorized: Missing or invalid token"))?;
-        Uuid::parse_str(&claims.tenant_id).map_err(|_| Status::invalid_argument("Invalid tenant id in token"))
+        Uuid::parse_str(&claims.tenant_id)
+            .map_err(|_| Status::invalid_argument("Invalid tenant id in token"))
     }
 }
 
@@ -55,7 +58,9 @@ fn to_money_proto(b: &sqlx::types::BigDecimal) -> Option<Money> {
     let nanos = if parts.len() > 1 {
         // pad right with zeros up to 9 chars
         let mut n_str = parts[1].to_string();
-        while n_str.len() < 9 { n_str.push('0'); }
+        while n_str.len() < 9 {
+            n_str.push('0');
+        }
         n_str[0..9].parse::<i32>().unwrap_or(0)
     } else {
         0
@@ -103,18 +108,24 @@ impl ProductService for ProductServiceImpl {
     ) -> Result<Response<ListProductsResponse>, Status> {
         let tenant_id = self.get_tenant_id(&request)?;
         let req = request.into_inner();
-        let cat_opt = req.category_id.map(|c| Uuid::parse_str(&c).unwrap_or_default());
+        let cat_opt = req
+            .category_id
+            .map(|c| Uuid::parse_str(&c).unwrap_or_default());
         let search_opt = req.search_query;
-        
-        let products = self.product_repo.list_by_tenant(&tenant_id, cat_opt, search_opt)
+
+        let products = self
+            .product_repo
+            .list_by_tenant(&tenant_id, cat_opt, search_opt)
             .await
             .map_err(|e| Status::internal(format!("DB Error: {}", e)))?;
 
         Ok(Response::new(ListProductsResponse {
             products: products.into_iter().map(to_proto_product).collect(),
             pagination: Some(PaginationResponse {
-                total_count: 0, total_pages: 0, has_next: false
-            })
+                total_count: 0,
+                total_pages: 0,
+                has_next: false,
+            }),
         }))
     }
 
@@ -123,9 +134,12 @@ impl ProductService for ProductServiceImpl {
         request: Request<GetProductRequest>,
     ) -> Result<Response<ProtoProduct>, Status> {
         let tenant_id = self.get_tenant_id(&request)?;
-        let id = Uuid::parse_str(&request.into_inner().id).map_err(|_| Status::invalid_argument("Invalid ID format"))?;
+        let id = Uuid::parse_str(&request.into_inner().id)
+            .map_err(|_| Status::invalid_argument("Invalid ID format"))?;
 
-        let product = self.product_repo.find_by_id(&tenant_id, &id)
+        let product = self
+            .product_repo
+            .find_by_id(&tenant_id, &id)
             .await
             .map_err(|e| Status::internal(format!("DB error: {}", e)))?
             .ok_or_else(|| Status::not_found("Product not found"))?;
@@ -143,7 +157,9 @@ impl ProductService for ProductServiceImpl {
         let new_prod = DomainProduct {
             id: Uuid::new_v4(),
             tenant_id,
-            category_id: req.category_id.map(|id| Uuid::parse_str(&id).unwrap_or_default()),
+            category_id: req
+                .category_id
+                .map(|id| Uuid::parse_str(&id).unwrap_or_default()),
             sku: Some(req.sku),
             name: req.name,
             description: req.description,
@@ -158,11 +174,15 @@ impl ProductService for ProductServiceImpl {
             updated_at: chrono::Utc::now(),
         };
 
-        let topping_ids: Vec<Uuid> = req.topping_ids.iter()
+        let topping_ids: Vec<Uuid> = req
+            .topping_ids
+            .iter()
             .map(|id| Uuid::parse_str(id).unwrap_or_default())
             .collect();
 
-        let created = self.product_repo.create(&new_prod, &topping_ids)
+        let created = self
+            .product_repo
+            .create(&new_prod, &topping_ids)
             .await
             .map_err(|e| Status::internal(format!("Failed to create product: {}", e)))?;
 
@@ -175,12 +195,15 @@ impl ProductService for ProductServiceImpl {
     ) -> Result<Response<ProtoProduct>, Status> {
         let tenant_id = self.get_tenant_id(&request)?;
         let req = request.into_inner();
-        let id = Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid ID format"))?;
+        let id =
+            Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid ID format"))?;
 
         let updated_prod = DomainProduct {
             id,
             tenant_id,
-            category_id: req.category_id.map(|cid| Uuid::parse_str(&cid).unwrap_or_default()),
+            category_id: req
+                .category_id
+                .map(|cid| Uuid::parse_str(&cid).unwrap_or_default()),
             sku: req.sku,
             name: req.name.unwrap_or_default(),
             description: req.description,
@@ -195,11 +218,15 @@ impl ProductService for ProductServiceImpl {
             updated_at: chrono::Utc::now(),
         };
 
-        let topping_ids: Vec<Uuid> = req.topping_ids.iter()
+        let topping_ids: Vec<Uuid> = req
+            .topping_ids
+            .iter()
             .map(|id| Uuid::parse_str(id).unwrap_or_default())
             .collect();
 
-        let updated = self.product_repo.update(&tenant_id, &id, &updated_prod, Some(&topping_ids))
+        let updated = self
+            .product_repo
+            .update(&tenant_id, &id, &updated_prod, Some(&topping_ids))
             .await
             .map_err(|e| Status::internal(format!("Failed to update product: {}", e)))?;
 
@@ -211,13 +238,18 @@ impl ProductService for ProductServiceImpl {
         request: Request<DeleteProductRequest>,
     ) -> Result<Response<SuccessResponse>, Status> {
         let tenant_id = self.get_tenant_id(&request)?;
-        let id = Uuid::parse_str(&request.into_inner().id).map_err(|_| Status::invalid_argument("Invalid ID format"))?;
+        let id = Uuid::parse_str(&request.into_inner().id)
+            .map_err(|_| Status::invalid_argument("Invalid ID format"))?;
 
-        self.product_repo.delete(&tenant_id, &id)
+        self.product_repo
+            .delete(&tenant_id, &id)
             .await
             .map_err(|_| Status::internal("Failed to delete product"))?;
 
-        Ok(Response::new(SuccessResponse { success: true, message: "Product deleted".to_string() }))
+        Ok(Response::new(SuccessResponse {
+            success: true,
+            message: "Product deleted".to_string(),
+        }))
     }
 
     async fn list_toppings(
@@ -225,13 +257,19 @@ impl ProductService for ProductServiceImpl {
         request: Request<PaginationRequest>,
     ) -> Result<Response<ListToppingsResponse>, Status> {
         let tenant_id = self.get_tenant_id(&request)?;
-        let toppings = self.topping_repo.list_by_tenant(&tenant_id)
+        let toppings = self
+            .topping_repo
+            .list_by_tenant(&tenant_id)
             .await
             .map_err(|e| Status::internal(format!("DB error: {}", e)))?;
 
         Ok(Response::new(ListToppingsResponse {
             toppings: toppings.into_iter().map(to_proto_topping).collect(),
-            pagination: Some(PaginationResponse { total_count: 0, total_pages: 0, has_next: false })
+            pagination: Some(PaginationResponse {
+                total_count: 0,
+                total_pages: 0,
+                has_next: false,
+            }),
         }))
     }
 
@@ -251,7 +289,9 @@ impl ProductService for ProductServiceImpl {
             created_at: chrono::Utc::now(),
         };
 
-        let created = self.topping_repo.create(&new_top)
+        let created = self
+            .topping_repo
+            .create(&new_top)
             .await
             .map_err(|e| Status::internal(format!("Failed to create topping: {}", e)))?;
 
@@ -263,12 +303,17 @@ impl ProductService for ProductServiceImpl {
         request: Request<DeleteToppingRequest>,
     ) -> Result<Response<SuccessResponse>, Status> {
         let tenant_id = self.get_tenant_id(&request)?;
-        let id = Uuid::parse_str(&request.into_inner().id).map_err(|_| Status::invalid_argument("Invalid ID format"))?;
+        let id = Uuid::parse_str(&request.into_inner().id)
+            .map_err(|_| Status::invalid_argument("Invalid ID format"))?;
 
-        self.topping_repo.delete(&tenant_id, &id)
+        self.topping_repo
+            .delete(&tenant_id, &id)
             .await
             .map_err(|_| Status::internal("Failed to delete topping"))?;
 
-        Ok(Response::new(SuccessResponse { success: true, message: "Topping deleted".to_string() }))
+        Ok(Response::new(SuccessResponse {
+            success: true,
+            message: "Topping deleted".to_string(),
+        }))
     }
 }

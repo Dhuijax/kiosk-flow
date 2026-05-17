@@ -1,26 +1,28 @@
-use std::sync::Arc;
-use tonic::{Request, Response, Status};
-use uuid::Uuid;
+use crate::deduction::DeductionService;
+use bigdecimal::{BigDecimal, ToPrimitive, Zero};
 use chrono::Utc;
-use bigdecimal::{BigDecimal, Zero, ToPrimitive};
-use proto_gen::order::{
-    order_service_server::OrderService, 
-    CreateOrderRequest, GetOrderRequest, ListOrdersRequest, OrderResponse, 
-    UpdateOrderStatusRequest, CancelOrderRequest, ListOrdersResponse, StreamOrdersRequest,
-    Order as ProtoOrder, OrderItem as ProtoOrderItem, OrderItemTopping as ProtoOrderItemTopping,
-    OrderStatus as ProtoOrderStatus, OrderItemStatus as ProtoOrderItemStatus
+use domain::models::order::{
+    Order as DomainOrder, OrderItem as DomainOrderItem, OrderItemStatus as DomainOrderItemStatus,
+    OrderItemTopping as DomainOrderItemTopping, OrderStatus as DomainOrderStatus,
 };
-use proto_gen::common::Money;
-use infra::repository::{OrderRepository, ProductRepository, ToppingRepository, TableRepository};
-use domain::models::order::{Order as DomainOrder, OrderItem as DomainOrderItem, OrderItemTopping as DomainOrderItemTopping, OrderStatus as DomainOrderStatus, OrderItemStatus as DomainOrderItemStatus};
+use futures_util::StreamExt;
+use infra::repository::{OrderRepository, ProductRepository, TableRepository, ToppingRepository};
 use infra::security::Claims;
+use proto_gen::common::Money;
+use proto_gen::order::{
+    order_service_server::OrderService, CancelOrderRequest, CreateOrderRequest, GetOrderRequest,
+    ListOrdersRequest, ListOrdersResponse, Order as ProtoOrder, OrderItem as ProtoOrderItem,
+    OrderItemStatus as ProtoOrderItemStatus, OrderItemTopping as ProtoOrderItemTopping,
+    OrderResponse, OrderStatus as ProtoOrderStatus, StreamOrdersRequest, UpdateOrderStatusRequest,
+};
 use redis::aio::ConnectionManager;
 use redis::AsyncCommands;
-use tokio_stream::Stream;
-use futures_util::StreamExt;
+use serde::{Deserialize, Serialize};
 use std::pin::Pin;
-use serde::{Serialize, Deserialize};
-use crate::deduction::DeductionService;
+use std::sync::Arc;
+use tokio_stream::Stream;
+use tonic::{Request, Response, Status};
+use uuid::Uuid;
 
 pub struct OrderServiceImpl {
     order_repo: Arc<OrderRepository>,
@@ -40,8 +42,22 @@ struct OrderEvent {
 }
 
 impl OrderServiceImpl {
-    pub fn new(order_repo: Arc<OrderRepository>, product_repo: Arc<ProductRepository>, topping_repo: Arc<ToppingRepository>, table_repo: Arc<TableRepository>, deduction_service: Arc<DeductionService>, redis: ConnectionManager) -> Self {
-        Self { order_repo, product_repo, topping_repo, table_repo, deduction_service, redis }
+    pub fn new(
+        order_repo: Arc<OrderRepository>,
+        product_repo: Arc<ProductRepository>,
+        topping_repo: Arc<ToppingRepository>,
+        table_repo: Arc<TableRepository>,
+        deduction_service: Arc<DeductionService>,
+        redis: ConnectionManager,
+    ) -> Self {
+        Self {
+            order_repo,
+            product_repo,
+            topping_repo,
+            table_repo,
+            deduction_service,
+            redis,
+        }
     }
 
     fn get_context<T>(&self, request: &Request<T>) -> Result<(Uuid, Uuid), Status> {
@@ -49,21 +65,29 @@ impl OrderServiceImpl {
             .extensions()
             .get::<Claims>()
             .ok_or_else(|| Status::unauthenticated("Unauthorized: Missing or invalid token"))?;
-        
-        let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
-        let user_id = Uuid::parse_str(&claims.sub).map_err(|_| Status::invalid_argument("Invalid user id"))?;
-        
+
+        let tenant_id = Uuid::parse_str(&claims.tenant_id)
+            .map_err(|_| Status::invalid_argument("Invalid tenant id"))?;
+        let user_id = Uuid::parse_str(&claims.sub)
+            .map_err(|_| Status::invalid_argument("Invalid user id"))?;
+
         Ok((tenant_id, user_id))
     }
 
-    async fn notify_order_update(&self, tenant_id: Uuid, branch_id: Uuid, order_id: Uuid, status: DomainOrderStatus) {
+    async fn notify_order_update(
+        &self,
+        tenant_id: Uuid,
+        branch_id: Uuid,
+        order_id: Uuid,
+        status: DomainOrderStatus,
+    ) {
         let event = OrderEvent {
             tenant_id,
             branch_id,
             order_id,
             status: format!("{:?}", status),
         };
-        
+
         if let Ok(payload) = serde_json::to_string(&event) {
             let channel = format!("kioskflow:orders:{}", branch_id);
             let mut conn = self.redis.clone();
@@ -74,13 +98,20 @@ impl OrderServiceImpl {
 
 #[tonic::async_trait]
 impl OrderService for OrderServiceImpl {
-    async fn create_order(&self, request: Request<CreateOrderRequest>) -> Result<Response<OrderResponse>, Status> {
+    async fn create_order(
+        &self,
+        request: Request<CreateOrderRequest>,
+    ) -> Result<Response<OrderResponse>, Status> {
         let (tenant_id, created_by) = self.get_context(&request)?;
         let req = request.into_inner();
 
-        let branch_id = Uuid::parse_str(&req.branch_id).map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
+        let branch_id = Uuid::parse_str(&req.branch_id)
+            .map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
         let table_id = if !req.table_id.is_empty() {
-            Some(Uuid::parse_str(&req.table_id).map_err(|_| Status::invalid_argument("Invalid table_id"))?)
+            Some(
+                Uuid::parse_str(&req.table_id)
+                    .map_err(|_| Status::invalid_argument("Invalid table_id"))?,
+            )
         } else {
             None
         };
@@ -89,21 +120,31 @@ impl OrderService for OrderServiceImpl {
         let mut total_price = BigDecimal::zero();
 
         for item_req in req.items {
-            let product_id = Uuid::parse_str(&item_req.product_id).map_err(|_| Status::invalid_argument("Invalid product_id"))?;
-            let product = self.product_repo.find_by_id(&tenant_id, &product_id).await
+            let product_id = Uuid::parse_str(&item_req.product_id)
+                .map_err(|_| Status::invalid_argument("Invalid product_id"))?;
+            let product = self
+                .product_repo
+                .find_by_id(&tenant_id, &product_id)
+                .await
                 .map_err(|e| Status::internal(e.to_string()))?
                 .ok_or_else(|| Status::not_found("Product not found"))?;
 
             let item_subtotal = &product.price * BigDecimal::from(item_req.quantity);
-            
+
             // Handle Toppings
             let mut domain_toppings = Vec::new();
             if !item_req.topping_ids.is_empty() {
-                let topping_uuids: Vec<Uuid> = item_req.topping_ids.iter()
+                let topping_uuids: Vec<Uuid> = item_req
+                    .topping_ids
+                    .iter()
                     .map(|id| Uuid::parse_str(id).unwrap_or_default())
                     .collect();
-                
-                if let Ok(tops) = self.topping_repo.find_by_ids(&tenant_id, &topping_uuids).await {
+
+                if let Ok(tops) = self
+                    .topping_repo
+                    .find_by_ids(&tenant_id, &topping_uuids)
+                    .await
+                {
                     for t in tops {
                         domain_toppings.push(DomainOrderItemTopping {
                             id: Uuid::new_v4(),
@@ -136,21 +177,31 @@ impl OrderService for OrderServiceImpl {
         }
 
         let customer_id = if !req.customer_id.is_empty() {
-            Some(Uuid::parse_str(&req.customer_id).map_err(|_| Status::invalid_argument("Invalid customer_id"))?)
+            Some(
+                Uuid::parse_str(&req.customer_id)
+                    .map_err(|_| Status::invalid_argument("Invalid customer_id"))?,
+            )
         } else {
             None
         };
 
         let guest_id = if customer_id.is_none() {
             let table_name = if let Some(tid) = table_id {
-                self.table_repo.find_by_id(&tenant_id, &tid).await
-                    .ok().flatten()
+                self.table_repo
+                    .find_by_id(&tenant_id, &tid)
+                    .await
+                    .ok()
+                    .flatten()
                     .map(|t| t.name)
                     .unwrap_or_else(|| "TA".to_string())
             } else {
                 "TA".to_string()
             };
-            Some(format!("{}_{}", table_name, Utc::now().format("%Y%m%d%H%M%S")))
+            Some(format!(
+                "{}_{}",
+                table_name,
+                Utc::now().format("%Y%m%d%H%M%S")
+            ))
         } else {
             None
         };
@@ -177,26 +228,40 @@ impl OrderService for OrderServiceImpl {
             completed_at: None,
         };
 
-        let created = self.order_repo.create(&order, &domain_items).await
+        let created = self
+            .order_repo
+            .create(&order, &domain_items)
+            .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        let full_order = self.order_repo.find_by_id(&tenant_id, &created.id).await
+        let full_order = self
+            .order_repo
+            .find_by_id(&tenant_id, &created.id)
+            .await
             .map_err(|e| Status::internal(e.to_string()))?
             .ok_or_else(|| Status::internal("Order created but not found"))?;
 
         // Notify kitchen/clients
-        self.notify_order_update(tenant_id, branch_id, created.id, DomainOrderStatus::Draft).await;
+        self.notify_order_update(tenant_id, branch_id, created.id, DomainOrderStatus::Draft)
+            .await;
 
         Ok(Response::new(OrderResponse {
             order: Some(map_domain_to_proto(full_order.0, full_order.1)),
         }))
     }
 
-    async fn get_order(&self, request: Request<GetOrderRequest>) -> Result<Response<OrderResponse>, Status> {
+    async fn get_order(
+        &self,
+        request: Request<GetOrderRequest>,
+    ) -> Result<Response<OrderResponse>, Status> {
         let (tenant_id, _) = self.get_context(&request)?;
-        let id = Uuid::parse_str(&request.into_inner().id).map_err(|_| Status::invalid_argument("Invalid id"))?;
+        let id = Uuid::parse_str(&request.into_inner().id)
+            .map_err(|_| Status::invalid_argument("Invalid id"))?;
 
-        let full_order = self.order_repo.find_by_id(&tenant_id, &id).await
+        let full_order = self
+            .order_repo
+            .find_by_id(&tenant_id, &id)
+            .await
             .map_err(|e| Status::internal(e.to_string()))?
             .ok_or_else(|| Status::not_found("Order not found"))?;
 
@@ -205,11 +270,15 @@ impl OrderService for OrderServiceImpl {
         }))
     }
 
-    async fn list_orders(&self, request: Request<ListOrdersRequest>) -> Result<Response<ListOrdersResponse>, Status> {
+    async fn list_orders(
+        &self,
+        request: Request<ListOrdersRequest>,
+    ) -> Result<Response<ListOrdersResponse>, Status> {
         let (tenant_id, _) = self.get_context(&request)?;
         let req = request.into_inner();
-        let branch_id = Uuid::parse_str(&req.branch_id).map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
-        
+        let branch_id = Uuid::parse_str(&req.branch_id)
+            .map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
+
         let status = if req.status != 0 {
             Some(map_proto_status_to_domain(req.status()))
         } else {
@@ -217,37 +286,67 @@ impl OrderService for OrderServiceImpl {
         };
 
         let pagination = req.pagination.unwrap_or_default();
-        let limit = if pagination.page_size > 0 { pagination.page_size } else { 10 };
-        let offset = (if pagination.page > 0 { pagination.page - 1 } else { 0 }) * limit;
+        let limit = if pagination.page_size > 0 {
+            pagination.page_size
+        } else {
+            10
+        };
+        let offset = (if pagination.page > 0 {
+            pagination.page - 1
+        } else {
+            0
+        }) * limit;
 
-        let orders = self.order_repo.list_by_branch(&tenant_id, &branch_id, status, limit as i64, offset as i64).await
+        let orders = self
+            .order_repo
+            .list_by_branch(&tenant_id, &branch_id, status, limit as i64, offset as i64)
+            .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(ListOrdersResponse {
-            orders: orders.into_iter().map(|o| map_domain_to_proto(o, vec![])).collect(),
+            orders: orders
+                .into_iter()
+                .map(|o| map_domain_to_proto(o, vec![]))
+                .collect(),
             pagination: None, // Simplified
         }))
     }
 
-    async fn update_order_status(&self, request: Request<UpdateOrderStatusRequest>) -> Result<Response<OrderResponse>, Status> {
+    async fn update_order_status(
+        &self,
+        request: Request<UpdateOrderStatusRequest>,
+    ) -> Result<Response<OrderResponse>, Status> {
         let (tenant_id, _) = self.get_context(&request)?;
         let req = request.into_inner();
         let id = Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid id"))?;
         let next_status = map_proto_status_to_domain(req.status());
 
-        let (current_order, items) = self.order_repo.find_by_id(&tenant_id, &id).await
+        let (current_order, items) = self
+            .order_repo
+            .find_by_id(&tenant_id, &id)
+            .await
             .map_err(|e| Status::internal(e.to_string()))?
             .ok_or_else(|| Status::not_found("Order not found"))?;
 
         validate_transition(&current_order.status, &next_status)?;
 
-        let updated = self.order_repo.update_status(&tenant_id, &id, next_status.clone()).await
+        let updated = self
+            .order_repo
+            .update_status(&tenant_id, &id, next_status.clone())
+            .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
         // 2. Perform Ingredient Deduction if moving to Completed
         if next_status == DomainOrderStatus::Completed {
-            if let Err(e) = self.deduction_service.deduct_stock_for_order(&tenant_id, &current_order.branch_id, &current_order.id).await {
-                eprintln!("Failed to deduct stock for order {}: {}", current_order.id, e);
+            if let Err(e) = self
+                .deduction_service
+                .deduct_stock_for_order(&tenant_id, &current_order.branch_id, &current_order.id)
+                .await
+            {
+                eprintln!(
+                    "Failed to deduct stock for order {}: {}",
+                    current_order.id, e
+                );
                 // We log the error but don't fail the status update for now to avoid blocking the POS flow.
                 // In a stricter system, we might wrap this in a transaction.
             }
@@ -255,30 +354,44 @@ impl OrderService for OrderServiceImpl {
 
         // Notify kitchen/clients
         let branch_id = updated.branch_id;
-        self.notify_order_update(tenant_id, branch_id, id, next_status).await;
+        self.notify_order_update(tenant_id, branch_id, id, next_status)
+            .await;
 
         Ok(Response::new(OrderResponse {
             order: Some(map_domain_to_proto(updated, items)),
         }))
     }
 
-    async fn cancel_order(&self, request: Request<CancelOrderRequest>) -> Result<Response<OrderResponse>, Status> {
+    async fn cancel_order(
+        &self,
+        request: Request<CancelOrderRequest>,
+    ) -> Result<Response<OrderResponse>, Status> {
         let (tenant_id, _) = self.get_context(&request)?;
         let req = request.into_inner();
         let id = Uuid::parse_str(&req.id).map_err(|_| Status::invalid_argument("Invalid id"))?;
 
-        let (current_order, items) = self.order_repo.find_by_id(&tenant_id, &id).await
+        let (current_order, items) = self
+            .order_repo
+            .find_by_id(&tenant_id, &id)
+            .await
             .map_err(|e| Status::internal(e.to_string()))?
             .ok_or_else(|| Status::not_found("Order not found"))?;
 
         match current_order.status {
-            DomainOrderStatus::Paid | DomainOrderStatus::Completed | DomainOrderStatus::Cancelled => {
-                return Err(Status::failed_precondition("Cannot cancel order in current status"));
+            DomainOrderStatus::Paid
+            | DomainOrderStatus::Completed
+            | DomainOrderStatus::Cancelled => {
+                return Err(Status::failed_precondition(
+                    "Cannot cancel order in current status",
+                ));
             }
             _ => {}
         }
 
-        let updated = self.order_repo.update_status(&tenant_id, &id, DomainOrderStatus::Cancelled).await
+        let updated = self
+            .order_repo
+            .update_status(&tenant_id, &id, DomainOrderStatus::Cancelled)
+            .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
         Ok(Response::new(OrderResponse {
@@ -288,33 +401,42 @@ impl OrderService for OrderServiceImpl {
 
     type StreamOrdersStream = Pin<Box<dyn Stream<Item = Result<OrderResponse, Status>> + Send>>;
 
-    async fn stream_orders(&self, request: Request<StreamOrdersRequest>) -> Result<Response<Self::StreamOrdersStream>, Status> {
+    async fn stream_orders(
+        &self,
+        request: Request<StreamOrdersRequest>,
+    ) -> Result<Response<Self::StreamOrdersStream>, Status> {
         let (tenant_id, _) = self.get_context(&request)?;
         let branch_id_str = request.into_inner().branch_id;
-        let branch_id = Uuid::parse_str(&branch_id_str).map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
-        
+        let branch_id = Uuid::parse_str(&branch_id_str)
+            .map_err(|_| Status::invalid_argument("Invalid branch_id"))?;
+
         let order_repo = self.order_repo.clone();
         let channel_name = format!("kioskflow:orders:{}", branch_id);
-        
+
         // We need a separate connection for PubSub since it blocks
         let redis_url = std::env::var("REDIS_URL").expect("REDIS_URL must be set");
         let client = redis::Client::open(redis_url).map_err(|e| Status::internal(e.to_string()))?;
-        
+
         let (tx, rx) = tokio::sync::mpsc::channel(10);
-        
+
         tokio::spawn(async move {
             if let Ok(mut pubsub) = client.get_async_pubsub().await {
                 if let Ok(_) = pubsub.subscribe(&channel_name).await {
                     let mut pubsub_stream = pubsub.into_on_message();
-                    
+
                     while let Some(msg) = pubsub_stream.next().await {
                         let payload: String = msg.get_payload().unwrap_or_default();
                         if let Ok(event) = serde_json::from_str::<OrderEvent>(&payload) {
                             if event.tenant_id == tenant_id {
                                 // Fetch latest order state
-                                if let Ok(Some(full_order)) = order_repo.find_by_id(&tenant_id, &event.order_id).await {
+                                if let Ok(Some(full_order)) =
+                                    order_repo.find_by_id(&tenant_id, &event.order_id).await
+                                {
                                     let response = OrderResponse {
-                                        order: Some(map_domain_to_proto(full_order.0, full_order.1)),
+                                        order: Some(map_domain_to_proto(
+                                            full_order.0,
+                                            full_order.1,
+                                        )),
                                     };
                                     if tx.send(Ok(response)).await.is_err() {
                                         break;
@@ -328,25 +450,33 @@ impl OrderService for OrderServiceImpl {
         });
 
         let output_stream = tokio_stream::wrappers::ReceiverStream::new(rx);
-        Ok(Response::new(Box::pin(output_stream) as Self::StreamOrdersStream))
+        Ok(Response::new(
+            Box::pin(output_stream) as Self::StreamOrdersStream
+        ))
     }
 }
 
-fn validate_transition(current: &DomainOrderStatus, next: &DomainOrderStatus) -> Result<(), Status> {
+fn validate_transition(
+    current: &DomainOrderStatus,
+    next: &DomainOrderStatus,
+) -> Result<(), Status> {
     use DomainOrderStatus::*;
-    
+
     let valid = match (current, next) {
         (Draft, Confirmed) => true,
         (Confirmed, Preparing) => true,
         (Preparing, Served) => true,
         (Draft | Confirmed | Preparing | Served, Paid) => true,
         (Paid, Completed) => true,
-        (_, Cancelled) => true, 
+        (_, Cancelled) => true,
         _ => false,
     };
 
     if !valid {
-        return Err(Status::failed_precondition(format!("Invalid state transition from {:?} to {:?}", current, next)));
+        return Err(Status::failed_precondition(format!(
+            "Invalid state transition from {:?} to {:?}",
+            current, next
+        )));
     }
     Ok(())
 }
@@ -360,7 +490,10 @@ fn map_money_to_proto(val: BigDecimal) -> Option<Money> {
     })
 }
 
-fn map_domain_to_proto(order: DomainOrder, items: Vec<(DomainOrderItem, Vec<DomainOrderItemTopping>)>) -> ProtoOrder {
+fn map_domain_to_proto(
+    order: DomainOrder,
+    items: Vec<(DomainOrderItem, Vec<DomainOrderItemTopping>)>,
+) -> ProtoOrder {
     ProtoOrder {
         id: order.id.to_string(),
         branch_id: order.branch_id.to_string(),
@@ -369,7 +502,10 @@ fn map_domain_to_proto(order: DomainOrder, items: Vec<(DomainOrderItem, Vec<Doma
         order_number: order.order_number,
         status: map_domain_status_to_proto(order.status) as i32,
         customer_name: order.customer_name.unwrap_or_default(),
-        customer_id: order.customer_id.map(|id| id.to_string()).unwrap_or_default(),
+        customer_id: order
+            .customer_id
+            .map(|id| id.to_string())
+            .unwrap_or_default(),
         cashier_name: order.cashier_name.unwrap_or_default(),
         guest_id: order.guest_id.unwrap_or_default(),
         subtotal: map_money_to_proto(order.subtotal),
@@ -377,22 +513,28 @@ fn map_domain_to_proto(order: DomainOrder, items: Vec<(DomainOrderItem, Vec<Doma
         discount_amount: map_money_to_proto(order.discount_amount),
         total: map_money_to_proto(order.total),
         note: order.note.unwrap_or_default(),
-        items: items.into_iter().map(|(i, t)| ProtoOrderItem {
-            id: i.id.to_string(),
-            product_id: i.product_id.to_string(),
-            product_name: i.product_name,
-            unit_price: map_money_to_proto(i.unit_price),
-            quantity: i.quantity,
-            subtotal: map_money_to_proto(i.subtotal),
-            note: i.note.unwrap_or_default(),
-            status: map_domain_item_status_to_proto(i.status) as i32,
-            toppings: t.into_iter().map(|top| ProtoOrderItemTopping {
-                id: top.id.to_string(),
-                topping_id: top.topping_id.to_string(),
-                name: top.name,
-                price: map_money_to_proto(top.price),
-            }).collect(),
-        }).collect(),
+        items: items
+            .into_iter()
+            .map(|(i, t)| ProtoOrderItem {
+                id: i.id.to_string(),
+                product_id: i.product_id.to_string(),
+                product_name: i.product_name,
+                unit_price: map_money_to_proto(i.unit_price),
+                quantity: i.quantity,
+                subtotal: map_money_to_proto(i.subtotal),
+                note: i.note.unwrap_or_default(),
+                status: map_domain_item_status_to_proto(i.status) as i32,
+                toppings: t
+                    .into_iter()
+                    .map(|top| ProtoOrderItemTopping {
+                        id: top.id.to_string(),
+                        topping_id: top.topping_id.to_string(),
+                        name: top.name,
+                        price: map_money_to_proto(top.price),
+                    })
+                    .collect(),
+            })
+            .collect(),
         created_at: Some(prost_types::Timestamp {
             seconds: order.created_at.timestamp(),
             nanos: order.created_at.timestamp_subsec_nanos() as i32,

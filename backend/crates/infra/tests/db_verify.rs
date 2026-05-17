@@ -5,6 +5,10 @@ use uuid::Uuid;
 #[tokio::test]
 async fn test_tenant_rls_isolation() -> anyhow::Result<()> {
     dotenv().ok();
+    if std::env::var("DATABASE_URL").is_err() {
+        println!("Skipping RLS integration test as DATABASE_URL is not set");
+        return Ok(());
+    }
     let pool = create_pool().await?;
     run_migrations(&pool).await?;
 

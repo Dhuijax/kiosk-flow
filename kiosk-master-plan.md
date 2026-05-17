@@ -548,3 +548,6 @@ kiosk-flow/
 | S34 | `[x]` Completed | 2026-05-17 |
 | S35 | `[x]` Conversational AI Simulator (Landing Page) | 2026-05-17 |
 | S36 | `[x]` Loyalty & Combo Engine (POS Checkout) | 2026-05-17 |
+| S37 | `[x]` Interactive ROI & Sandbox Playground (Landing Page) | 2026-05-17 |
+| S38 | `[ ]` Split/Merge Bills & Table Transfer (POS Core) | 2026-05-17 |
+| S39 | `[ ]` Self-Service Table QR Ordering (SaaS ERP) | 2026-05-17 |

@@ -1040,6 +1040,7 @@ dependencies = [
  "chrono",
  "domain",
  "dotenvy",
+ "futures-util",
  "hex",
  "http",
  "http-body",

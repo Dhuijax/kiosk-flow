@@ -28,11 +28,7 @@ impl ReportRepository {
     }
 
     async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
-            .bind(tenant_id.to_string())
-            .execute(&mut *tx)
-            .await?;
+        let tx = crate::db::begin_scoped_tx(&self.pool, tenant_id, None, None).await?;
         Ok(tx)
     }
 
@@ -207,11 +203,7 @@ impl UserRepository {
 
     /// Helper to start a transaction and set the tenant context for RLS
     async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
-            .bind(tenant_id.to_string())
-            .execute(&mut *tx)
-            .await?;
+        let tx = crate::db::begin_scoped_tx(&self.pool, tenant_id, None, None).await?;
         Ok(tx)
     }
 
@@ -371,11 +363,7 @@ impl CategoryRepository {
     }
 
     async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
-            .bind(tenant_id.to_string())
-            .execute(&mut *tx)
-            .await?;
+        let tx = crate::db::begin_scoped_tx(&self.pool, tenant_id, None, None).await?;
         Ok(tx)
     }
 
@@ -510,11 +498,7 @@ impl ProductRepository {
     }
 
     async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
-            .bind(tenant_id.to_string())
-            .execute(&mut *tx)
-            .await?;
+        let tx = crate::db::begin_scoped_tx(&self.pool, tenant_id, None, None).await?;
         Ok(tx)
     }
 
@@ -687,11 +671,7 @@ impl ToppingRepository {
     }
 
     async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
-            .bind(tenant_id.to_string())
-            .execute(&mut *tx)
-            .await?;
+        let tx = crate::db::begin_scoped_tx(&self.pool, tenant_id, None, None).await?;
         Ok(tx)
     }
 
@@ -777,11 +757,7 @@ impl TableRepository {
     }
 
     async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
-            .bind(tenant_id.to_string())
-            .execute(&mut *tx)
-            .await?;
+        let tx = crate::db::begin_scoped_tx(&self.pool, tenant_id, None, None).await?;
         Ok(tx)
     }
 
@@ -1155,11 +1131,7 @@ impl FloorPlanRepository {
     }
 
     async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
-            .bind(tenant_id.to_string())
-            .execute(&mut *tx)
-            .await?;
+        let tx = crate::db::begin_scoped_tx(&self.pool, tenant_id, None, None).await?;
         Ok(tx)
     }
 
@@ -1261,11 +1233,7 @@ impl OrderRepository {
     }
 
     async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
-            .bind(tenant_id.to_string())
-            .execute(&mut *tx)
-            .await?;
+        let tx = crate::db::begin_scoped_tx(&self.pool, tenant_id, None, None).await?;
         Ok(tx)
     }
 
@@ -1928,11 +1896,7 @@ impl PaymentRepository {
     }
 
     async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
-            .bind(tenant_id.to_string())
-            .execute(&mut *tx)
-            .await?;
+        let tx = crate::db::begin_scoped_tx(&self.pool, tenant_id, None, None).await?;
         Ok(tx)
     }
 
@@ -2083,11 +2047,7 @@ impl InventoryRepository {
     }
 
     async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
-            .bind(tenant_id.to_string())
-            .execute(&mut *tx)
-            .await?;
+        let tx = crate::db::begin_scoped_tx(&self.pool, tenant_id, None, None).await?;
         Ok(tx)
     }
 
@@ -2301,11 +2261,7 @@ impl CustomerRepository {
     }
 
     async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
-            .bind(tenant_id.to_string())
-            .execute(&mut *tx)
-            .await?;
+        let tx = crate::db::begin_scoped_tx(&self.pool, tenant_id, None, None).await?;
         Ok(tx)
     }
 
@@ -2488,11 +2444,7 @@ impl StoreRepository {
     }
 
     async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
-            .bind(tenant_id.to_string())
-            .execute(&mut *tx)
-            .await?;
+        let tx = crate::db::begin_scoped_tx(&self.pool, tenant_id, None, None).await?;
         Ok(tx)
     }
 
@@ -2776,11 +2728,7 @@ impl IngredientRepository {
     }
 
     async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
-            .bind(tenant_id.to_string())
-            .execute(&mut *tx)
-            .await?;
+        let tx = crate::db::begin_scoped_tx(&self.pool, tenant_id, None, None).await?;
         Ok(tx)
     }
 

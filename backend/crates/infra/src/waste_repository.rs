@@ -13,11 +13,7 @@ impl WasteRepository {
     }
 
     async fn tx_with_tenant(&self, tenant_id: &Uuid) -> Result<Transaction<'_, Postgres>> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query("SELECT set_config('app.current_tenant', $1, true)")
-            .bind(tenant_id.to_string())
-            .execute(&mut *tx)
-            .await?;
+        let tx = crate::db::begin_scoped_tx(&self.pool, tenant_id, None, None).await?;
         Ok(tx)
     }
 

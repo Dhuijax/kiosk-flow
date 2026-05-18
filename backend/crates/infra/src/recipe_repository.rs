@@ -57,7 +57,9 @@ impl RecipeRepository {
         product_id: &Uuid,
         ingredients: &[(Uuid, BigDecimal, bool)],
     ) -> Result<(), sqlx::Error> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = crate::db::begin_scoped_tx(&self.pool, tenant_id, None, None)
+            .await
+            .map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
 
         // 1. Delete existing
         sqlx::query!(

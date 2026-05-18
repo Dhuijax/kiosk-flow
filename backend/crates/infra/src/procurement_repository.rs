@@ -150,7 +150,13 @@ impl ProcurementRepository {
 
     // Purchase Orders
     pub async fn begin_transaction(&self) -> Result<Transaction<'_, Postgres>, sqlx::Error> {
-        self.pool.begin().await
+        let tenant_id = crate::middleware::CURRENT_CONTEXT
+            .try_with(|c| c.tenant_id)
+            .unwrap_or_default();
+        let tx = crate::db::begin_scoped_tx(&self.pool, &tenant_id, None, None)
+            .await
+            .map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
+        Ok(tx)
     }
 
     pub async fn create_purchase_order(

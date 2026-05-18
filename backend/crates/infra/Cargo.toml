@@ -26,6 +26,7 @@ hex = { workspace = true }
 bytes = { workspace = true }
 http = { workspace = true }
 tower = { workspace = true }
+tokio = { workspace = true }
+futures-util = "0.3"
 
 [dev-dependencies]
-tokio = { workspace = true }

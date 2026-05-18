@@ -43,7 +43,7 @@ use services::status::StatusServiceImpl;
 use services::store::{StoreServiceImpl, TenantSettingsServiceImpl};
 use services::table::TableServiceImpl;
 
-use infra::middleware::{get_auth_interceptor, idempotency::IdempotencyLayer};
+use infra::middleware::{get_auth_interceptor, idempotency::IdempotencyLayer, ScopingLayer};
 
 use dotenvy::dotenv;
 use infra::db::create_pool;
@@ -201,6 +201,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             HeaderName::from_static("authorization"),
             HeaderName::from_static("content-type"),
             HeaderName::from_static("x-tenant-id"),
+            HeaderName::from_static("x-branch-id"),
             HeaderName::from_static("x-grpc-web"),
             HeaderName::from_static("x-user-agent"),
             HeaderName::from_static("grpc-timeout"),
@@ -222,10 +223,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Starting server with gRPC-Web and CORS enabled...");
 
     let idempotency_layer = IdempotencyLayer::new(redis_manager.clone());
+    let scoping_layer = ScopingLayer;
     let server = Server::builder()
         .accept_http1(true)
         .layer(cors)
-        .layer(idempotency_layer);
+        .layer(idempotency_layer)
+        .layer(scoping_layer);
 
     // Apply tonic-web to all services
     let mut router = server;

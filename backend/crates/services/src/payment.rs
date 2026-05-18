@@ -1,3 +1,4 @@
+use crate::deduction::DeductionService;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::Utc;
 use domain::models::order::OrderStatus as DomainOrderStatus;
@@ -22,6 +23,7 @@ pub struct PaymentServiceImpl {
     order_repo: Arc<OrderRepository>,
     customer_repo: Arc<CustomerRepository>,
     user_repo: Arc<UserRepository>,
+    deduction_service: Arc<DeductionService>,
 }
 
 impl PaymentServiceImpl {
@@ -30,12 +32,14 @@ impl PaymentServiceImpl {
         order_repo: Arc<OrderRepository>,
         customer_repo: Arc<CustomerRepository>,
         user_repo: Arc<UserRepository>,
+        deduction_service: Arc<DeductionService>,
     ) -> Self {
         Self {
             payment_repo,
             order_repo,
             customer_repo,
             user_repo,
+            deduction_service,
         }
     }
 
@@ -123,6 +127,15 @@ impl PaymentService for PaymentServiceImpl {
             .create_with_order_status(&domain_payment, DomainOrderStatus::Paid)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
+
+        // Perform Ingredient Deduction if moving to Paid (Takeaway fallback)
+        if let Err(e) = self
+            .deduction_service
+            .deduct_stock_for_order(&tenant_id, &order.branch_id, &order_id)
+            .await
+        {
+            eprintln!("Failed to deduct stock for order {}: {}", order_id, e);
+        }
 
         // 5. Update Order with Cashier Name and Customer Points (Post-payment hooks)
         let cashier_name = self

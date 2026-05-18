@@ -360,6 +360,15 @@ proto/
 | **S33** | Auto-Deduction Engine | Real-time ingredient deduction on Order completion | Stock levels update based on sales | [x] |
 | **S34** | Procurement & Alerts | Purchase orders for ingredients + low stock alerts | Purchase ingredients to refill stock | [x] |
 
+### Phase 8: Enterprise Resiliency & Upgrades (Chuỗi & Vận Hành Thực Tế)
+
+| Sprint | Name | Description | Verify | Status |
+|--------|------|-------------|--------|--------|
+| **E1** | Served-Triggered BOM Deduction | Deduct ingredient stock when order is served, rollback if cancelled | Real-time deduction on served, correct refund on cancelled | [ ] |
+| **E2** | Waste & Loss Management | API + UI to report food/ingredient waste (human error/spills) | Waste log records created, stock reduced with 'waste' type | [ ] |
+| **E3** | Idempotency Engine | Redis short-lived locks with client-side UUID keys | Block duplicates on timeout network retries | [ ] |
+| **E4** | Auto-migrations & Branch Scoping | SaaS auto-migration pipeline + strict branch_id scoping in DB | CLI successfully updates 100% of separate tenant DB schemas | [ ] |
+
 ### Phase 6: Polish & Production
 
 | Sprint | Name | Description | Verify | Status |
@@ -551,3 +560,7 @@ kiosk-flow/
 | S37 | `[x]` Interactive ROI & Sandbox Playground (Landing Page) | 2026-05-17 |
 | S39 | `[x]` Completed | 2026-05-17 |
 | S40 | `[x]` Completed | 2026-05-17 |
+| E1  | `[ ]` In Progress | 2026-05-18 |
+| E2  | `[ ]` Pending | - |
+| E3  | `[ ]` Pending | - |
+| E4  | `[ ]` Pending | - |

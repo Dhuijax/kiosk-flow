@@ -2198,6 +2198,29 @@ impl InventoryRepository {
         Ok(inventory)
     }
 
+    pub async fn has_transaction_for_reference(
+        &self,
+        tenant_id: &Uuid,
+        reference_id: &Uuid,
+        r#type: InventoryTransactionType,
+    ) -> Result<bool> {
+        let mut tx = self.tx_with_tenant(tenant_id).await?;
+        let row: (bool,) = sqlx::query_as(
+            r#"
+            SELECT EXISTS(
+                SELECT 1 FROM inventory_transactions 
+                WHERE reference_id = $1 AND type = $2
+            )
+            "#,
+        )
+        .bind(reference_id)
+        .bind(r#type)
+        .fetch_one(&mut *tx)
+        .await?;
+        tx.commit().await?;
+        Ok(row.0)
+    }
+
     pub async fn list_stock(
         &self,
         tenant_id: &Uuid,

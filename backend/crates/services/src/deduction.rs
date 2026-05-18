@@ -31,6 +31,15 @@ impl DeductionService {
         branch_id: &Uuid,
         order_id: &Uuid,
     ) -> Result<()> {
+        // Prevent double deduction
+        if self
+            .inventory_repo
+            .has_transaction_for_reference(tenant_id, order_id, InventoryTransactionType::Sale)
+            .await?
+        {
+            return Ok(());
+        }
+
         // 1. Fetch Order and Items
         let (order, items) = match self.order_repo.find_by_id(tenant_id, order_id).await? {
             Some(data) => data,
@@ -73,6 +82,77 @@ impl DeductionService {
                         InventoryTransactionType::Sale,
                         Some(*order_id),
                         Some(format!("Deduction for Order #{}", order.order_number)),
+                        None, // System user
+                    )
+                    .await?;
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn rollback_stock_for_order(
+        &self,
+        tenant_id: &Uuid,
+        branch_id: &Uuid,
+        order_id: &Uuid,
+    ) -> Result<()> {
+        // Prevent rollback if order was not deducted
+        let has_deduction = self
+            .inventory_repo
+            .has_transaction_for_reference(tenant_id, order_id, InventoryTransactionType::Sale)
+            .await?;
+        if !has_deduction {
+            return Ok(());
+        }
+
+        // Prevent double rollback
+        let has_rollback = self
+            .inventory_repo
+            .has_transaction_for_reference(tenant_id, order_id, InventoryTransactionType::Return)
+            .await?;
+        if has_rollback {
+            return Ok(());
+        }
+
+        // 1. Fetch Order and Items
+        let (order, items) = match self.order_repo.find_by_id(tenant_id, order_id).await? {
+            Some(data) => data,
+            None => return Err(anyhow::anyhow!("Order not found")),
+        };
+
+        for (item, _) in items {
+            // 2. Fetch Recipe for Product
+            let ingredients = self
+                .recipe_repo
+                .get_recipe_for_product(tenant_id, &item.product_id)
+                .await?;
+
+            if ingredients.is_empty() {
+                continue;
+            }
+
+            for recipe_item in ingredients {
+                let recipe_qty = recipe_item.quantity;
+                let item_qty = BigDecimal::from(item.quantity);
+
+                let total_rollback = recipe_qty * item_qty;
+                let quantity_change = total_rollback; // positive change for return
+
+                let _ = self
+                    .inventory_repo
+                    .update_stock(
+                        tenant_id,
+                        branch_id,
+                        None, // product_id
+                        Some(recipe_item.ingredient_id),
+                        &quantity_change,
+                        InventoryTransactionType::Return,
+                        Some(*order_id),
+                        Some(format!(
+                            "Rollback for Cancelled Order #{}",
+                            order.order_number
+                        )),
                         None, // System user
                     )
                     .await?;

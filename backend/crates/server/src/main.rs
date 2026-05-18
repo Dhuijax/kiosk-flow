@@ -124,6 +124,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         order_repo.clone(),
         customer_repo.clone(),
         user_repo.clone(),
+        deduction_service.clone(),
     );
     let report_service = ReportServiceImpl::new(report_repo.clone());
     let customer_service = CustomerServiceImpl::new(customer_repo.clone(), order_repo.clone());

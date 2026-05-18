@@ -348,8 +348,11 @@ impl OrderService for OrderServiceImpl {
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        // 2. Perform Ingredient Deduction if moving to Completed
-        if next_status == DomainOrderStatus::Completed {
+        // 2. Perform Ingredient Deduction if moving to Served, Paid, or Completed
+        if next_status == DomainOrderStatus::Served
+            || next_status == DomainOrderStatus::Paid
+            || next_status == DomainOrderStatus::Completed
+        {
             if let Err(e) = self
                 .deduction_service
                 .deduct_stock_for_order(&tenant_id, &current_order.branch_id, &current_order.id)
@@ -359,8 +362,20 @@ impl OrderService for OrderServiceImpl {
                     "Failed to deduct stock for order {}: {}",
                     current_order.id, e
                 );
-                // We log the error but don't fail the status update for now to avoid blocking the POS flow.
-                // In a stricter system, we might wrap this in a transaction.
+            }
+        }
+
+        // 3. Perform Rollback if moving to Cancelled
+        if next_status == DomainOrderStatus::Cancelled {
+            if let Err(e) = self
+                .deduction_service
+                .rollback_stock_for_order(&tenant_id, &current_order.branch_id, &current_order.id)
+                .await
+            {
+                eprintln!(
+                    "Failed to rollback stock for order {}: {}",
+                    current_order.id, e
+                );
             }
         }
 
@@ -408,6 +423,18 @@ impl OrderService for OrderServiceImpl {
             .update_status(&tenant_id, &id, DomainOrderStatus::Cancelled)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
+
+        // Perform Rollback if moving to Cancelled
+        if let Err(e) = self
+            .deduction_service
+            .rollback_stock_for_order(&tenant_id, &current_order.branch_id, &current_order.id)
+            .await
+        {
+            eprintln!(
+                "Failed to rollback stock for order {}: {}",
+                current_order.id, e
+            );
+        }
 
         Ok(Response::new(OrderResponse {
             order: Some(map_domain_to_proto(updated, items)),

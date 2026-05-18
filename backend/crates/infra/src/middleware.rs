@@ -27,6 +27,30 @@ pub fn extract_tenant_from_request<T>(request: &Request<T>) -> Result<String, St
     Ok(parts[0].to_string())
 }
 
+/// Extracts the tenant subdomain from http headers for Tower services
+pub fn extract_tenant_from_request_http(headers: &http::HeaderMap) -> String {
+    if let Some(tenant_id) = headers.get("x-tenant-id") {
+        if let Ok(tid) = tenant_id.to_str() {
+            return tid.to_string();
+        }
+    }
+
+    if let Some(authority) = headers
+        .get(":authority")
+        .or_else(|| headers.get("host"))
+        .and_then(|v| v.to_str().ok())
+    {
+        let parts: Vec<&str> = authority.split('.').collect();
+        if !parts.is_empty() {
+            return parts[0].to_string();
+        }
+    }
+
+    "default".to_string()
+}
+
+pub mod idempotency;
+
 /// A Tonic Interceptor that verifies JWT and injects tenant/user context.
 pub fn get_auth_interceptor(
     secret: String,

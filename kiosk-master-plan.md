@@ -562,5 +562,5 @@ kiosk-flow/
 | S40 | `[x]` Completed | 2026-05-17 |
 | E1  | `[x]` Completed | 2026-05-18 |
 | E2  | `[x]` Completed | 2026-05-18 |
-| E3  | `[ ]` Pending | - |
+| E3  | `[x]` Completed | 2026-05-18 |
 | E4  | `[ ]` Pending | - |

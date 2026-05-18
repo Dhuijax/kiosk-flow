@@ -10,6 +10,8 @@ service InventoryService {
     rpc UpdateStock (UpdateStockRequest) returns (StockItem);
     rpc ListStock (ListStockRequest) returns (ListStockResponse);
     rpc GetStockHistory (GetStockHistoryRequest) returns (StockHistoryResponse);
+    rpc LogWaste (LogWasteRequest) returns (LogWasteResponse);
+    rpc ListWasteLogs (ListWasteLogsRequest) returns (ListWasteLogsResponse);
 }
 
 message StockItem {
@@ -66,3 +68,45 @@ message StockHistoryResponse {
     repeated StockHistoryEntry entries = 1;
     common.PaginationResponse pagination = 2;
 }
+
+message LogWasteRequest {
+    string branch_id = 1;
+    optional string product_id = 2;
+    optional string ingredient_id = 3;
+    double quantity = 4;
+    string reason = 5; // WRONG_RECIPE, SPOILED, DAMAGED, EXPIRED, OTHER
+    optional string note = 6;
+}
+
+message LogWasteResponse {
+    string waste_log_id = 1;
+    bool success = 2;
+    double calculated_cost = 3;
+}
+
+message WasteLogItem {
+    string id = 1;
+    string branch_id = 2;
+    optional string product_id = 3;
+    optional string ingredient_id = 4;
+    string product_name = 5;
+    string ingredient_name = 6;
+    double quantity = 7;
+    string reason = 8;
+    double cost = 9;
+    optional string note = 10;
+    string created_by = 11;
+    string created_at = 12;
+}
+
+message ListWasteLogsRequest {
+    string branch_id = 1;
+    optional string reason = 2;
+    common.PaginationRequest pagination = 3;
+}
+
+message ListWasteLogsResponse {
+    repeated WasteLogItem items = 1;
+    common.PaginationResponse pagination = 2;
+}
+

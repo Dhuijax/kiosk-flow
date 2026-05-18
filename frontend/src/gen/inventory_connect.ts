@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { GetStockHistoryRequest, GetStockRequest, ListStockRequest, ListStockResponse, StockHistoryResponse, StockItem, UpdateStockRequest } from "./inventory_pb";
+import { GetStockHistoryRequest, GetStockRequest, ListStockRequest, ListStockResponse, ListWasteLogsRequest, ListWasteLogsResponse, LogWasteRequest, LogWasteResponse, StockHistoryResponse, StockItem, UpdateStockRequest } from "./inventory_pb";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -48,6 +48,24 @@ export const InventoryService = {
       name: "GetStockHistory",
       I: GetStockHistoryRequest,
       O: StockHistoryResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc inventory.InventoryService.LogWaste
+     */
+    logWaste: {
+      name: "LogWaste",
+      I: LogWasteRequest,
+      O: LogWasteResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc inventory.InventoryService.ListWasteLogs
+     */
+    listWasteLogs: {
+      name: "ListWasteLogs",
+      I: ListWasteLogsRequest,
+      O: ListWasteLogsResponse,
       kind: MethodKind.Unary,
     },
   }

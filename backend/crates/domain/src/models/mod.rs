@@ -10,3 +10,4 @@ pub mod recipe;
 pub mod table;
 pub mod tenant;
 pub mod user;
+pub mod waste;

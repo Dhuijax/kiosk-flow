@@ -157,6 +157,13 @@ export default function InventoryPage() {
           >
             <Box className="w-6 h-6 stroke-[3]" />
           </Link>
+          <Link 
+            href="/dashboard/inventory/waste"
+            className="w-14 h-14 bg-surface border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-sm"
+            title="Báo hỏng & Hao hụt"
+          >
+            <AlertTriangle className="w-6 h-6 stroke-[3]" />
+          </Link>
           <button 
             onClick={handleExportCSV}
             className="btn-dynamic px-8 py-3 text-sm"

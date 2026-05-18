@@ -3,11 +3,11 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { InventoryService } from '@/gen/inventory_connect';
 import {
-  // StockItem, 
-  // StockHistoryEntry, 
   ListStockRequest,
   UpdateStockRequest,
-  GetStockHistoryRequest
+  GetStockHistoryRequest,
+  LogWasteRequest,
+  ListWasteLogsRequest
 } from '@/gen/inventory_pb';
 
 export function useInventory() {
@@ -71,11 +71,47 @@ export function useInventory() {
     }
   }, [getClient]);
 
+  const logWaste = useCallback(async (request: Partial<LogWasteRequest>) => {
+    const client = getClient();
+    if (!client) return null;
+
+    setLoading(true);
+    try {
+      const response = await client.logWaste(request);
+      setError(null);
+      return response;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to log waste');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [getClient]);
+
+  const listWasteLogs = useCallback(async (request: Partial<ListWasteLogsRequest>) => {
+    const client = getClient();
+    if (!client) return { items: [], pagination: undefined };
+
+    setLoading(true);
+    try {
+      const response = await client.listWasteLogs(request);
+      setError(null);
+      return response;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to list waste logs');
+      return { items: [], pagination: undefined };
+    } finally {
+      setLoading(false);
+    }
+  }, [getClient]);
+
   return {
     loading,
     error,
     listStock,
     updateStock,
-    getStockHistory
+    getStockHistory,
+    logWaste,
+    listWasteLogs
   };
 }

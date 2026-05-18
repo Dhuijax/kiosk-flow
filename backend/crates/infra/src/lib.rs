@@ -8,3 +8,4 @@ pub mod procurement_repository;
 pub mod recipe_repository;
 pub mod repository;
 pub mod security;
+pub mod waste_repository;

@@ -18,7 +18,8 @@
                 "purchase",
                 "adjustment",
                 "transfer",
-                "return"
+                "return",
+                "waste"
               ]
             }
           }

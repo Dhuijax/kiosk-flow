@@ -116,6 +116,12 @@ export default function SuppliersPage() {
         >
           Phiếu nhập hàng
         </Link>
+        <Link 
+          href="/dashboard/inventory/waste" 
+          className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
+        >
+          Báo hỏng & hao hụt
+        </Link>
       </div>
 
       {/* Suppliers Grid */}

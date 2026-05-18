@@ -5,39 +5,33 @@ use sqlx::FromRow;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, Clone, FromRow)]
-pub struct Inventory {
+pub struct WasteLog {
     pub id: Uuid,
     pub tenant_id: Uuid,
     pub branch_id: Uuid,
-    pub product_id: Option<Uuid>,
     pub ingredient_id: Option<Uuid>,
+    pub product_id: Option<Uuid>,
     pub quantity: BigDecimal,
-    pub min_quantity: BigDecimal,
-    pub updated_at: DateTime<Utc>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, FromRow)]
-pub struct InventoryTransaction {
-    pub id: Uuid,
-    pub tenant_id: Uuid,
-    pub branch_id: Uuid,
-    pub product_id: Option<Uuid>,
-    pub ingredient_id: Option<Uuid>,
-    pub r#type: InventoryTransactionType,
-    pub quantity_change: BigDecimal,
-    pub reference_id: Option<Uuid>,
+    pub reason: String,
+    pub cost: BigDecimal,
     pub note: Option<String>,
     pub created_by: Option<Uuid>,
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, sqlx::Type, PartialEq, Eq)]
-#[sqlx(type_name = "inventory_transaction_type", rename_all = "lowercase")]
-pub enum InventoryTransactionType {
-    Sale,
-    Purchase,
-    Adjustment,
-    Transfer,
-    Return,
-    Waste,
+#[derive(Debug, Serialize, Deserialize, Clone, FromRow)]
+pub struct WasteLogWithNames {
+    pub id: Uuid,
+    pub tenant_id: Uuid,
+    pub branch_id: Uuid,
+    pub ingredient_id: Option<Uuid>,
+    pub product_id: Option<Uuid>,
+    pub quantity: BigDecimal,
+    pub reason: String,
+    pub cost: BigDecimal,
+    pub note: Option<String>,
+    pub created_by: Option<Uuid>,
+    pub created_at: DateTime<Utc>,
+    pub product_name: Option<String>,
+    pub ingredient_name: Option<String>,
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT id, tenant_id, branch_id, product_id, ingredient_id, type as \"type: _\", quantity_change, reference_id, note, created_by, created_at as \"created_at!\"\n            FROM inventory_transactions\n            WHERE branch_id = $1 \n              AND (product_id = $2 OR ($2 IS NULL AND product_id IS NULL))\n              AND (ingredient_id = $3 OR ($3 IS NULL AND ingredient_id IS NULL))\n            ORDER BY created_at DESC\n            ",
+  "query": "\n            INSERT INTO waste_logs (id, tenant_id, branch_id, ingredient_id, product_id, quantity, reason, cost, note, created_by)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)\n            RETURNING id, tenant_id, branch_id, ingredient_id, product_id, quantity, reason, cost, note, created_by, created_at as \"created_at!\"\n            ",
   "describe": {
     "columns": [
       {
@@ -20,42 +20,28 @@
       },
       {
         "ordinal": 3,
-        "name": "product_id",
-        "type_info": "Uuid"
-      },
-      {
-        "ordinal": 4,
         "name": "ingredient_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 5,
-        "name": "type: _",
-        "type_info": {
-          "Custom": {
-            "name": "inventory_transaction_type",
-            "kind": {
-              "Enum": [
-                "sale",
-                "purchase",
-                "adjustment",
-                "transfer",
-                "return",
-                "waste"
-              ]
-            }
-          }
-        }
+        "ordinal": 4,
+        "name": "product_id",
+        "type_info": "Uuid"
       },
       {
-        "ordinal": 6,
-        "name": "quantity_change",
+        "ordinal": 5,
+        "name": "quantity",
         "type_info": "Numeric"
       },
       {
+        "ordinal": 6,
+        "name": "reason",
+        "type_info": "Varchar"
+      },
+      {
         "ordinal": 7,
-        "name": "reference_id",
-        "type_info": "Uuid"
+        "name": "cost",
+        "type_info": "Numeric"
       },
       {
         "ordinal": 8,
@@ -77,6 +63,13 @@
       "Left": [
         "Uuid",
         "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Numeric",
+        "Varchar",
+        "Numeric",
+        "Text",
         "Uuid"
       ]
     },
@@ -88,11 +81,11 @@
       true,
       false,
       false,
-      true,
+      false,
       true,
       true,
       true
     ]
   },
-  "hash": "a82828990113b9aede78e6542f9caa9aaf9f21248dd10e85777cd5e43fecf67c"
+  "hash": "a31a921c344fc275a17cb78ca18811c1aa501a0efcbf34aaf256d17b71485f8e"
 }

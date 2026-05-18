@@ -1,0 +1,97 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT \n                wl.id, wl.tenant_id, wl.branch_id, wl.ingredient_id, wl.product_id, \n                wl.quantity, wl.reason, wl.cost, wl.note, wl.created_by, wl.created_at as \"created_at!\",\n                p.name as product_name, i.name as ingredient_name\n            FROM waste_logs wl\n            LEFT JOIN products p ON wl.product_id = p.id\n            LEFT JOIN ingredients i ON wl.ingredient_id = i.id\n            WHERE wl.branch_id = $1 AND ($2::text IS NULL OR wl.reason = $2)\n            ORDER BY wl.created_at DESC\n            LIMIT $3 OFFSET $4\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "tenant_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "branch_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "ingredient_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "product_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "quantity",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 6,
+        "name": "reason",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "cost",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 8,
+        "name": "note",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_by",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "product_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "ingredient_name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "15387aff1a20602a41a8f5ab1af84143860b14d510ac7d2c6c3ed6813452267d"
+}

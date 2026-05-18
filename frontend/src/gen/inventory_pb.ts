@@ -443,3 +443,316 @@ export class StockHistoryResponse extends Message<StockHistoryResponse> {
   }
 }
 
+/**
+ * @generated from message inventory.LogWasteRequest
+ */
+export class LogWasteRequest extends Message<LogWasteRequest> {
+  /**
+   * @generated from field: string branch_id = 1;
+   */
+  branchId = "";
+
+  /**
+   * @generated from field: optional string product_id = 2;
+   */
+  productId?: string;
+
+  /**
+   * @generated from field: optional string ingredient_id = 3;
+   */
+  ingredientId?: string;
+
+  /**
+   * @generated from field: double quantity = 4;
+   */
+  quantity = 0;
+
+  /**
+   * WRONG_RECIPE, SPOILED, DAMAGED, EXPIRED, OTHER
+   *
+   * @generated from field: string reason = 5;
+   */
+  reason = "";
+
+  /**
+   * @generated from field: optional string note = 6;
+   */
+  note?: string;
+
+  constructor(data?: PartialMessage<LogWasteRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "inventory.LogWasteRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "branch_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "product_id", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+    { no: 3, name: "ingredient_id", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+    { no: 4, name: "quantity", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
+    { no: 5, name: "reason", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "note", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): LogWasteRequest {
+    return new LogWasteRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): LogWasteRequest {
+    return new LogWasteRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): LogWasteRequest {
+    return new LogWasteRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: LogWasteRequest | PlainMessage<LogWasteRequest> | undefined, b: LogWasteRequest | PlainMessage<LogWasteRequest> | undefined): boolean {
+    return proto3.util.equals(LogWasteRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message inventory.LogWasteResponse
+ */
+export class LogWasteResponse extends Message<LogWasteResponse> {
+  /**
+   * @generated from field: string waste_log_id = 1;
+   */
+  wasteLogId = "";
+
+  /**
+   * @generated from field: bool success = 2;
+   */
+  success = false;
+
+  /**
+   * @generated from field: double calculated_cost = 3;
+   */
+  calculatedCost = 0;
+
+  constructor(data?: PartialMessage<LogWasteResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "inventory.LogWasteResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "waste_log_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "success", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 3, name: "calculated_cost", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): LogWasteResponse {
+    return new LogWasteResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): LogWasteResponse {
+    return new LogWasteResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): LogWasteResponse {
+    return new LogWasteResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: LogWasteResponse | PlainMessage<LogWasteResponse> | undefined, b: LogWasteResponse | PlainMessage<LogWasteResponse> | undefined): boolean {
+    return proto3.util.equals(LogWasteResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message inventory.WasteLogItem
+ */
+export class WasteLogItem extends Message<WasteLogItem> {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id = "";
+
+  /**
+   * @generated from field: string branch_id = 2;
+   */
+  branchId = "";
+
+  /**
+   * @generated from field: optional string product_id = 3;
+   */
+  productId?: string;
+
+  /**
+   * @generated from field: optional string ingredient_id = 4;
+   */
+  ingredientId?: string;
+
+  /**
+   * @generated from field: string product_name = 5;
+   */
+  productName = "";
+
+  /**
+   * @generated from field: string ingredient_name = 6;
+   */
+  ingredientName = "";
+
+  /**
+   * @generated from field: double quantity = 7;
+   */
+  quantity = 0;
+
+  /**
+   * @generated from field: string reason = 8;
+   */
+  reason = "";
+
+  /**
+   * @generated from field: double cost = 9;
+   */
+  cost = 0;
+
+  /**
+   * @generated from field: optional string note = 10;
+   */
+  note?: string;
+
+  /**
+   * @generated from field: string created_by = 11;
+   */
+  createdBy = "";
+
+  /**
+   * @generated from field: string created_at = 12;
+   */
+  createdAt = "";
+
+  constructor(data?: PartialMessage<WasteLogItem>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "inventory.WasteLogItem";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "branch_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "product_id", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+    { no: 4, name: "ingredient_id", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+    { no: 5, name: "product_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "ingredient_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 7, name: "quantity", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
+    { no: 8, name: "reason", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 9, name: "cost", kind: "scalar", T: 1 /* ScalarType.DOUBLE */ },
+    { no: 10, name: "note", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+    { no: 11, name: "created_by", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 12, name: "created_at", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): WasteLogItem {
+    return new WasteLogItem().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): WasteLogItem {
+    return new WasteLogItem().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): WasteLogItem {
+    return new WasteLogItem().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: WasteLogItem | PlainMessage<WasteLogItem> | undefined, b: WasteLogItem | PlainMessage<WasteLogItem> | undefined): boolean {
+    return proto3.util.equals(WasteLogItem, a, b);
+  }
+}
+
+/**
+ * @generated from message inventory.ListWasteLogsRequest
+ */
+export class ListWasteLogsRequest extends Message<ListWasteLogsRequest> {
+  /**
+   * @generated from field: string branch_id = 1;
+   */
+  branchId = "";
+
+  /**
+   * @generated from field: optional string reason = 2;
+   */
+  reason?: string;
+
+  /**
+   * @generated from field: common.PaginationRequest pagination = 3;
+   */
+  pagination?: PaginationRequest;
+
+  constructor(data?: PartialMessage<ListWasteLogsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "inventory.ListWasteLogsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "branch_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "reason", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+    { no: 3, name: "pagination", kind: "message", T: PaginationRequest },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListWasteLogsRequest {
+    return new ListWasteLogsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListWasteLogsRequest {
+    return new ListWasteLogsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListWasteLogsRequest {
+    return new ListWasteLogsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ListWasteLogsRequest | PlainMessage<ListWasteLogsRequest> | undefined, b: ListWasteLogsRequest | PlainMessage<ListWasteLogsRequest> | undefined): boolean {
+    return proto3.util.equals(ListWasteLogsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message inventory.ListWasteLogsResponse
+ */
+export class ListWasteLogsResponse extends Message<ListWasteLogsResponse> {
+  /**
+   * @generated from field: repeated inventory.WasteLogItem items = 1;
+   */
+  items: WasteLogItem[] = [];
+
+  /**
+   * @generated from field: common.PaginationResponse pagination = 2;
+   */
+  pagination?: PaginationResponse;
+
+  constructor(data?: PartialMessage<ListWasteLogsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "inventory.ListWasteLogsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "items", kind: "message", T: WasteLogItem, repeated: true },
+    { no: 2, name: "pagination", kind: "message", T: PaginationResponse },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListWasteLogsResponse {
+    return new ListWasteLogsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListWasteLogsResponse {
+    return new ListWasteLogsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListWasteLogsResponse {
+    return new ListWasteLogsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ListWasteLogsResponse | PlainMessage<ListWasteLogsResponse> | undefined, b: ListWasteLogsResponse | PlainMessage<ListWasteLogsResponse> | undefined): boolean {
+    return proto3.util.equals(ListWasteLogsResponse, a, b);
+  }
+}
+

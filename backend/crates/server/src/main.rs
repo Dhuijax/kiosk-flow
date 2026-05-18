@@ -102,12 +102,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         recipe_repo.clone(),
     ));
 
+    let waste_repo = Arc::new(infra::waste_repository::WasteRepository::new(pool.clone()));
+
     // 3. Initialize Services
     let auth_service =
         AuthServiceImpl::new(user_repo.clone(), tenant_repo.clone(), security.clone());
     let store_service = StoreServiceImpl::new(store_repo.clone());
     let settings_service = TenantSettingsServiceImpl::new(store_repo.clone());
-    let inventory_service = InventoryServiceImpl::new(inventory_repo.clone());
+    let inventory_service = InventoryServiceImpl::new(
+        inventory_repo.clone(),
+        recipe_repo.clone(),
+        waste_repo.clone(),
+        product_repo.clone(),
+        ingredient_repo.clone(),
+    );
     let category_service = CategoryServiceImpl::new(category_repo.clone());
     let product_service = ProductServiceImpl::new(product_repo.clone(), topping_repo.clone());
     let table_service = TableServiceImpl::new(table_repo.clone(), floor_plan_repo.clone());

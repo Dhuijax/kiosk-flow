@@ -44,6 +44,7 @@ const navigation = [
   { name: 'Nguyên liệu', href: '/dashboard/inventory/ingredients', icon: Box },
   { name: 'Nhà cung cấp', href: '/dashboard/inventory/suppliers', icon: Users },
   { name: 'Nhập hàng', href: '/dashboard/inventory/procurement', icon: ShoppingCart },
+  { name: 'Báo hỏng', href: '/dashboard/inventory/waste', icon: AlertTriangle },
   { name: 'Cảnh báo', href: '/dashboard/alerts', icon: AlertTriangle },
   { name: 'Chi nhánh', href: '/dashboard/branches', icon: MapPin },
   { name: 'Cấu hình', href: '/dashboard/settings', icon: Settings, status: 'demo' as const },

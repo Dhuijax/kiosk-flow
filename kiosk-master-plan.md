@@ -560,7 +560,7 @@ kiosk-flow/
 | S37 | `[x]` Interactive ROI & Sandbox Playground (Landing Page) | 2026-05-17 |
 | S39 | `[x]` Completed | 2026-05-17 |
 | S40 | `[x]` Completed | 2026-05-17 |
-| E1  | `[ ]` In Progress | 2026-05-18 |
+| E1  | `[x]` Completed | 2026-05-18 |
 | E2  | `[ ]` Pending | - |
 | E3  | `[ ]` Pending | - |
 | E4  | `[ ]` Pending | - |

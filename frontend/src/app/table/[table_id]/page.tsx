@@ -66,20 +66,33 @@ export default function GuestTableOrderingPage() {
   // Initialize Subdomain / Tenant ID resolution
   useEffect(() => {
     if (typeof window !== "undefined") {
+      const isValidUuid = (val: string) => {
+        return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(val);
+      };
+
       const hostname = window.location.host;
       const parts = hostname.split(".");
+      let resolvedTenantId = "";
+
       if (parts.length > 1 && !hostname.startsWith("localhost") && !hostname.startsWith("127.0.0.1")) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setTenantId(parts[0]);
-      } else {
-        const savedTenant = localStorage.getItem("tenant_id");
-        if (savedTenant) {
-          setTenantId(savedTenant);
-        } else {
-          // Default tenant ID fallback for guest table view on localhost
-          setTenantId("00000000-0000-0000-0000-000000000001");
+        const potentialSubdomain = parts[0];
+        if (isValidUuid(potentialSubdomain)) {
+          resolvedTenantId = potentialSubdomain;
         }
       }
+
+      if (!resolvedTenantId) {
+        const savedTenant = localStorage.getItem("tenant_id");
+        if (savedTenant && isValidUuid(savedTenant)) {
+          resolvedTenantId = savedTenant;
+        } else {
+          // Default tenant ID fallback for guest table view on localhost / non-subdomain deploy
+          resolvedTenantId = "00000000-0000-0000-0000-000000000001";
+        }
+      }
+
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTenantId(resolvedTenantId);
 
       // Check for saved tracked order
       const savedOrderId = localStorage.getItem(ACTIVE_ORDER_KEY);

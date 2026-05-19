@@ -25,14 +25,21 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('store');
   const { storeInfo, settings, loading, updateStore, updateTenantSettings } = useSettings();
 
-  const navItems = [
+  interface NavItem {
+    id: SettingsTab;
+    name: string;
+    icon: React.ComponentType<{ className?: string }>;
+    status?: 'demo' | 'coming-soon' | 'beta' | 'live';
+  }
+
+  const navItems: NavItem[] = [
     { id: 'store', name: 'Cửa hàng', icon: Store },
     { id: 'appearance', name: 'Giao diện', icon: Palette },
     { id: 'billing', name: 'Gói dịch vụ', icon: CreditCard },
     { id: 'notifications', name: 'Thông báo', icon: Bell },
     { id: 'security', name: 'Bảo mật', icon: Shield },
-    { id: 'kiosk', name: 'Thiết bị Kiosk', icon: Smartphone, status: 'coming-soon' as const },
-  ] as const;
+    { id: 'kiosk', name: 'Thiết bị Kiosk', icon: Smartphone },
+  ];
 
   const renderContent = () => {
     if (loading && !storeInfo && !settings && activeTab !== 'billing') {
@@ -122,7 +129,7 @@ export default function SettingsPage() {
                     <item.icon className={`w-6 h-6 stroke-[3] ${isActive ? 'text-white' : ''}`} />
                     {item.name}
                   </div>
-                  {'status' in item && <StatusBadge status={item.status} className={isActive ? "bg-white/20 text-white border-white/20" : ""} />}
+                  {item.status && <StatusBadge status={item.status} className={isActive ? "bg-white/20 text-white border-white/20" : ""} />}
                 </button>
               );
             })}

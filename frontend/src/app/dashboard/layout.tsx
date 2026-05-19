@@ -32,7 +32,14 @@ import BranchSwitcher from '@/components/dashboard/BranchSwitcher';
 import { cn } from '@/lib/utils';
 
 
-const navigation = [
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  status?: 'demo' | 'coming-soon' | 'live' | 'beta';
+}
+
+const navigation: NavigationItem[] = [
   { name: 'Tổng quan', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Bán hàng', href: '/pos/order', icon: Store },
   { name: 'Đơn hàng', href: '/dashboard/orders', icon: Receipt },
@@ -47,7 +54,7 @@ const navigation = [
   { name: 'Báo hỏng', href: '/dashboard/inventory/waste', icon: AlertTriangle },
   { name: 'Cảnh báo', href: '/dashboard/alerts', icon: AlertTriangle },
   { name: 'Chi nhánh', href: '/dashboard/branches', icon: MapPin },
-  { name: 'Cấu hình', href: '/dashboard/settings', icon: Settings, status: 'demo' as const },
+  { name: 'Cấu hình', href: '/dashboard/settings', icon: Settings },
 ];
 
 

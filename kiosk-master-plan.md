@@ -563,4 +563,4 @@ kiosk-flow/
 | E1  | `[x]` Completed | 2026-05-18 |
 | E2  | `[x]` Completed | 2026-05-18 |
 | E3  | `[x]` Completed | 2026-05-18 |
-| E4  | `[ ]` Pending | - |
+| E4  | `[x]` Completed | 2026-05-18 |

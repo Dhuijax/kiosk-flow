@@ -116,7 +116,7 @@ export default function DashboardLayout({
     <div className="flex min-h-screen bg-background text-foreground font-sans selection:bg-accent selection:text-accent-foreground">
       {/* Sidebar */}
       <aside className="w-80 bg-surface border-r border-foreground/10 flex flex-col sticky top-0 h-screen z-[100] shadow-sm">
-        <div className="p-8">
+        <div className="p-8 flex-shrink-0">
           <Link href="/dashboard" className="flex items-center gap-3 group">
             <div className="w-12 h-12 bg-primary border border-foreground/10 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-all">
               <Sparkles className="text-white w-7 h-7" />
@@ -127,7 +127,7 @@ export default function DashboardLayout({
           </Link>
         </div>
 
-        <nav className="flex-1 px-6 py-8 space-y-4">
+        <nav className="flex-1 px-6 py-8 space-y-4 overflow-y-auto custom-scrollbar">
           {navigation.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -155,7 +155,7 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        <div className="px-6 py-8 mt-auto border-t border-foreground/5">
+        <div className="px-6 py-8 mt-auto border-t border-foreground/5 flex-shrink-0">
           <button 
             onClick={() => {
               logout();

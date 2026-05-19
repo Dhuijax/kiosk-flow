@@ -10,7 +10,9 @@ pub fn extract_tenant_from_request<T>(request: &Request<T>) -> Result<String, St
     // 1. Check x-tenant-id (passed by Envoy/Frontend)
     if let Some(tenant_id) = request.metadata().get("x-tenant-id") {
         if let Ok(tid) = tenant_id.to_str() {
-            return Ok(tid.to_string());
+            if !tid.is_empty() {
+                return Ok(tid.to_string());
+            }
         }
     }
 
@@ -27,14 +29,21 @@ pub fn extract_tenant_from_request<T>(request: &Request<T>) -> Result<String, St
         return Err(Status::invalid_argument("Invalid Host format"));
     }
 
-    Ok(parts[0].to_string())
+    let subdomain = parts[0].to_string();
+    if subdomain == "localhost" || subdomain == "127.0.0.1" || subdomain.starts_with("localhost:") {
+        return Ok("00000000-0000-0000-0000-000000000001".to_string());
+    }
+
+    Ok(subdomain)
 }
 
 /// Extracts the tenant subdomain from http headers for Tower services
 pub fn extract_tenant_from_request_http(headers: &http::HeaderMap) -> String {
     if let Some(tenant_id) = headers.get("x-tenant-id") {
         if let Ok(tid) = tenant_id.to_str() {
-            return tid.to_string();
+            if !tid.is_empty() {
+                return tid.to_string();
+            }
         }
     }
 
@@ -45,11 +54,18 @@ pub fn extract_tenant_from_request_http(headers: &http::HeaderMap) -> String {
     {
         let parts: Vec<&str> = authority.split('.').collect();
         if !parts.is_empty() {
-            return parts[0].to_string();
+            let subdomain = parts[0].to_string();
+            if subdomain == "localhost"
+                || subdomain == "127.0.0.1"
+                || subdomain.starts_with("localhost:")
+            {
+                return "00000000-0000-0000-0000-000000000001".to_string();
+            }
+            return subdomain;
         }
     }
 
-    "default".to_string()
+    "00000000-0000-0000-0000-000000000001".to_string()
 }
 
 pub mod idempotency;

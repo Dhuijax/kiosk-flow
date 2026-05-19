@@ -4,7 +4,7 @@ import { createConnectTransport } from '@connectrpc/connect-web';
 import { StatusService } from '@/gen/status_connect';
 
 const transport = createConnectTransport({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:50051',
 });
 
 const client = createPromiseClient(StatusService, transport);

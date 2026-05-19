@@ -5,7 +5,7 @@ import { ServiceType } from "@bufbuild/protobuf";
 
 // The gRPC server URL (via Envoy proxy)
 const transport = createGrpcWebTransport({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080",
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:50051",
 });
 
 export const getClient = <T extends ServiceType>(service: T) => {
@@ -16,7 +16,7 @@ export const getClient = <T extends ServiceType>(service: T) => {
 // This is a simplified version; real app might use a more complex interceptor
 export const getAuthenticatedClient = <T extends ServiceType>(service: T, tenantId: string, token?: string) => {
   const authTransport = createGrpcWebTransport({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080",
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:50051",
     interceptors: [
       (next) => async (req) => {
         req.header.set("x-tenant-id", tenantId);

@@ -75,6 +75,9 @@ export default function GuestTableOrderingPage() {
         const savedTenant = localStorage.getItem("tenant_id");
         if (savedTenant) {
           setTenantId(savedTenant);
+        } else {
+          // Default tenant ID fallback for guest table view on localhost
+          setTenantId("00000000-0000-0000-0000-000000000001");
         }
       }
 

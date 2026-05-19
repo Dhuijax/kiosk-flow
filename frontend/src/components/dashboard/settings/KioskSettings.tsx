@@ -207,7 +207,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
           <button 
             onClick={handleSaveSettings}
             disabled={isSaving}
-            className="flex items-center gap-2 px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/40 text-white rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all shadow-md"
+            className="flex items-center gap-2 px-6 py-3.5 bg-primary hover:bg-primary/90 disabled:bg-primary/40 text-white rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all shadow-md"
           >
             {isSaving ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -226,7 +226,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
           {/* Timeout */}
           <div className="space-y-6">
             <h4 className="text-xs font-black uppercase tracking-widest text-foreground/40 italic flex items-center gap-2">
-              <Timer className="w-4 h-4 text-indigo-400" />
+              <Timer className="w-4 h-4 text-primary" />
               Tự động reset thiết bị
             </h4>
             <div className="space-y-3">
@@ -239,9 +239,9 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
                   step="30"
                   value={timeout}
                   onChange={(e) => setTimeoutVal(parseInt(e.target.value))}
-                  className="flex-1 h-2 bg-[#1e293b] border border-foreground/10 rounded-lg appearance-none cursor-pointer accent-indigo-500 shadow-sm"
+                  className="flex-1 h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer accent-primary shadow-sm"
                 />
-                <span className="w-16 text-center font-black italic text-lg text-indigo-400">{timeout}s</span>
+                <span className="w-16 text-center font-black italic text-lg text-primary">{timeout}s</span>
               </div>
               <p className="text-[10px] font-bold text-foreground/30 italic">Hệ thống tự động xóa giỏ hàng và quay về trang chào sau thời gian không có thao tác.</p>
             </div>
@@ -267,7 +267,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
                     value={pinCode}
                     onChange={(e) => setPinCode(e.target.value.replace(/\D/g, ''))}
                     placeholder="Mã PIN 4-6 số"
-                    className="w-full bg-[#0F1322] border border-foreground/10 rounded-xl py-3 pl-11 pr-12 text-sm text-foreground font-mono font-bold tracking-widest focus:border-indigo-500 outline-none transition-all"
+                    className="w-full bg-surface border border-foreground/10 focus:bg-white focus:border-primary rounded-xl py-3 pl-11 pr-12 text-sm text-foreground font-mono font-bold tracking-widest outline-none transition-all"
                   />
                   <button
                     type="button"
@@ -281,7 +281,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
                 <button
                   type="button"
                   onClick={handleSavePin}
-                  className="px-5 py-3.5 bg-[#1E293B] hover:bg-[#2D3D52] border border-foreground/10 text-foreground font-black text-xs uppercase italic tracking-tighter rounded-xl transition-all flex items-center gap-2"
+                  className="px-5 py-3.5 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 text-foreground font-black text-xs uppercase italic tracking-tighter rounded-xl transition-all flex items-center gap-2"
                 >
                   {pinSaved ? <Check size={14} className="text-emerald-500" /> : null}
                   Cập nhật PIN
@@ -299,7 +299,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
       <div className="ai-card p-8 md:p-12 space-y-8 bg-surface">
         <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-foreground/10 pb-6 gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 shadow-sm animate-pulse">
+            <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-center text-primary shadow-sm animate-pulse">
               <Sparkles className="w-6 h-6" />
             </div>
             <div>
@@ -313,12 +313,12 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
           {/* Area filter */}
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40 italic flex items-center gap-1.5 flex-shrink-0">
-              <MapPin size={14} className="text-indigo-400" /> Khu vực:
+              <MapPin size={14} className="text-primary" /> Khu vực:
             </span>
             <select
               value={selectedPlanId}
               onChange={(e) => setSelectedPlanId(e.target.value)}
-              className="bg-[#0F1322] border border-foreground/10 text-xs font-black uppercase italic tracking-tighter rounded-xl px-4 py-2.5 text-foreground outline-none cursor-pointer focus:border-indigo-500"
+              className="bg-surface border border-foreground/10 text-xs font-black uppercase italic tracking-tighter rounded-xl px-4 py-2.5 text-foreground outline-none cursor-pointer focus:border-primary"
             >
               {floorPlans.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
@@ -330,7 +330,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
         {/* Visual interactive table grid */}
         {loadingTables ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
             <p className="text-xs font-black uppercase tracking-widest text-foreground/40">Đang tải danh sách bàn...</p>
           </div>
         ) : tables.length === 0 ? (
@@ -351,8 +351,8 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
                   key={table.id}
                   className={`border rounded-3xl p-5 flex flex-col justify-between gap-4 transition-all duration-300 ${
                     isBound 
-                      ? 'bg-indigo-500/5 border-indigo-500/30 hover:border-indigo-500/60 shadow-lg shadow-indigo-600/5' 
-                      : 'bg-[#0F1322]/40 border-foreground/10 hover:border-foreground/20'
+                      ? 'bg-primary/5 border-primary/30 hover:border-primary/60 shadow-lg shadow-primary/5' 
+                      : 'bg-surface border-foreground/10 hover:border-foreground/20'
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -367,7 +367,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
                         KIOSK ON
                       </span>
                     ) : (
-                      <span className="px-2.5 py-1 bg-[#1E293B] border border-foreground/5 text-foreground/40 text-[9px] font-black uppercase tracking-wider rounded-lg">
+                      <span className="px-2.5 py-1 bg-foreground/5 border border-foreground/10 text-foreground/40 text-[9px] font-black uppercase tracking-wider rounded-lg">
                         CHƯA GÁN
                       </span>
                     )}
@@ -375,14 +375,14 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
 
                   {/* Device bound specs */}
                   {isBound && kioskInfo ? (
-                    <div className="bg-[#0F1322] border border-foreground/5 rounded-2xl p-3 text-xs space-y-1.5">
+                    <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-3 text-xs space-y-1.5">
                       <div className="flex justify-between">
                         <span className="text-foreground/40 font-bold uppercase text-[9px]">Thiết bị:</span>
                         <span className="text-foreground font-black uppercase italic tracking-tight text-[10px]">{kioskInfo.model}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-foreground/40 font-bold uppercase text-[9px]">Dung lượng Pin:</span>
-                        <span className={`font-black italic text-[10px] ${kioskInfo.battery < 20 ? 'text-rose-500' : 'text-emerald-400'}`}>
+                        <span className={`font-black italic text-[10px] ${kioskInfo.battery < 20 ? 'text-rose-600' : 'text-emerald-600'}`}>
                           {kioskInfo.battery}%
                         </span>
                       </div>
@@ -403,7 +403,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
                       onClick={() => handleToggleKioskBind(table.id)}
                       className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase italic tracking-tighter border transition-all ${
                         isBound
-                          ? 'bg-[#1E293B] border-foreground/10 text-rose-400 hover:bg-rose-500/10'
+                          ? 'bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100'
                           : 'bg-foreground/5 border-foreground/10 text-foreground/60 hover:text-foreground hover:bg-foreground/10'
                       }`}
                     >
@@ -412,7 +412,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
                     
                     <button
                       onClick={() => handleLaunchKiosk(table.id)}
-                      className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] uppercase italic tracking-tighter rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-indigo-600/10"
+                      className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase italic tracking-tighter rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-primary/10"
                       title="Mở giao diện gọi món và khóa Kiosk cho bàn này"
                     >
                       <MonitorPlay size={12} />
@@ -431,18 +431,18 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
         {/* Receipt printer */}
         <div className="ai-card p-8 md:p-12 space-y-6 bg-surface">
           <h4 className="text-sm font-black uppercase tracking-widest text-foreground/40 italic flex items-center gap-2">
-            <Printer className="w-4 h-4 text-indigo-400" />
+            <Printer className="w-4 h-4 text-primary" />
             Máy in hóa đơn tại quầy
           </h4>
           <div className="space-y-4">
-            <div className="p-6 bg-[#0F1322] border border-foreground/10 rounded-3xl flex items-center justify-between shadow-sm">
+            <div className="p-6 bg-foreground/5 border border-foreground/10 rounded-3xl flex items-center justify-between shadow-sm">
               <div className="flex items-center gap-4">
                 <Printer className="text-foreground/40" />
                 <span className="font-black uppercase italic tracking-tighter text-sm">EPSON TM-T88VI</span>
               </div>
-              <span className="px-3 py-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-lg text-[9px] font-black uppercase tracking-widest">CONNECTED</span>
+              <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-[9px] font-black uppercase tracking-widest">CONNECTED</span>
             </div>
-            <button className="w-full py-4 border border-dashed border-foreground/10 rounded-3xl text-foreground/40 font-black uppercase italic tracking-tighter text-xs hover:border-foreground/30 hover:text-foreground transition-all flex items-center justify-center gap-3 shadow-sm bg-[#0F1322]/20">
+            <button className="w-full py-4 border border-dashed border-foreground/10 rounded-3xl text-foreground/40 font-black uppercase italic tracking-tighter text-xs hover:border-foreground/30 hover:text-foreground transition-all flex items-center justify-center gap-3 shadow-sm bg-surface">
               <RefreshCw className="w-4 h-4" />
               TÌM KIẾM MÁY IN KHÁC
             </button>
@@ -462,7 +462,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
              </div>
              <div className="flex justify-between border-b border-foreground/5 pb-3">
                 <span className="text-foreground/40">Độ trễ Mạng gRPC-Web</span>
-                <span className="text-emerald-400 font-bold">12ms (Xuất sắc)</span>
+                <span className="text-emerald-600 font-bold">12ms (Xuất sắc)</span>
              </div>
              <div className="flex justify-between">
                 <span className="text-foreground/40">Phiên bản Client Engine</span>

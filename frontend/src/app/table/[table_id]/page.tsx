@@ -6,69 +6,83 @@ import { getAuthenticatedClient } from "@/lib/grpc/client";
 import { TableService } from "@/gen/table_connect";
 import { CategoryService } from "@/gen/category_connect";
 import { ProductService } from "@/gen/product_connect";
-import { OrderService } from "@/gen/order_connect";
 import { Table } from "@/gen/table_pb";
 import { Category } from "@/gen/category_pb";
 import { Product, Topping } from "@/gen/product_pb";
-import { OrderItemRequest, CreateOrderRequest, Order } from "@/gen/order_pb";
 import { Money } from "@/gen/common_pb";
-
-// Local storage key for active order ID
-const ACTIVE_ORDER_KEY = "kioskflow_active_order_id";
-const CUSTOMER_NAME_KEY = "kioskflow_customer_name";
+import { useTableCart } from "@/hooks/useTableCart";
+import { 
+  Users, 
+  ShoppingCart, 
+  Plus, 
+  Minus, 
+  Trash2, 
+  Check, 
+  Sparkles, 
+  AlertCircle, 
+  ChevronRight, 
+  Utensils, 
+  Search, 
+  Coffee, 
+  Wifi, 
+  Send 
+} from "lucide-react";
 
 export default function GuestTableOrderingPage() {
   const params = useParams();
   const tableId = params.table_id as string;
 
-  // Tenant ID resolution from host/subdomain
-  const [tenantId, setTenantId] = useState<string>("00000000-0000-0000-0000-000000000001"); // fallback
+  // Configuration IDs
+  const [tenantId, setTenantId] = useState<string>("00000000-0000-0000-0000-000000000001");
+  const [branchId, setBranchId] = useState<string>("00000000-0000-0000-0000-000000000002");
 
-  // State variables
+  // Authentication & Guest Session lobby state
+  const [guestNameInput, setGuestNameInput] = useState("");
+  const [isLobbyJoined, setIsLobbyJoined] = useState(false);
+  const [guestName, setGuestName] = useState("");
+  const [guestId, setGuestId] = useState("");
+
+  // Product Catalogue state
   const [loading, setLoading] = useState(true);
-  const [submittingOrder, setSubmittingOrder] = useState(false);
   const [tableData, setTableData] = useState<Table | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Cart State
-  const [cart, setCart] = useState<{
-    product: Product;
-    quantity: number;
-    selectedToppings: Topping[];
-    note: string;
-    uniqueKey: string; // combination of productId and selected topping IDs
-  }[]>([]);
-
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [customerName, setCustomerName] = useState("");
-  const [orderNote, setOrderNote] = useState("");
-
-  // Topping Modal State
+  // Customization Topping Modal State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [modalToppings, setModalToppings] = useState<Topping[]>([]);
   const [modalQuantity, setModalQuantity] = useState(1);
   const [modalNote, setModalNote] = useState("");
 
-  // Order Tracking State
-  const [trackedOrderId, setTrackedOrderId] = useState<string | null>(null);
-  const [trackedOrder, setTrackedOrder] = useState<Order | null>(null);
-
-  // Error/Success alerts
+  // Notification overlays
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [orderNote, setOrderNote] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [orderSubmittedSuccess, setOrderSubmittedSuccess] = useState<any>(null);
 
-  // Active category list filter ref
+  // Category horizontal scroll ref
   const categoryScrollRef = useRef<HTMLDivElement>(null);
 
-  // Initialize Subdomain / Tenant ID resolution
+  // Multiplayer Hook Integration
+  const {
+    activeGuests,
+    cartItems,
+    isConnected,
+    loading: hookLoading,
+    joinSession,
+    updateCartItem,
+    submitOrder,
+  } = useTableCart(tenantId, branchId, tableId, guestId, guestName);
+
+  // Initialize tenant and local session recovery
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const isValidUuid = (val: string) => {
-        return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(val);
-      };
+      const isValidUuid = (val: string) =>
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(val);
 
       const hostname = window.location.host;
       const parts = hostname.split(".");
@@ -86,122 +100,85 @@ export default function GuestTableOrderingPage() {
         if (savedTenant && isValidUuid(savedTenant)) {
           resolvedTenantId = savedTenant;
         } else {
-          // Default tenant ID fallback for guest table view on localhost / non-subdomain deploy
           resolvedTenantId = "00000000-0000-0000-0000-000000000001";
         }
       }
-
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTenantId(resolvedTenantId);
 
-      // Check for saved tracked order
-      const savedOrderId = localStorage.getItem(ACTIVE_ORDER_KEY);
-      if (savedOrderId) {
-        setTrackedOrderId(savedOrderId);
-      }
+      // Session recovery check
+      const savedGuestId = localStorage.getItem(`kioskflow:guest_id:${tableId}`);
+      const savedGuestName = localStorage.getItem(`kioskflow:guest_name:${tableId}`);
 
-      // Check for saved customer name
-      const savedName = localStorage.getItem(CUSTOMER_NAME_KEY);
-      if (savedName) {
-        setCustomerName(savedName);
+      if (savedGuestId && savedGuestName) {
+        setGuestId(savedGuestId);
+        setGuestName(savedGuestName);
+        setIsLobbyJoined(true);
       }
     }
-  }, []);
+  }, [tableId]);
 
-  // Fetch Table, Categories, Products
+  // Load Catalogue data
   useEffect(() => {
-    if (!tableId || trackedOrderId) return;
+    if (!tableId) return;
 
-    const fetchData = async () => {
+    const fetchCatalogue = async () => {
       try {
         setLoading(true);
         setErrorMsg(null);
 
-        // Connect Clients
         const tableClient = getAuthenticatedClient(TableService, tenantId);
         const categoryClient = getAuthenticatedClient(CategoryService, tenantId);
         const productClient = getAuthenticatedClient(ProductService, tenantId);
 
-        // Fetch Table details
         const tableResp = await tableClient.getTable({ id: tableId });
         setTableData(tableResp);
+        if (tableResp.branchId) {
+          setBranchId(tableResp.branchId);
+        }
 
-        // Fetch Categories
         const catResp = await categoryClient.listCategories({ page: 1, pageSize: 100 });
         setCategories(catResp.categories);
 
-        // Fetch active Products
         const prodResp = await productClient.listProducts({
           pagination: { page: 1, pageSize: 200 }
         });
-        // Filter only active products
-        const activeProducts = prodResp.products.filter(p => p.isActive);
-        setProducts(activeProducts);
+        setProducts(prodResp.products.filter(p => p.isActive));
 
-      } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-        console.error("Error loading table menu:", err);
-        setErrorMsg("Không thể tải thông tin thực đơn. Vui lòng kiểm tra lại mã QR hoặc kết nối mạng.");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (err: any) {
+        console.error("Error fetching table catalogue:", err);
+        setErrorMsg("Không thể kết nối đến máy chủ thực đơn. Vui lòng thử lại!");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [tableId, tenantId, trackedOrderId]);
+    fetchCatalogue();
+  }, [tableId, tenantId]);
 
-  // Order status polling effect
-  useEffect(() => {
-    if (!trackedOrderId) return;
-
-    const fetchTrackedOrder = async () => {
-      try {
-        const orderClient = getAuthenticatedClient(OrderService, tenantId);
-        const resp = await orderClient.getOrder({ id: trackedOrderId });
-        setTrackedOrder(resp.order || null);
-      } catch (err) {
-        console.error("Error polling order status:", err);
-      }
-    };
-
-    // Initial fetch
-    fetchTrackedOrder();
-
-    // Interval fetch every 8 seconds
-    const interval = setInterval(fetchTrackedOrder, 8000);
-    return () => clearInterval(interval);
-  }, [trackedOrderId, tenantId]);
-
-  // Currency Formatter Helper
+  // Format currency helpers
   const formatCurrency = (money?: Money) => {
     if (!money) return "0 ₫";
     const amount = Number(money.units || BigInt(0));
     return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
   };
 
-  const getProductPriceNumber = (product: Product) => {
-    return Number(product.price?.units || BigInt(0));
+  const getProductPriceNumber = (product: Product) => Number(product.price?.units || BigInt(0));
+  const getToppingPriceNumber = (topping: Topping) => Number(topping.price?.units || BigInt(0));
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getCartItemPriceNumber = (item: any) => Number(item.price?.units || BigInt(0));
+
+  const sharedCartTotal = () => {
+    return cartItems.reduce((sum, item) => sum + getCartItemPriceNumber(item) * item.quantity, 0);
   };
 
-  const getToppingPriceNumber = (topping: Topping) => {
-    return Number(topping.price?.units || BigInt(0));
+  const sharedCartCount = () => {
+    return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   };
 
-  // Cart total calculations
-  const cartItemTotal = (item: typeof cart[0]) => {
-    const base = getProductPriceNumber(item.product);
-    const toppingsSum = item.selectedToppings.reduce((sum, t) => sum + getToppingPriceNumber(t), 0);
-    return (base + toppingsSum) * item.quantity;
-  };
-
-  const cartTotal = () => {
-    return cart.reduce((sum, item) => sum + cartItemTotal(item), 0);
-  };
-
-  const cartCount = () => {
-    return cart.reduce((sum, item) => sum + item.quantity, 0);
-  };
-
-  // Category change filter
+  // Catalogue filters
   const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory === "all" || product.categoryId === selectedCategory;
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -209,7 +186,26 @@ export default function GuestTableOrderingPage() {
     return matchesCategory && matchesSearch;
   });
 
-  // Topping Modal handlers
+  // Lobby Join handler
+  const handleJoinLobby = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!guestNameInput.trim()) return;
+
+    try {
+      const gName = guestNameInput.trim();
+      const resolvedGuestId = await joinSession(gName);
+      if (resolvedGuestId) {
+        setGuestId(resolvedGuestId);
+        setGuestName(gName);
+        setIsLobbyJoined(true);
+      }
+    } catch (err) {
+      console.error("Failed to join multiplayer lobby:", err);
+      setErrorMsg("Không thể tham gia phiên bàn này. Vui lòng tải lại trang!");
+    }
+  };
+
+  // Topping Customization
   const openToppingModal = (product: Product) => {
     setSelectedProduct(product);
     setModalToppings([]);
@@ -225,405 +221,289 @@ export default function GuestTableOrderingPage() {
     }
   };
 
-  const handleAddToCart = () => {
+  // Add customized item to the Shared Multiplayer Cart
+  const handleAddProductToSharedCart = async () => {
     if (!selectedProduct) return;
 
-    // Create unique key based on selected toppings
-    const sortedToppingIds = modalToppings.map(t => t.id).sort().join("-");
-    const uniqueKey = `${selectedProduct.id}_${sortedToppingIds}_${modalNote}`;
+    try {
+      await updateCartItem(
+        selectedProduct.id,
+        modalQuantity,
+        modalNote,
+        modalToppings.map(t => t.id)
+      );
 
-    const existingIndex = cart.findIndex(item => item.uniqueKey === uniqueKey);
-
-    if (existingIndex > -1) {
-      const newCart = [...cart];
-      newCart[existingIndex].quantity += modalQuantity;
-      setCart(newCart);
-    } else {
-      setCart([...cart, {
-        product: selectedProduct,
-        quantity: modalQuantity,
-        selectedToppings: modalToppings,
-        note: modalNote,
-        uniqueKey
-      }]);
+      setSelectedProduct(null);
+      setSuccessMsg(`Đã thêm ${selectedProduct.name} vào giỏ hàng chung!`);
+      setTimeout(() => setSuccessMsg(null), 2500);
+    } catch (err) {
+      console.error("Error adding to multiplayer cart:", err);
+      setErrorMsg("Không thể thêm món vào giỏ hàng chung.");
     }
-
-    // Reset and close
-    setSelectedProduct(null);
-    setSuccessMsg(`Đã thêm ${selectedProduct.name} vào giỏ hàng`);
-    setTimeout(() => setSuccessMsg(null), 2500);
   };
 
-  const updateCartItemQuantity = (uniqueKey: string, delta: number) => {
-    const updated = cart.map(item => {
-      if (item.uniqueKey === uniqueKey) {
-        const nextQty = item.quantity + delta;
-        return nextQty > 0 ? { ...item, quantity: nextQty } : null;
-      }
-      return item;
-    }).filter(Boolean) as typeof cart;
-    setCart(updated);
+  // Mutate item in shared cart
+  const handleUpdateQuantity = async (productId: string, change: number, note: string = "", toppings: string[] = []) => {
+    try {
+      await updateCartItem(productId, change, note, toppings);
+    } catch (err) {
+      console.error("Failed to update item quantity in shared cart:", err);
+    }
   };
 
-  // Order submission
-  const handlePlaceOrder = async () => {
-    if (cart.length === 0) return;
-    if (!customerName.trim()) {
-      setErrorMsg("Vui lòng nhập tên của bạn để nhân viên dễ dàng phục vụ.");
-      return;
-    }
+  // Submit and checkout order
+  const handleCheckoutSharedCart = async () => {
+    if (cartItems.length === 0) return;
 
     try {
-      setSubmittingOrder(true);
-      setErrorMsg(null);
-
-      const orderClient = getAuthenticatedClient(OrderService, tenantId);
-
-      // Save customer name for next visits
-      localStorage.setItem(CUSTOMER_NAME_KEY, customerName.trim());
-
-      // Prepare order items
-      const itemsRequest = cart.map(item => {
-        return new OrderItemRequest({
-          productId: item.product.id,
-          quantity: item.quantity,
-          note: item.note,
-          toppingIds: item.selectedToppings.map(t => t.id)
-        });
-      });
-
-      const branchId = tableData?.branchId || "default-branch";
-
-      const orderRequest = new CreateOrderRequest({
-        branchId,
-        tableId,
-        customerName: customerName.trim(),
-        note: orderNote.trim(),
-        items: itemsRequest
-      });
-
-      const response = await orderClient.createOrder(orderRequest);
-
-      if (response.order) {
-        const newOrderId = response.order.id;
-        setTrackedOrderId(newOrderId);
-        setTrackedOrder(response.order);
-        localStorage.setItem(ACTIVE_ORDER_KEY, newOrderId);
-        setCart([]); // Clear cart
+      const response = await submitOrder(orderNote.trim());
+      if (response && response.success) {
+        setOrderSubmittedSuccess(response);
         setIsCartOpen(false);
-      } else {
-        throw new Error("Không nhận được thông tin đơn hàng từ máy chủ.");
       }
-
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error("Error creating guest order:", err);
-      setErrorMsg("Không thể gửi đơn hàng. Vui lòng thử lại hoặc liên hệ nhân viên phục vụ tại bàn.");
-    } finally {
-      setSubmittingOrder(false);
+    } catch (err) {
+      console.error("Failed to submit shared table order:", err);
+      setErrorMsg("Có lỗi xảy ra khi xác nhận đặt món. Vui lòng liên hệ quầy thu ngân!");
     }
   };
 
-  // Helper to get status details
-  const getOrderStatusInfo = (status: number) => {
-    // DomainOrderStatus mapping (DRAFT=0, CONFIRMED=1, PREPARING=2, SERVED=3, PAID=4, COMPLETED=5, CANCELLED=6)
-    switch (status) {
-      case 0:
-        return {
-          step: 1,
-          title: "Chờ thu ngân duyệt",
-          desc: "Đơn hàng đã được gửi đến quầy thu ngân. Nhân viên đang kiểm tra và duyệt đơn của bạn.",
-          color: "text-amber-700 bg-amber-500/10 border-amber-500/20",
-          progressGlow: "shadow-amber-500/10"
-        };
-      case 1:
-      case 2:
-        return {
-          step: 2,
-          title: "Đang pha chế",
-          desc: "Đơn hàng đã được duyệt! Các Bartender của chúng tôi đang tích cực chuẩn bị món uống cho bạn.",
-          color: "text-blue-700 bg-blue-500/10 border-blue-500/20",
-          progressGlow: "shadow-blue-500/10"
-        };
-      case 3:
-      case 4:
-      case 5:
-        return {
-          step: 3,
-          title: "Đã phục vụ",
-          desc: "Món ngon đã sẵn sàng trên bàn! Chúc bạn có những phút giây thưởng thức thật tuyệt vời.",
-          color: "text-emerald-700 bg-emerald-500/10 border-emerald-500/20",
-          progressGlow: "shadow-emerald-500/10"
-        };
-      case 6:
-        return {
-          step: 0,
-          title: "Đã hủy",
-          desc: "Đơn hàng của bạn đã bị hủy hoặc từ chối. Vui lòng liên hệ nhân viên để được hỗ trợ.",
-          color: "text-rose-700 bg-rose-500/10 border-rose-500/20",
-          progressGlow: "shadow-rose-500/10"
-        };
-      default:
-        return {
-          step: 1,
-          title: "Đang xử lý",
-          desc: "Hệ thống đang đồng bộ dữ liệu đơn hàng của bạn.",
-          color: "text-foreground/75 bg-foreground/5 border-foreground/10",
-          progressGlow: ""
-        };
-    }
+  // Return to order screen from success checkout
+  const handleResetCheckout = () => {
+    setOrderSubmittedSuccess(null);
+    setIsLobbyJoined(false);
+    setGuestName("");
+    setGuestId("");
+    setGuestNameInput("");
   };
 
-  const handleClearTracking = () => {
-    localStorage.removeItem(ACTIVE_ORDER_KEY);
-    setTrackedOrderId(null);
-    setTrackedOrder(null);
-  };
-
+  // LOADING STATE
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground p-6">
-        <div className="relative w-16 h-16 mb-4">
-          <div className="absolute inset-0 rounded-full border-4 border-foreground/10"></div>
-          <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-950 text-neutral-200 p-6">
+        <div className="relative w-20 h-20 mb-6">
+          <div className="absolute inset-0 rounded-full border-4 border-white/5"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-t-amber-500 animate-spin"></div>
         </div>
-        <p className="text-foreground/60 font-medium animate-pulse">Đang kết nối bàn & tải thực đơn...</p>
+        <p className="text-neutral-400 font-black uppercase tracking-widest text-xs animate-pulse">
+          Đang nạp thực đơn bàn...
+        </p>
       </div>
     );
   }
 
-  // ----------------------------------------------------
-  // ORDER TRACKING SCREEN (If order is already placed)
-  // ----------------------------------------------------
-  if (trackedOrderId && trackedOrder) {
-    const statusInfo = getOrderStatusInfo(trackedOrder.status);
-
+  // ORDER SUBMITTED SUCCESS SCREEN
+  if (orderSubmittedSuccess) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex flex-col font-sans pb-12 relative overflow-hidden">
-        {/* Glowing Background Art */}
-        <div className="absolute top-[-10%] left-[-20%] w-[80vw] h-[80vw] rounded-full bg-primary/5 blur-[120px] pointer-events-none"></div>
-        <div className="absolute bottom-[-10%] right-[-20%] w-[80vw] h-[80vw] rounded-full bg-interaction/5 blur-[120px] pointer-events-none"></div>
+      <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans justify-center items-center p-6 relative overflow-hidden">
+        {/* Glow Spheres */}
+        <div className="absolute top-[-10%] left-[-20%] w-[90vw] h-[90vw] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none"></div>
+        <div className="absolute bottom-[-10%] right-[-20%] w-[90vw] h-[90vw] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none"></div>
 
-        {/* Top Header */}
-        <header className="sticky top-0 z-30 backdrop-blur-md bg-background/85 border-b border-foreground/10 px-5 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></div>
-            <span className="font-semibold text-primary tracking-wide">KioskFlow LIVE</span>
-          </div>
-          <span className="text-sm font-semibold px-3 py-1 rounded-full bg-surface border border-foreground/10 text-foreground">
-            {tableData?.name || "Bàn gọi món"}
-          </span>
-        </header>
-
-        {/* Live Tracking Core */}
-        <main className="flex-1 max-w-md w-full mx-auto px-5 pt-8 flex flex-col items-center">
-          
-          {/* Success Ring Indicator */}
-          <div className="relative mb-6">
-            <div className="absolute inset-0 rounded-full bg-primary/10 blur-md scale-110 animate-pulse"></div>
-            <div className="w-20 h-20 rounded-full border-2 border-dashed border-primary/30 flex items-center justify-center p-1.5 animate-[spin_30s_linear_infinite]">
-              <div className="w-full h-full rounded-full border border-primary/20 flex items-center justify-center bg-surface">
-              </div>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
-            </div>
+        <div className="max-w-md w-full text-center space-y-8 bg-neutral-900/60 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative">
+          <div className="mx-auto w-24 h-24 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center relative">
+            <Check className="w-12 h-12 text-amber-400 stroke-[3]" />
+            <div className="absolute -inset-2 rounded-full border border-amber-500/20 animate-ping opacity-30"></div>
           </div>
 
-          <h2 className="text-2xl font-bold text-center text-foreground mb-1">Cảm ơn bạn đã đặt món!</h2>
-          <p className="text-foreground/60 text-sm text-center mb-6">Đơn hàng của bạn đang được truyền phát trực tiếp.</p>
-
-          {/* Active Status Display Card */}
-          <div className={`w-full border rounded-2xl p-5 mb-8 flex flex-col gap-3 transition-all duration-300 ${statusInfo.color}`}>
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase font-extrabold tracking-wider opacity-85">Trạng thái hiện tại</span>
-              <span className="text-xs font-mono bg-black/5 px-2 py-0.5 rounded">#{trackedOrder.orderNumber}</span>
-            </div>
-            <h3 className="text-xl font-bold text-foreground">{statusInfo.title}</h3>
-            <p className="text-sm opacity-90 leading-relaxed text-foreground/80">{statusInfo.desc}</p>
+          <div className="space-y-3">
+            <h2 className="text-3xl font-black uppercase tracking-tight italic text-amber-400">Đã gửi món thành công!</h2>
+            <p className="text-neutral-400 text-xs font-semibold uppercase tracking-wider">
+              Mã đơn hàng: <span className="font-mono text-white">#{orderSubmittedSuccess.orderNumber}</span>
+            </p>
+            <p className="text-neutral-400 text-sm leading-relaxed">
+              Các Bartender tại <span className="text-white font-bold">KioskFlow</span> đang bắt đầu chuẩn bị món ngon cho bàn của bạn.
+            </p>
           </div>
 
-          {/* Live Progress Tracker Stepper */}
-          <div className="w-full bg-surface border border-foreground/10 rounded-2xl p-6 mb-8 shadow-sm">
-            <h4 className="text-xs font-bold text-foreground/50 uppercase tracking-widest mb-6">Tiến trình chuẩn bị</h4>
-            
-            <div className="flex justify-between items-center relative px-2">
-              {/* Stepper connector line */}
-              <div className="absolute top-5 left-10 right-10 h-0.5 bg-foreground/5 z-0">
-                <div 
-                  className="h-full bg-primary transition-all duration-500" 
-                  style={{ width: statusInfo.step === 1 ? "0%" : statusInfo.step === 2 ? "50%" : statusInfo.step === 3 ? "100%" : "0%" }}
-                ></div>
-              </div>
-
-              {/* Step 1: Sent / Draft */}
-              <div className="flex flex-col items-center z-10">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                  statusInfo.step >= 1 
-                    ? "bg-primary border-primary text-white shadow-md shadow-primary/15" 
-                    : "bg-background border-foreground/10 text-foreground/40"
-                }`}>
-                  <span className="text-sm font-bold">1</span>
-                </div>
-                <span className={`text-xs font-semibold mt-2.5 ${statusInfo.step >= 1 ? "text-primary font-bold" : "text-foreground/40"}`}>Gửi đơn</span>
-              </div>
-
-              {/* Step 2: Preparing */}
-              <div className="flex flex-col items-center z-10">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                  statusInfo.step >= 2 
-                    ? "bg-primary border-primary text-white shadow-md shadow-primary/15" 
-                    : "bg-background border-foreground/10 text-foreground/40"
-                }`}>
-                  <span className="text-sm font-bold">2</span>
-                </div>
-                <span className={`text-xs font-semibold mt-2.5 ${statusInfo.step >= 2 ? "text-primary font-bold" : "text-foreground/40"}`}>Pha chế</span>
-              </div>
-
-              {/* Step 3: Completed */}
-              <div className="flex flex-col items-center z-10">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                  statusInfo.step >= 3 
-                    ? "bg-primary border-primary text-white shadow-md shadow-primary/15" 
-                    : "bg-background border-foreground/10 text-foreground/40"
-                }`}>
-                  <span className="text-sm font-bold">3</span>
-                </div>
-                <span className={`text-xs font-semibold mt-2.5 ${statusInfo.step >= 3 ? "text-primary font-bold" : "text-foreground/40"}`}>Phục vụ</span>
-              </div>
+          <div className="bg-neutral-950/80 border border-white/5 rounded-2xl p-5 text-left space-y-3">
+            <div className="flex justify-between items-center text-xs font-bold text-neutral-500 uppercase tracking-widest pb-2 border-b border-white/5">
+              <span>Đơn vị</span>
+              <span>Trạng thái</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-black text-neutral-200">{tableData?.name || "Bàn gọi món"}</span>
+              <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 font-extrabold text-[10px] uppercase rounded-full tracking-wider animate-pulse">
+                Đang chuẩn bị
+              </span>
             </div>
           </div>
 
-          {/* Ordered items details breakdown */}
-          <div className="w-full bg-surface border border-foreground/10 rounded-2xl p-5 mb-8 shadow-sm">
-            <h4 className="text-sm font-bold text-foreground mb-3 border-b border-foreground/5 pb-2">Chi tiết đơn hàng</h4>
-            <div className="flex flex-col gap-3">
-              {trackedOrder.items.map((item, idx) => (
-                <div key={idx} className="flex justify-between items-start text-sm">
-                  <div className="flex-1 pr-3">
-                    <p className="font-semibold text-foreground">
-                      {item.productName} <span className="text-primary text-xs font-mono font-bold">x{item.quantity}</span>
-                    </p>
-                    {item.toppings && item.toppings.length > 0 && (
-                      <p className="text-xs text-foreground/60 mt-0.5">
-                        +{item.toppings.map(t => t.name).join(", ")}
-                      </p>
-                    )}
-                    {item.note && (
-                      <p className="text-xs text-amber-700 italic mt-0.5">Ghi chú: {item.note}</p>
-                    )}
-                  </div>
-                  <span className="font-mono text-foreground/80 font-bold">{formatCurrency(item.subtotal)}</span>
-                </div>
-              ))}
-            </div>
-            
-            <div className="border-t border-foreground/5 mt-4 pt-3 flex justify-between items-center">
-              <span className="font-semibold text-foreground/75 text-sm">Tổng cộng</span>
-              <span className="font-mono text-primary font-black text-base">{formatCurrency(trackedOrder.total)}</span>
-            </div>
-          </div>
-
-          {/* Action to order more */}
           <button
-            onClick={handleClearTracking}
-            className="w-full py-3.5 px-6 rounded-xl bg-surface hover:bg-foreground/5 border border-foreground/10 text-foreground font-bold transition-all duration-300 flex items-center justify-center gap-2 hover:shadow shadow-sm"
+            onClick={handleResetCheckout}
+            className="w-full py-4.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-black uppercase tracking-wider text-xs shadow-xl shadow-amber-500/10 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
-            <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
-            </svg>
-            Gọi thêm món uống khác
+            Quay lại trang đặt món
           </button>
-
-        </main>
+        </div>
       </div>
     );
   }
 
-  // ----------------------------------------------------
-  // MENU CATALOGUE & ORDER PLACEMENT SCREEN
-  // ----------------------------------------------------
-  return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans pb-28 relative overflow-hidden">
-      {/* Sleek Backdrop Blurs */}
-      <div className="absolute top-0 left-[-10vw] w-[50vw] h-[50vw] rounded-full bg-primary/5 blur-[100px] pointer-events-none"></div>
-      <div className="absolute top-[40vh] right-[-10vw] w-[50vw] h-[50vw] rounded-full bg-interaction/5 blur-[100px] pointer-events-none"></div>
+  // MULTIPLAYER LOBBY WELCOME SCREEN
+  if (!isLobbyJoined) {
+    return (
+      <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col justify-center items-center p-6 relative overflow-hidden font-sans">
+        {/* Decorative background glows */}
+        <div className="absolute top-[-20%] left-[-20%] w-[100vw] h-[100vw] rounded-full bg-amber-500/5 blur-[150px] pointer-events-none animate-pulse"></div>
+        <div className="absolute bottom-[-20%] right-[-20%] w-[100vw] h-[100vw] rounded-full bg-amber-500/5 blur-[150px] pointer-events-none"></div>
 
-      {/* Static Welcome banner & Table indicator */}
-      <header className="sticky top-0 z-30 backdrop-blur-lg bg-background/80 border-b border-foreground/10 px-4 py-3 flex items-center justify-between">
-        <div className="flex flex-col">
-          <span className="text-[10px] uppercase tracking-widest text-foreground/50 font-extrabold">Chào mừng bạn đến với</span>
-          <h1 className="text-base font-extrabold text-primary">
-            KioskFlow Cafe
-          </h1>
+        <div className="max-w-md w-full bg-neutral-900/60 backdrop-blur-2xl border border-white/10 p-8 rounded-3xl shadow-2xl space-y-8 relative">
+          <div className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+              <Utensils className="w-8 h-8 text-amber-500 animate-float" />
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-black text-amber-500 tracking-[0.3em] block mb-1">
+                KioskFlow Cafe
+              </span>
+              <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white">
+                Bàn {tableData?.name || "Gọi Món"}
+              </h2>
+            </div>
+            <p className="text-neutral-400 text-xs leading-relaxed max-w-xs mx-auto">
+              Nhập tên của bạn để tham gia phòng đặt món thực tế ảo. Mọi người ở cùng bàn sẽ thấy giỏ hàng của nhau trong thời gian thực!
+            </p>
+          </div>
+
+          <form onSubmit={handleJoinLobby} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Tên của bạn</label>
+              <input
+                type="text"
+                placeholder="Ví dụ: Hoàng, Linh..."
+                value={guestNameInput}
+                onChange={(e) => setGuestNameInput(e.target.value)}
+                maxLength={25}
+                required
+                className="w-full bg-neutral-950 border border-white/10 hover:border-white/20 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-2xl py-4 px-5 text-sm text-white placeholder-neutral-600 outline-none transition-all shadow-inner"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={hookLoading || !guestNameInput.trim()}
+              className="w-full py-4.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-40 disabled:pointer-events-none text-black font-black uppercase tracking-wider text-xs shadow-xl shadow-amber-500/10 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {hookLoading ? (
+                <>
+                  <div className="h-4 w-4 rounded-full border-2 border-neutral-950 border-t-transparent animate-spin"></div>
+                  <span>Đang kết nối...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Tham gia đặt món chung</span>
+                </>
+              )}
+            </button>
+          </form>
         </div>
-        
-        {/* Glow badge for table number */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-primary/10 blur-md rounded-full scale-105"></div>
-          <span className="relative z-10 px-3.5 py-1.5 rounded-full bg-surface border border-foreground/10 text-primary text-xs font-bold shadow-sm">
-            {tableData?.name || "Bàn Kiosk"}
-          </span>
+      </div>
+    );
+  }
+
+  // MAIN CATALOGUE & MULTIPLAYER ORDER VIEW
+  return (
+    <div className="min-h-screen bg-neutral-950 text-neutral-200 flex flex-col font-sans pb-28 relative overflow-hidden">
+      {/* Decorative backdrop elements */}
+      <div className="absolute top-0 left-[-10vw] w-[50vw] h-[50vw] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none"></div>
+      <div className="absolute top-[40vh] right-[-10vw] w-[50vw] h-[50vw] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none"></div>
+
+      {/* STICKY MULTIPLAYER HEADER */}
+      <header className="sticky top-0 z-30 backdrop-blur-xl bg-neutral-950/80 border-b border-white/5 px-4 py-3.5 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`h-2 w-2 rounded-full ${isConnected ? "bg-emerald-500 animate-ping" : "bg-red-500"}`}></div>
+            <div className="flex flex-col">
+              <span className="text-[9px] uppercase font-black tracking-widest text-amber-500">PHÒNG ĐỒNG BỘ TRỰC TUYẾN</span>
+              <span className="text-xs text-neutral-400 font-bold flex items-center gap-1.5">
+                <Wifi className={`w-3.5 h-3.5 ${isConnected ? "text-emerald-400 animate-pulse" : "text-red-500"}`} /> {isConnected ? "Live Synced Table Cart" : "Connecting..."}
+              </span>
+            </div>
+          </div>
+          
+          <div className="relative">
+            <div className="absolute inset-0 bg-amber-500/20 blur-md rounded-full scale-105"></div>
+            <span className="relative z-10 px-3.5 py-1.5 rounded-full bg-neutral-900 border border-white/10 text-amber-400 text-xs font-black shadow-lg">
+              BÀN {tableData?.name || "01"}
+            </span>
+          </div>
+        </div>
+
+        {/* Real-time active guests visualizer */}
+        <div className="flex items-center gap-3 bg-neutral-900/50 border border-white/5 rounded-2xl p-3">
+          <div className="flex items-center gap-1.5 text-neutral-400 font-bold text-[10px] uppercase tracking-wider">
+            <Users className="w-4 h-4 text-amber-500" />
+            <span>Đang ở bàn ({activeGuests.length}):</span>
+          </div>
+          
+          <div className="flex flex-wrap gap-1.5 flex-1 items-center">
+            {activeGuests.map((guest) => (
+              <span 
+                key={guest.guestId}
+                className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase border tracking-wider transition-all duration-300 ${
+                  guest.guestId === guestId
+                    ? "bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-md shadow-amber-500/5"
+                    : "bg-white/5 border-white/5 text-neutral-300"
+                }`}
+              >
+                {guest.guestName} {guest.guestId === guestId && "(Bạn)"}
+              </span>
+            ))}
+          </div>
         </div>
       </header>
 
-      {/* Core catalog controls */}
+      {/* CORE CONTROLS */}
       <div className="px-4 pt-5 pb-2">
-        {/* Search bar */}
+        {/* Search */}
         <div className="relative mb-5">
           <input
             type="text"
             placeholder="Tìm món uống bạn yêu thích..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-surface border border-foreground/15 focus:border-primary/50 rounded-xl py-3 pl-11 pr-4 text-sm text-foreground placeholder-foreground/45 outline-none transition-all duration-300 shadow-sm"
+            className="w-full bg-neutral-900/60 border border-white/10 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-2xl py-3.5 pl-11 pr-10 text-sm text-white placeholder-neutral-600 outline-none transition-all duration-300 shadow-lg"
           />
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/40">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500">
+            <Search className="w-4 h-4 stroke-[2.5]" />
           </div>
           {searchQuery && (
             <button 
               onClick={() => setSearchQuery("")} 
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/50 hover:text-foreground"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <Plus className="w-4 h-4 rotate-45" />
             </button>
           )}
         </div>
 
-        {/* Horizontal Category List selector */}
+        {/* Categories selector */}
         <div className="flex items-center gap-2 mb-4 overflow-hidden relative">
           <div 
             ref={categoryScrollRef}
             className="flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory"
             style={{ WebkitOverflowScrolling: "touch" }}
           >
-            {/* 'ALL' category */}
             <button
               onClick={() => setSelectedCategory("all")}
-              className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 flex-shrink-0 snap-align-start border ${
+              className={`px-4.5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 flex-shrink-0 snap-align-start border ${
                 selectedCategory === "all"
-                  ? "bg-primary text-white border-primary shadow-sm shadow-primary/10"
-                  : "bg-surface border-foreground/10 text-foreground/60 hover:text-foreground"
+                  ? "bg-amber-500 text-black border-amber-500 shadow-lg shadow-amber-500/10"
+                  : "bg-neutral-900 border-white/5 text-neutral-400 hover:text-white"
               }`}
             >
               Tất cả
             </button>
 
-            {/* Custom categories */}
             {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 flex-shrink-0 snap-align-start border ${
+                className={`px-4.5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 flex-shrink-0 snap-align-start border ${
                   selectedCategory === category.id
-                    ? "bg-primary text-white border-primary shadow-sm shadow-primary/10"
-                    : "bg-surface border-foreground/10 text-foreground/60 hover:text-foreground"
+                    ? "bg-amber-500 text-black border-amber-500 shadow-lg shadow-amber-500/10"
+                    : "bg-neutral-900 border-white/5 text-neutral-400 hover:text-white"
                 }`}
               >
                 {category.name}
@@ -633,48 +513,42 @@ export default function GuestTableOrderingPage() {
         </div>
       </div>
 
-      {/* Floating Success Notifications */}
+      {/* FLOAT NOTIFICATIONS */}
       {successMsg && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-interaction text-white text-xs font-semibold shadow-xl border border-interaction/30 flex items-center gap-2 animate-bounce">
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-          </svg>
+        <div className="fixed top-28 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl bg-amber-500 text-black text-xs font-extrabold shadow-2xl border border-amber-500/30 flex items-center gap-2 animate-bounce">
+          <Check className="w-3.5 h-3.5 stroke-[3]" />
           {successMsg}
         </div>
       )}
 
-      {/* Floating Error Alert */}
       {errorMsg && (
-        <div className="mx-4 mb-4 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 text-xs leading-relaxed flex items-start gap-3">
-          <svg className="w-5 h-5 flex-shrink-0 text-rose-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
+        <div className="mx-4 mb-4 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs leading-relaxed flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-500 mt-0.5" />
           <div>{errorMsg}</div>
         </div>
       )}
 
-      {/* Catalog items Grid */}
+      {/* CATALOGUE PRODUCTS GRID */}
       <main className="flex-1 px-4">
         {filteredProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-foreground/40">
-            <svg className="w-12 h-12 text-foreground/30 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="text-sm font-medium">Không tìm thấy sản phẩm nào phù hợp.</p>
+          <div className="flex flex-col items-center justify-center py-16 text-neutral-600">
+            <Coffee className="w-12 h-12 mb-3 opacity-30" />
+            <p className="text-sm font-bold uppercase tracking-wider">Không tìm thấy sản phẩm</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {filteredProducts.map((product) => {
               const hasToppings = product.allowTopping && product.toppings && product.toppings.length > 0;
               return (
                 <div
                   key={product.id}
-                  className="bg-surface border border-foreground/10 rounded-2xl p-3 flex flex-col justify-between hover:border-primary/30 hover:shadow-md transition-all duration-300 group shadow-sm"
+                  className="bg-neutral-900/40 border border-white/5 rounded-2xl p-4.5 flex flex-col justify-between hover:border-amber-500/30 hover:shadow-lg transition-all duration-300 group shadow-md"
                 >
                   <div>
-                    {/* Visual container with placeholder fallback design */}
-                    <div className="relative aspect-square w-full rounded-xl bg-foreground/5 overflow-hidden mb-3 border border-foreground/5 flex items-center justify-center">
+                    {/* Visual container */}
+                    <div className="relative aspect-square w-full rounded-xl bg-neutral-950 overflow-hidden mb-3 border border-white/5 flex items-center justify-center">
                       {product.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={product.imageUrl}
                           alt={product.name}
@@ -682,47 +556,35 @@ export default function GuestTableOrderingPage() {
                         />
                       ) : (
                         <div className="flex flex-col items-center justify-center p-4">
-                          {/* Rich fallback icons depending on name queries */}
-                          {product.name.toLowerCase().includes("trà") || product.name.toLowerCase().includes("tea") ? (
-                            <svg className="w-10 h-10 text-primary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                            </svg>
-                          ) : (
-                            <svg className="w-10 h-10 text-primary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-11.314l.707.707m11.314 11.314l.707-.707M12 7a5 5 0 100 10 5 5 0 000-10z" />
-                            </svg>
-                          )}
-                          <span className="text-[9px] uppercase tracking-wider text-foreground/40 font-extrabold mt-2">KioskFlow</span>
+                          <Coffee className="w-10 h-10 text-amber-500/40 group-hover:animate-float" />
+                          <span className="text-[8px] uppercase tracking-wider text-neutral-600 font-black mt-2">KioskFlow</span>
                         </div>
                       )}
                       
-                      {/* Optional Toppings Indicator tag */}
                       {hasToppings && (
-                        <span className="absolute top-2 left-2 bg-interaction text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md shadow-md uppercase tracking-wider">
+                        <span className="absolute top-2 left-2 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[8px] font-black px-2 py-0.5 rounded-md shadow-md uppercase tracking-widest">
                           Topping
                         </span>
                       )}
                     </div>
 
-                    <h3 className="font-bold text-foreground text-sm line-clamp-1 mb-1">{product.name}</h3>
+                    <h3 className="font-black text-white text-sm line-clamp-1 mb-1">{product.name}</h3>
                     {product.description && (
-                      <p className="text-foreground/60 text-xs line-clamp-2 leading-relaxed mb-2 font-normal">
+                      <p className="text-neutral-500 text-[11px] line-clamp-2 leading-relaxed mb-2">
                         {product.description}
                       </p>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-foreground/5">
-                    <span className="font-mono text-primary font-bold text-sm">
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
+                    <span className="font-mono text-amber-400 font-bold text-xs">
                       {formatCurrency(product.price)}
                     </span>
                     <button
                       onClick={() => openToppingModal(product)}
-                      className="h-8 w-8 rounded-full bg-primary hover:bg-primary/95 active:scale-95 flex items-center justify-center text-white shadow-sm shadow-primary/10 transition-all duration-200"
+                      className="h-8 w-8 rounded-full bg-amber-500 hover:bg-amber-400 active:scale-95 flex items-center justify-center text-black shadow-md shadow-amber-500/10 transition-all duration-200 cursor-pointer"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
-                      </svg>
+                      <Plus className="w-4 h-4 stroke-[3]" />
                     </button>
                   </div>
                 </div>
@@ -732,104 +594,94 @@ export default function GuestTableOrderingPage() {
         )}
       </main>
 
-      {/* ----------------------------------------------------
-          TOPPING & NOTE SELECTION MODAL
-      ---------------------------------------------------- */}
+      {/* TOPPING & NOTE CUSTOMIZATION MODAL */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center p-0 bg-black/65 backdrop-blur-sm transition-all duration-300">
-          <div className="w-full max-w-md bg-surface border-t border-foreground/10 rounded-t-3xl overflow-hidden shadow-2xl p-5 flex flex-col gap-4 animate-[slideUp_0.3s_ease-out]">
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-0 bg-black/80 backdrop-blur-sm transition-all duration-300">
+          <div className="w-full max-w-md bg-neutral-900 border-t border-white/10 rounded-t-3xl overflow-hidden shadow-2xl p-6 flex flex-col gap-4 animate-[slideUp_0.3s_ease-out]">
             
-            {/* Modal Drag handle visual indicator */}
-            <div className="w-12 h-1.5 rounded-full bg-foreground/10 mx-auto mb-1"></div>
+            <div className="w-12 h-1.5 rounded-full bg-neutral-800 mx-auto mb-1"></div>
 
-            {/* Product details summary */}
             <div className="flex justify-between items-start">
               <div className="flex-1 pr-3">
-                <span className="text-[10px] font-extrabold uppercase text-primary tracking-wider">Tùy biến món uống</span>
-                <h3 className="text-lg font-bold text-foreground mt-0.5">{selectedProduct.name}</h3>
-                <p className="text-xs text-primary/80 font-mono mt-1 font-semibold">
+                <span className="text-[10px] font-black uppercase text-amber-500 tracking-wider">Tùy biến món uống</span>
+                <h3 className="text-lg font-black text-white mt-0.5">{selectedProduct.name}</h3>
+                <p className="text-xs text-amber-400 font-mono mt-1 font-semibold">
                   Đơn giá: {formatCurrency(selectedProduct.price)}
                 </p>
               </div>
               <button
                 onClick={() => setSelectedProduct(null)}
-                className="h-8 w-8 rounded-full bg-foreground/5 flex items-center justify-center text-foreground/60 hover:text-foreground"
+                className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center text-neutral-400 hover:text-white"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <Plus className="w-4 h-4 rotate-45" />
               </button>
             </div>
 
-            {/* Toppings Selection Core */}
+            {/* Toppings selection */}
             {selectedProduct.allowTopping && selectedProduct.toppings && selectedProduct.toppings.length > 0 && (
               <div className="flex flex-col gap-2 max-h-[35vh] overflow-y-auto pr-1">
-                <h4 className="text-xs font-bold text-foreground/50 uppercase tracking-widest mb-1.5">Chọn thêm Topping</h4>
+                <h4 className="text-[10px] font-black text-neutral-500 uppercase tracking-widest mb-1.5">Chọn thêm Topping</h4>
                 {selectedProduct.toppings.filter(t => t.isActive).map(topping => {
                   const isChecked = modalToppings.some(t => t.id === topping.id);
                   return (
                     <button
                       key={topping.id}
                       onClick={() => toggleModalTopping(topping)}
-                      className={`flex items-center justify-between p-3.5 rounded-xl border text-sm transition-all duration-200 ${
+                      className={`flex items-center justify-between p-3.5 rounded-xl border text-sm transition-all duration-200 cursor-pointer ${
                         isChecked
-                          ? "bg-primary/10 border-primary text-primary"
-                          : "bg-surface border-foreground/10 text-foreground/60"
+                          ? "bg-amber-500/10 border-amber-500 text-amber-400"
+                          : "bg-neutral-950 border-white/5 text-neutral-400 hover:text-white"
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
-                          isChecked ? "bg-primary border-primary" : "border-foreground/20 bg-background"
+                          isChecked ? "bg-amber-500 border-amber-500" : "border-neutral-800 bg-neutral-950"
                         }`}>
-                          {isChecked && (
-                            <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3.5" d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
+                          {isChecked && <Check className="w-2.5 h-2.5 text-black stroke-[3]" />}
                         </div>
-                        <span className="font-medium text-foreground">{topping.name}</span>
+                        <span className="font-bold text-white">{topping.name}</span>
                       </div>
-                      <span className="font-mono text-primary font-semibold">+{formatCurrency(topping.price)}</span>
+                      <span className="font-mono text-amber-400 font-semibold">+{formatCurrency(topping.price)}</span>
                     </button>
                   );
                 })}
               </div>
             )}
 
-            {/* Note text field */}
+            {/* Note Special Instructions */}
             <div className="flex flex-col gap-1.5">
-              <h4 className="text-xs font-bold text-foreground/50 uppercase tracking-widest">Ghi chú đặc biệt</h4>
+              <h4 className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Ghi chú đặc biệt</h4>
               <textarea
-                placeholder="Ví dụ: Ít đường, ít đá, thêm cốc giấy..."
+                placeholder="Ví dụ: Ít đường, ít đá, thêm sữa..."
                 value={modalNote}
                 onChange={(e) => setModalNote(e.target.value)}
                 rows={2}
-                className="w-full bg-background border border-foreground/10 focus:border-primary/45 rounded-xl p-3 text-xs text-foreground placeholder-foreground/35 outline-none resize-none transition-all"
+                className="w-full bg-neutral-950 border border-white/10 hover:border-white/20 focus:border-amber-500 rounded-xl p-3 text-xs text-white placeholder-neutral-600 outline-none resize-none transition-all"
               />
             </div>
 
-            {/* Quantity control & add submit */}
-            <div className="flex items-center justify-between border-t border-foreground/10 pt-4 mt-1">
-              <div className="flex items-center gap-3 bg-background border border-foreground/10 rounded-xl p-1.5">
+            {/* Quantity Controls & Add Button */}
+            <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-1">
+              <div className="flex items-center gap-3 bg-neutral-950 border border-white/10 rounded-xl p-1.5">
                 <button
                   disabled={modalQuantity <= 1}
                   onClick={() => setModalQuantity(modalQuantity - 1)}
-                  className="h-7 w-7 rounded-lg bg-surface text-foreground/75 border border-foreground/10 hover:text-foreground flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none transition-all"
+                  className="h-7 w-7 rounded-lg bg-neutral-900 text-neutral-400 border border-white/5 hover:text-white flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
                 >
-                  -
+                  <Minus className="w-3.5 h-3.5" />
                 </button>
-                <span className="font-mono font-bold text-sm text-foreground w-6 text-center">{modalQuantity}</span>
+                <span className="font-mono font-bold text-sm text-white w-6 text-center">{modalQuantity}</span>
                 <button
                   onClick={() => setModalQuantity(modalQuantity + 1)}
-                  className="h-7 w-7 rounded-lg bg-surface text-foreground/75 border border-foreground/10 hover:text-foreground flex items-center justify-center transition-all"
+                  className="h-7 w-7 rounded-lg bg-neutral-900 text-neutral-400 border border-white/5 hover:text-white flex items-center justify-center transition-all cursor-pointer"
                 >
-                  +
+                  <Plus className="w-3.5 h-3.5" />
                 </button>
               </div>
 
               <button
-                onClick={handleAddToCart}
-                className="flex-1 ml-4 py-3.5 px-6 rounded-xl bg-primary hover:bg-primary/95 font-bold text-sm text-white shadow-md shadow-primary/10 flex items-center justify-center gap-2 active:scale-98 transition-all"
+                onClick={handleAddProductToSharedCart}
+                className="flex-1 ml-4 py-3.5 px-6 rounded-xl bg-amber-500 hover:bg-amber-400 font-black text-xs uppercase tracking-wider text-black shadow-lg shadow-amber-500/10 flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer"
               >
                 <span>Thêm vào giỏ</span>
                 <span>•</span>
@@ -848,149 +700,137 @@ export default function GuestTableOrderingPage() {
         </div>
       )}
 
-      {/* ----------------------------------------------------
-          CART BOTTOM ACTION OVERLAY DRAWER
-      ---------------------------------------------------- */}
-      {cart.length > 0 && !isCartOpen && (
-        <div className="fixed bottom-0 inset-x-0 z-40 px-4 pb-5 pt-3 bg-gradient-to-t from-background via-background/95 to-transparent">
+      {/* FLOAT SHARED CART BAR */}
+      {cartItems.length > 0 && !isCartOpen && (
+        <div className="fixed bottom-0 inset-x-0 z-40 px-4 pb-5 pt-3 bg-gradient-to-t from-neutral-950 via-neutral-950/95 to-transparent">
           <button
             onClick={() => setIsCartOpen(true)}
-            className="w-full max-w-md mx-auto py-4 px-5 rounded-2xl bg-gradient-to-r from-primary to-interaction hover:scale-102 flex items-center justify-between text-white shadow-xl shadow-primary/20 active:scale-98 transition-all duration-300 animate-pulse"
+            className="w-full max-w-md mx-auto py-4.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:scale-102 flex items-center justify-between text-black shadow-2xl shadow-amber-500/20 active:scale-98 transition-all duration-300 animate-pulse cursor-pointer"
           >
-            <div className="flex items-center gap-2">
-              <span className="h-6 w-6 rounded-lg bg-white/25 text-xs font-bold flex items-center justify-center">
-                {cartCount()}
+            <div className="flex items-center gap-3">
+              <span className="h-6 w-6 rounded-lg bg-black text-white text-xs font-black flex items-center justify-center">
+                {sharedCartCount()}
               </span>
-              <span className="text-sm font-extrabold tracking-wide">Xem giỏ hàng của bạn</span>
+              <span className="text-xs font-black uppercase tracking-wider">Xem giỏ hàng chung của bàn</span>
             </div>
-            <span className="font-mono font-bold tracking-wide">{formatCurrency(new Money({ units: BigInt(cartTotal()) }))}</span>
+            <span className="font-mono font-black text-sm tracking-wide">{formatCurrency(new Money({ units: BigInt(sharedCartTotal()) }))}</span>
           </button>
         </div>
       )}
 
-      {/* Full height Slideup Drawer for shopping cart details */}
+      {/* MULTIPLAYER CART DETAILS SLIDE DRAWER */}
       {isCartOpen && (
-        <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-end justify-center p-0 transition-all duration-300">
-          <div className="w-full max-w-md bg-surface border-t border-foreground/10 rounded-t-3xl overflow-hidden shadow-2xl p-5 flex flex-col max-h-[85vh] animate-[slideUp_0.3s_ease-out]">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end justify-center p-0 transition-all duration-300 font-sans">
+          <div className="w-full max-w-md bg-neutral-900 border-t border-white/10 rounded-t-3xl overflow-hidden shadow-2xl p-6 flex flex-col max-h-[85vh] animate-[slideUp_0.3s_ease-out]">
             
-            {/* Modal indicator */}
-            <div className="w-12 h-1.5 rounded-full bg-foreground/10 mx-auto mb-2 flex-shrink-0"></div>
+            <div className="w-12 h-1.5 rounded-full bg-neutral-800 mx-auto mb-2 flex-shrink-0"></div>
 
-            {/* Header section */}
-            <div className="flex justify-between items-center border-b border-foreground/10 pb-3 flex-shrink-0">
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-foreground">Giỏ hàng của bạn</span>
-                <span className="text-xs bg-primary/10 text-primary font-mono px-2 py-0.5 rounded font-extrabold">
-                  {cartCount()} món
+            <div className="flex justify-between items-center border-b border-white/5 pb-3.5 flex-shrink-0">
+              <div className="flex items-center gap-2.5">
+                <span className="text-lg font-black text-white uppercase italic tracking-tighter">Giỏ hàng bàn {tableData?.name || ""}</span>
+                <span className="text-[10px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono px-2 py-0.5 rounded font-black tracking-widest uppercase">
+                  {sharedCartCount()} món
                 </span>
               </div>
               <button
                 onClick={() => setIsCartOpen(false)}
-                className="h-8 w-8 rounded-full bg-foreground/5 flex items-center justify-center text-foreground/60 hover:text-foreground"
+                className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center text-neutral-400 hover:text-white"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <Plus className="w-4 h-4 rotate-45" />
               </button>
             </div>
 
-            {/* Scrollable list of products */}
+            {/* Scrollable shared items list */}
             <div className="flex-1 overflow-y-auto py-4 flex flex-col gap-3 pr-1">
-              {cart.map((item) => (
+              {cartItems.map((item, idx) => (
                 <div
-                  key={item.uniqueKey}
-                  className="bg-background border border-foreground/10 rounded-2xl p-4.5 flex justify-between items-start gap-3.5"
+                  key={idx}
+                  className="bg-neutral-950 border border-white/5 rounded-2xl p-4 flex justify-between items-start gap-4 relative overflow-hidden group hover:border-amber-500/20 transition-all"
                 >
-                  <div className="flex-1">
-                    <h4 className="font-bold text-foreground text-sm leading-snug">{item.product.name}</h4>
-                    {item.selectedToppings.length > 0 && (
-                      <p className="text-xs text-primary mt-1 leading-normal">
-                        +{item.selectedToppings.map(t => t.name).join(", ")}
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-black text-white text-sm leading-snug">{item.productName}</h4>
+                      {/* Added by guest name badge */}
+                      <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 font-black text-[8px] uppercase tracking-wider">
+                        Bởi {item.addedByGuestName}
+                      </span>
+                    </div>
+
+                    {item.toppingIds && item.toppingIds.length > 0 && (
+                      <p className="text-[11px] text-neutral-500 leading-normal">
+                        Toppings: {item.toppingIds.join(", ")}
                       </p>
                     )}
                     {item.note && (
-                      <p className="text-xs text-amber-700 italic mt-1 leading-normal">
+                      <p className="text-[11px] text-amber-500/80 italic leading-normal">
                         Ghi chú: {item.note}
                       </p>
                     )}
-                    <p className="font-mono text-primary text-xs font-bold mt-2.5">
-                      {formatCurrency(new Money({ units: BigInt(cartItemTotal(item)) }))}
+                    <p className="font-mono text-amber-400 text-xs font-bold pt-1.5">
+                      {formatCurrency(new Money({ units: BigInt(getCartItemPriceNumber(item) * item.quantity) }))}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2.5 bg-surface border border-foreground/10 rounded-lg p-1 flex-shrink-0">
+                  <div className="flex items-center gap-2.5 bg-neutral-900 border border-white/5 rounded-lg p-1 flex-shrink-0">
                     <button
-                      onClick={() => updateCartItemQuantity(item.uniqueKey, -1)}
-                      className="h-6 w-6 rounded bg-background border border-foreground/5 text-foreground/75 font-bold text-xs flex items-center justify-center transition-all"
+                      onClick={() => handleUpdateQuantity(item.productId, -1, item.note, item.toppingIds)}
+                      className="h-6 w-6 rounded bg-neutral-950 text-neutral-400 hover:text-white font-bold text-xs flex items-center justify-center transition-all cursor-pointer"
                     >
-                      -
+                      <Minus className="w-3.5 h-3.5" />
                     </button>
-                    <span className="font-mono font-bold text-xs text-foreground w-5 text-center">{item.quantity}</span>
+                    <span className="font-mono font-bold text-xs text-white w-5 text-center">{item.quantity}</span>
                     <button
-                      onClick={() => updateCartItemQuantity(item.uniqueKey, 1)}
-                      className="h-6 w-6 rounded bg-background border border-foreground/5 text-foreground/75 font-bold text-xs flex items-center justify-center transition-all"
+                      onClick={() => handleUpdateQuantity(item.productId, 1, item.note, item.toppingIds)}
+                      className="h-6 w-6 rounded bg-neutral-950 text-neutral-400 hover:text-white font-bold text-xs flex items-center justify-center transition-all cursor-pointer"
                     >
-                      +
+                      <Plus className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Validation & place order form footer container */}
-            <div className="border-t border-foreground/10 pt-4 flex flex-col gap-4 flex-shrink-0">
+            {/* Validation & Place Order Footer */}
+            <div className="border-t border-white/5 pt-4 flex flex-col gap-4 flex-shrink-0">
               
-              {/* Form Input fields */}
-              <div className="flex flex-col gap-3">
+              <div className="space-y-3">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-foreground/50 uppercase tracking-widest">Tên của bạn *</label>
+                  <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">
+                    Ghi chú cho quầy thu ngân (Tùy chọn)
+                  </label>
                   <input
                     type="text"
-                    required
-                    placeholder="Nhập tên của bạn để nhân viên tiện gọi phục vụ..."
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full bg-background border border-foreground/10 focus:border-primary/40 rounded-xl py-3 px-4 text-xs text-foreground placeholder-foreground/35 outline-none transition-all"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-foreground/50 uppercase tracking-widest">Ghi chú cho đơn hàng (Tùy chọn)</label>
-                  <input
-                    type="text"
-                    placeholder="Ghi chú chung cho toàn bộ đơn hàng của bạn..."
+                    placeholder="Ghi chú chung cho toàn bộ bàn uống..."
                     value={orderNote}
                     onChange={(e) => setOrderNote(e.target.value)}
-                    className="w-full bg-background border border-foreground/10 focus:border-primary/40 rounded-xl py-3 px-4 text-xs text-foreground placeholder-foreground/35 outline-none transition-all"
+                    className="w-full bg-neutral-950 border border-white/10 hover:border-white/20 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl py-3 px-4 text-xs text-white placeholder-neutral-700 outline-none transition-all"
                   />
                 </div>
               </div>
 
-              {/* Order total checkout */}
+              {/* Shared Cart Total Display */}
               <div className="flex justify-between items-center text-sm pt-2">
-                <span className="font-semibold text-foreground/60">Tổng thanh toán</span>
-                <span className="font-mono text-primary font-black text-lg">
-                  {formatCurrency(new Money({ units: BigInt(cartTotal()) }))}
+                <span className="font-bold text-neutral-400 uppercase tracking-wider text-xs">Tổng thanh toán chung</span>
+                <span className="font-mono text-amber-400 font-black text-lg">
+                  {formatCurrency(new Money({ units: BigInt(sharedCartTotal()) }))}
                 </span>
               </div>
 
-              {/* Place Order CTA Button */}
+              {/* Submit CTA Button */}
               <button
-                onClick={handlePlaceOrder}
-                disabled={submittingOrder || cart.length === 0}
-                className="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-interaction hover:opacity-95 disabled:opacity-40 disabled:pointer-events-none text-white font-extrabold text-sm tracking-wide shadow-md shadow-primary/10 flex items-center justify-center gap-2 transition-all duration-300"
+                onClick={handleCheckoutSharedCart}
+                disabled={hookLoading || cartItems.length === 0}
+                className="w-full py-4.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-40 disabled:pointer-events-none text-black font-black text-xs uppercase tracking-wider shadow-xl shadow-amber-500/10 flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer"
               >
-                {submittingOrder ? (
+                {hookLoading ? (
                   <>
-                    <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
-                    <span>Đang gửi đơn hàng của bạn...</span>
+                    <div className="h-4 w-4 rounded-full border-2 border-black border-t-transparent animate-spin"></div>
+                    <span>Đang gửi đơn hàng...</span>
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Xác nhận & Gửi yêu cầu đặt món</span>
+                    <ShoppingCart className="w-4 h-4" />
+                    <span>Gửi yêu cầu đặt món ({sharedCartCount()})</span>
                   </>
                 )}
               </button>
@@ -1001,7 +841,7 @@ export default function GuestTableOrderingPage() {
         </div>
       )}
 
-      {/* Static custom modal CSS transition helpers */}
+      {/* Global CSS transition animations */}
       <style jsx global>{`
         @keyframes slideUp {
           from {
@@ -1017,6 +857,17 @@ export default function GuestTableOrderingPage() {
         .scrollbar-none {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-8px);
+          }
+        }
+        .animate-float {
+          animation: float 4s ease-in-out infinite;
         }
       `}</style>
     </div>

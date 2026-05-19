@@ -25,6 +25,7 @@ use proto_gen::store::{
     tenant_settings_service_server::TenantSettingsServiceServer,
 };
 use proto_gen::table::table_service_server::TableServiceServer;
+use proto_gen::table_cart::table_cart_service_server::TableCartServiceServer;
 use services::auth::AuthServiceImpl;
 use services::billing::BillingServiceImpl;
 use services::branch::BranchServiceImpl;
@@ -42,6 +43,7 @@ use services::report::ReportServiceImpl;
 use services::status::StatusServiceImpl;
 use services::store::{StoreServiceImpl, TenantSettingsServiceImpl};
 use services::table::TableServiceImpl;
+use services::table_cart::TableCartServiceImpl;
 
 use infra::middleware::{get_auth_interceptor, idempotency::IdempotencyLayer, ScopingLayer};
 
@@ -119,6 +121,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let category_service = CategoryServiceImpl::new(category_repo.clone());
     let product_service = ProductServiceImpl::new(product_repo.clone(), topping_repo.clone());
     let table_service = TableServiceImpl::new(table_repo.clone(), floor_plan_repo.clone());
+    let table_cart_service = TableCartServiceImpl::new(
+        product_repo.clone(),
+        topping_repo.clone(),
+        table_repo.clone(),
+        order_repo.clone(),
+        redis_manager.clone(),
+    );
     let order_service = OrderServiceImpl::new(
         order_repo.clone(),
         product_repo.clone(),
@@ -183,6 +192,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let status_server = StatusServiceServer::new(status_service);
     let billing_server =
         BillingServiceServer::with_interceptor(billing_service, auth_interceptor.clone());
+    let table_cart_server =
+        TableCartServiceServer::with_interceptor(table_cart_service, auth_interceptor.clone());
 
     // 4. Setup gRPC Reflection
     let ext_descriptor_set = tonic_reflection::server::Builder::configure()
@@ -251,6 +262,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let procurement_server = tonic_web::enable(procurement_server);
     let alert_server = tonic_web::enable(alert_server);
     let billing_server = tonic_web::enable(billing_server);
+    let table_cart_server = tonic_web::enable(table_cart_server);
 
     // 6. Spawn Axum HTTP Webhook Server on port + 1
     let webhook_addr = SocketAddr::from(([0, 0, 0, 0], addr.port() + 1));
@@ -292,6 +304,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(procurement_server)
         .add_service(alert_server)
         .add_service(billing_server)
+        .add_service(table_cart_server)
         .serve(addr)
         .await?;
 

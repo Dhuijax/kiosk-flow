@@ -66,4 +66,8 @@ pub mod billing {
     tonic::include_proto!("billing");
 }
 
+pub mod table_cart {
+    tonic::include_proto!("table_cart");
+}
+
 pub const FILE_DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("kioskflow_descriptor");

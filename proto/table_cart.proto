@@ -1,0 +1,92 @@
+syntax = "proto3";
+package table_cart;
+
+import "common.proto";
+
+service TableCartService {
+  rpc JoinTableSession (JoinRequest) returns (JoinResponse);
+  rpc UpdateCartItem (UpdateCartRequest) returns (UpdateCartResponse);
+  rpc SubmitTableOrder (SubmitOrderRequest) returns (SubmitOrderResponse);
+  
+  // Real-time server streaming for updates
+  rpc StreamCartUpdates (StreamRequest) returns (stream CartUpdateResponse);
+}
+
+message JoinRequest {
+  string tenant_id = 1;
+  string branch_id = 2;
+  string table_id = 3;
+  string guest_name = 4;
+}
+
+message JoinResponse {
+  string session_id = 1;
+  string guest_id = 2;
+  repeated Guest active_guests = 3;
+  repeated CartItem items = 4;
+}
+
+message Guest {
+  string guest_id = 1;
+  string guest_name = 2;
+  string joined_at = 3;
+}
+
+message CartItem {
+  string product_id = 1;
+  string product_name = 2;
+  int32 quantity = 3;
+  common.Money price = 4;
+  string note = 5;
+  repeated string topping_ids = 6;
+  string added_by_guest_name = 7;
+}
+
+message UpdateCartRequest {
+  string tenant_id = 1;
+  string branch_id = 2;
+  string table_id = 3;
+  string guest_id = 4;
+  string product_id = 5;
+  int32 quantity_change = 6; // e.g. +1, -1
+  string note = 7;
+  repeated string topping_ids = 8;
+}
+
+message UpdateCartResponse {
+  bool success = 1;
+}
+
+message StreamRequest {
+  string tenant_id = 1;
+  string branch_id = 2;
+  string table_id = 3;
+  string guest_id = 4;
+}
+
+message CartUpdateResponse {
+  enum EventType {
+    GUEST_JOINED = 0;
+    GUEST_LEFT = 1;
+    CART_UPDATED = 2;
+    ORDER_SUBMITTED = 3;
+  }
+  EventType event_type = 1;
+  repeated Guest active_guests = 2;
+  repeated CartItem items = 3;
+  string trigger_by_guest_name = 4;
+}
+
+message SubmitOrderRequest {
+  string tenant_id = 1;
+  string branch_id = 2;
+  string table_id = 3;
+  string guest_id = 4;
+  string note = 5;
+}
+
+message SubmitOrderResponse {
+  string order_id = 1;
+  string order_number = 2;
+  bool success = 3;
+}

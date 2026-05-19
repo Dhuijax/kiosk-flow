@@ -17,4 +17,5 @@ pub mod report;
 pub mod status;
 pub mod store;
 pub mod table;
+pub mod table_cart;
 pub mod tenant;

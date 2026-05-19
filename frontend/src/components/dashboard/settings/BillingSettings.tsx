@@ -281,7 +281,7 @@ export default function BillingSettings() {
                 className={`
                   ai-card p-8 flex flex-col justify-between transition-all duration-300 relative
                   ${plan.recommended 
-                    ? 'border-interaction/40 shadow-lg scale-[1.03] bg-surface z-10' 
+                    ? 'border-interaction/40 shadow-lg scale-[1.03] bg-surface z-10 !overflow-visible' 
                     : 'bg-surface/50 border-foreground/5 shadow-sm'
                   }
                   ${isCurrent ? 'border-primary/50' : ''}

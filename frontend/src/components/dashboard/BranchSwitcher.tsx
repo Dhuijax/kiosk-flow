@@ -6,6 +6,7 @@ import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { BranchService } from '@/gen/branch_connect';
 import { Branch } from '@/gen/branch_pb';
 import { Store, ChevronDown, Check, MapPin, RefreshCw } from 'lucide-react';
+import { Link } from '@/i18n/routing';
 
 export default function BranchSwitcher() {
   const { tenantId, token, branchId, setBranchId } = useAuth();
@@ -116,13 +117,13 @@ export default function BranchSwitcher() {
             </div>
 
             <div className="mt-2 px-4">
-              <a 
+              <Link 
                 href="/dashboard/branches" 
                 className="block w-full py-4 text-center text-xs font-black uppercase italic tracking-tighter text-interaction hover:bg-interaction/5 rounded-2xl transition-colors border border-transparent hover:border-interaction/10"
                 onClick={() => setIsOpen(false)}
               >
                 Quản lý chi nhánh
-              </a>
+              </Link>
             </div>
           </div>
         </>

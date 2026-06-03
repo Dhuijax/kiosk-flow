@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { 
   Mic, 
   ArrowRight, 
@@ -212,6 +213,7 @@ export default function LandingPage() {
         <div className="hidden md:flex items-center gap-8 font-black uppercase text-sm tracking-widest italic">
           <Link href="#features" className="hover:text-interaction transition-colors">Tính năng</Link>
           <Link href="#operations" className="hover:text-interaction transition-colors">Vận hành</Link>
+          <LanguageSwitcher />
           <Link href="/auth/login" className="px-6 py-3 bg-foreground text-background rounded-xl hover:bg-interaction transition-all">Đăng nhập</Link>
         </div>
       </nav>

@@ -1,0 +1,76 @@
+{
+  "Locale": {
+    "vi": "Tiếng Việt",
+    "en": "English"
+  },
+  "Common": {
+    "title": "KioskFlow - POS & ERP Platform for F&B",
+    "description": "Next-generation Point of Sale (POS) system",
+    "pos": "POS System",
+    "kitchen": "Kitchen Screen",
+    "dashboard": "Dashboard",
+    "table": "Table Ordering",
+    "settings": "Settings",
+    "logout": "Log Out",
+    "login": "Log In",
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "loading": "Loading...",
+    "error": "An error occurred"
+  },
+  "Landing": {
+    "welcome": "Welcome to KioskFlow",
+    "subtitle": "Comprehensive digital solution for Restaurants & Cafes (F&B)",
+    "selectMode": "Select an operating mode to start",
+    "kioskDescription": "Self-service interface for counter ordering.",
+    "posDescription": "Professional point of sale for cashiers and waiters.",
+    "kitchenDescription": "Real-time kitchen order display and preparation tracker.",
+    "dashboardDescription": "Business management, inventory, payroll, and analytics.",
+    "tableDescription": "QR code table ordering experience for dine-in guests."
+  },
+  "Auth": {
+    "username": "Username",
+    "password": "Password",
+    "signIn": "Sign In",
+    "signingIn": "Signing in...",
+    "invalidCredentials": "Invalid username or password",
+    "welcomeBack": "Welcome back"
+  },
+  "POS": {
+    "header": {
+      "cart": "Cart",
+      "tables": "Tables Plan",
+      "checkout": "Checkout",
+      "searchPlaceholder": "Search food, drinks..."
+    },
+    "cart": {
+      "empty": "Your cart is empty",
+      "addItems": "Select items to add to your order",
+      "total": "Total",
+      "itemCount": "{count} items"
+    },
+    "tables": {
+      "floorPlan": "Floor Plan",
+      "selectZone": "Select Zone",
+      "emptyTable": "Table is empty. Ready for guests.",
+      "servingTable": "Occupied",
+      "waitingTable": "Waiting",
+      "transferTable": "Transfer / Merge Table",
+      "qrCode": "Table QR Code",
+      "printQr": "Print Table QR"
+    },
+    "checkout": {
+      "title": "Bill Settlement",
+      "paymentMethod": "Payment Method",
+      "cash": "Cash",
+      "bankTransfer": "QR Bank Transfer",
+      "creditCard": "Credit Card",
+      "receivedAmount": "Cash Received",
+      "changeAmount": "Change Due",
+      "printReceipt": "Print Receipt",
+      "success": "Payment successful!"
+    }
+  }
+}

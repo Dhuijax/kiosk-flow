@@ -12,11 +12,13 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useAuth } from "@/lib/auth/AuthContext";
 import Link from "next/link";
 
 export default function KitchenPage() {
+  const t = useTranslations('Kitchen');
   const { token, tenantId, branchId, loading } = useAuth();
   const [showHistory, setShowHistory] = useState(false);
   
@@ -35,10 +37,10 @@ export default function KitchenPage() {
             <Sparkles className="w-10 h-10" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-3xl font-black uppercase italic tracking-tighter text-foreground">Truy cập bị chặn</h2>
-            <p className="text-sm font-bold opacity-40 uppercase tracking-widest leading-relaxed">Vui lòng đăng nhập hệ thống để quản lý nhà bếp</p>
+            <h2 className="text-3xl font-black uppercase italic tracking-tighter text-foreground">{t('accessBlocked')}</h2>
+            <p className="text-sm font-bold opacity-40 uppercase tracking-widest leading-relaxed">{t('loginRequired')}</p>
           </div>
-          <Link href="/auth/login" className="btn-dynamic w-full flex justify-center py-5 text-xl">ĐĂNG NHẬP NGAY</Link>
+          <Link href="/auth/login" className="btn-dynamic w-full flex justify-center py-5 text-xl">{t('loginNow')}</Link>
         </div>
       </div>
     );
@@ -60,14 +62,14 @@ export default function KitchenPage() {
               <h1 className="text-4xl font-black uppercase italic tracking-tighter text-foreground leading-tight">
                 KioskFlow <span className="text-interaction">KDS</span>
               </h1>
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1">Hệ thống điều phối bếp</p>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-1">{t('systemCoordinator')}</p>
             </div>
           </Link>
           
           <div className="hidden xl:flex items-center gap-6">
             <div className="flex items-center gap-3 px-6 py-3 bg-background border border-foreground/10 rounded-2xl shadow-sm">
               <Store size={18} className="text-primary" />
-              <span className="font-black uppercase italic tracking-tighter text-sm text-foreground">Chi nhánh chính</span>
+              <span className="font-black uppercase italic tracking-tighter text-sm text-foreground">{t('mainBranch')}</span>
             </div>
             
             <div className={`flex items-center gap-3 px-6 py-3 rounded-2xl border font-black uppercase italic tracking-tighter text-sm shadow-sm transition-colors ${
@@ -83,7 +85,7 @@ export default function KitchenPage() {
 
         <div className="flex items-center gap-6">
           <div className="flex flex-col items-end mr-6">
-            <span className="text-[10px] font-black uppercase opacity-40">Đơn chờ xử lý</span>
+            <span className="text-[10px] font-black uppercase opacity-40">{t('pendingOrders')}</span>
             <span className="text-3xl font-black italic tracking-tighter text-foreground">{activeOrders.length}</span>
           </div>
 
@@ -96,7 +98,7 @@ export default function KitchenPage() {
             }`}
           >
             {showHistory ? <LayoutGrid size={24} /> : <History size={24} />}
-            <span>{showHistory ? "QUAY LẠI BẾP" : "LỊCH SỬ"}</span>
+            <span>{showHistory ? t('backToKitchen') : t('history')}</span>
             {completedOrders.length > 0 && !showHistory && (
               <span className="bg-accent text-foreground text-xs w-7 h-7 rounded-full flex items-center justify-center font-black border-2 border-foreground ml-2">
                 {completedOrders.length}
@@ -123,8 +125,8 @@ export default function KitchenPage() {
                     <Timer size={80} className="text-foreground/10" />
                   </div>
                   <div className="text-center space-y-2">
-                    <h3 className="text-3xl font-black uppercase italic tracking-tighter text-foreground/20">Chưa có đơn mới</h3>
-                    <p className="text-[10px] font-black text-foreground/10 uppercase tracking-[0.3em]">Hệ thống đang thấu hiểu khách hàng...</p>
+                    <h3 className="text-3xl font-black uppercase italic tracking-tighter text-foreground/20">{t('noNewOrders')}</h3>
+                    <p className="text-[10px] font-black text-foreground/10 uppercase tracking-[0.3em]">{t('waitingForCustomers')}</p>
                   </div>
                 </div>
               ) : (
@@ -153,7 +155,7 @@ export default function KitchenPage() {
                 <div className="w-10 h-10 bg-interaction border border-interaction/30 rounded-xl flex items-center justify-center text-white shadow-sm">
                   <History size={20} />
                 </div>
-                <h2 className="text-4xl font-black uppercase italic tracking-tighter text-foreground">Lịch sử hôm nay</h2>
+                <h2 className="text-4xl font-black uppercase italic tracking-tighter text-foreground">{t('todayHistory')}</h2>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
@@ -176,12 +178,12 @@ export default function KitchenPage() {
         <div className="flex items-center gap-6">
           <span>AI KioskFlow Engine v2.0</span>
           <span className="w-1 h-1 bg-background/20 rounded-full" />
-          <span>Thời gian thực qua gRPC</span>
+          <span>{t('realtimeGrpc')}</span>
         </div>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full" />
-            <span>Xử lý: Tốt</span>
+            <span>{t('processingOk')}</span>
           </div>
         </div>
       </footer>

@@ -28,6 +28,7 @@ import { formatVND, moneyToNumber, formatDateTime } from '@/lib/utils/format';
 import RevenueChart from '@/components/dashboard/RevenueChart';
 import TopProducts from '@/components/dashboard/TopProducts';
 import DashboardFilters, { DateRange } from '@/components/dashboard/DashboardFilters';
+import { useTranslations } from 'next-intl';
 
 import StatusBadge from '@/components/ui/StatusBadge';
 
@@ -47,6 +48,8 @@ interface StockAlert {
 }
 
 export default function DashboardPage() {
+  const t = useTranslations('Dashboard');
+  const tOrders = useTranslations('Orders');
   const { token, tenantId, branchId } = useAuth();
   
   const [dateRange, setDateRange] = useState<DateRange>('week');
@@ -123,23 +126,23 @@ export default function DashboardPage() {
         });
 
         setReportData({
+          trends: trendRes.items.map(item => ({
+            label: item.periodLabel,
+            revenue: moneyToNumber(item.revenue),
+            orders: item.orderCount
+          })),
           topProducts: topRes.items.map(i => ({
             name: i.productName,
             quantity: i.quantitySold,
             revenue: moneyToNumber(i.revenue)
           })),
-          trends: trendRes.items.map(i => ({
-            label: i.periodLabel,
-            revenue: moneyToNumber(i.revenue),
-            orders: i.orderCount
-          })),
           recentOrders: orderRes.orders.map(o => ({
             id: o.orderNumber || `#${o.id.substring(0, 8)}`,
-            target: o.tableName || 'MANG VỀ',
+            target: o.tableName || t('nav.pos'),
             time: o.createdAt ? formatDateTime(o.createdAt.toDate()) : '...',
             amount: formatVND(moneyToNumber(o.total)),
-            status: mapOrderStatus(o.status).label,
-            type: mapOrderStatus(o.status).type
+            status: mapOrderStatus(o.status, tOrders).label,
+            type: mapOrderStatus(o.status, tOrders).type
           })),
           stockAlerts: alertRes.alerts.map(a => ({
             name: a.ingredientName,
@@ -408,15 +411,15 @@ function OrderRow({ id, target, time, amount, status, type }: {
   );
 }
 
-function mapOrderStatus(status: OrderStatus): { label: string; type: 'processing' | 'done' | 'cancel' } {
+function mapOrderStatus(status: OrderStatus, t: (key: string) => string): { label: string; type: 'processing' | 'done' | 'cancel' } {
   switch (status) {
     case OrderStatus.COMPLETED:
     case OrderStatus.PAID:
     case OrderStatus.SERVED:
-      return { label: 'Hoàn thành', type: 'done' };
+      return { label: t('completed'), type: 'done' };
     case OrderStatus.CANCELLED:
-      return { label: 'Đã hủy', type: 'cancel' };
+      return { label: t('cancelled'), type: 'cancel' };
     default:
-      return { label: 'Đang xử lý', type: 'processing' };
+      return { label: t('processing'), type: 'processing' };
   }
 }

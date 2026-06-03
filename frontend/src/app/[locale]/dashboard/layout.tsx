@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Link, usePathname, useRouter } from '@/i18n/routing';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useTranslations } from 'next-intl';
 import { 
   LayoutDashboard, 
   Users, 
@@ -63,6 +64,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations('Dashboard');
   const pathname = usePathname();
   const router = useRouter();
   const { logout, branchId } = useAuth();
@@ -70,6 +72,27 @@ export default function DashboardLayout({
   const { listStockAlerts } = useAlert();
   const [toastAlert, setToastAlert] = useState<{ message: string; type: 'success' | 'alert' } | null>(null);
   const [seenAlertIds] = useState<Set<string>>(() => new Set());
+
+  const getNavName = useMemo(() => {
+    const map: Record<string, string> = {
+      '/dashboard': t('nav.overview'),
+      '/pos/order': t('nav.pos'),
+      '/dashboard/orders': t('nav.orders'),
+      '/dashboard/customers': t('nav.customers'),
+      '/dashboard/reports': t('nav.reports'),
+      '/dashboard/staff': t('nav.staff'),
+      '/dashboard/products': t('nav.products'),
+      '/dashboard/inventory': t('nav.inventory'),
+      '/dashboard/inventory/ingredients': t('nav.ingredients'),
+      '/dashboard/inventory/suppliers': t('nav.suppliers'),
+      '/dashboard/inventory/procurement': t('nav.procurement'),
+      '/dashboard/inventory/waste': t('nav.waste'),
+      '/dashboard/alerts': t('nav.alerts'),
+      '/dashboard/branches': t('nav.branches'),
+      '/dashboard/settings': t('nav.settings'),
+    };
+    return (href: string) => map[href] || '';
+  }, [t]);
 
   // Real-time stock alerts Toast polling
   useEffect(() => {
@@ -84,7 +107,7 @@ export default function DashboardLayout({
           if (newAlert) {
             seenAlertIds.add(newAlert.id);
             setToastAlert({
-              message: `CẢNH BÁO TỒN KHO: ${newAlert.ingredientName} ĐÃ XUỐNG DƯỚI MỨC AN TOÀN!`,
+              message: t('stockAlert', { name: newAlert.ingredientName }),
               type: 'alert'
             });
             // Auto hide after 5 seconds
@@ -102,15 +125,15 @@ export default function DashboardLayout({
     checkAlerts();
     const interval = setInterval(checkAlerts, 15000);
     return () => clearInterval(interval);
-  }, [branchId, listStockAlerts, seenAlertIds]);
+  }, [branchId, listStockAlerts, seenAlertIds, t]);
 
 
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
     return navigation.filter(item => 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      getNavName(item.href).toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery]);
+  }, [searchQuery, getNavName]);
 
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && searchResults.length > 0) {
@@ -139,7 +162,7 @@ export default function DashboardLayout({
             const isActive = pathname === item.href;
             return (
               <Link
-                key={item.name}
+                key={item.href}
                 href={item.href}
                 className={`
                   flex items-center justify-between px-6 py-4 rounded-2xl transition-all duration-300 group border
@@ -152,7 +175,7 @@ export default function DashboardLayout({
                 <div className="flex items-center gap-4">
                   <item.icon className={`w-6 h-6 stroke-[3] ${isActive ? 'text-white' : ''}`} />
                   <div className="flex flex-col items-start gap-1">
-                    <span className="font-black uppercase italic tracking-tighter text-sm">{item.name}</span>
+                    <span className="font-black uppercase italic tracking-tighter text-sm">{getNavName(item.href)}</span>
                     {item.status && <StatusBadge status={item.status} className={cn(isActive ? "bg-white/20 text-white border-white/20" : "")} />}
                   </div>
                 </div>
@@ -171,7 +194,7 @@ export default function DashboardLayout({
             className="flex items-center gap-4 w-full px-6 py-4 text-foreground/40 hover:bg-red-500/10 hover:text-red-500 rounded-2xl border border-transparent transition-all group font-black uppercase italic tracking-tighter text-sm"
           >
             <LogOut className="w-6 h-6 group-hover:-translate-x-1 transition-transform stroke-[3]" />
-            <span>Đăng xuất</span>
+            <span>{t('logout')}</span>
           </button>
         </div>
       </aside>
@@ -187,7 +210,7 @@ export default function DashboardLayout({
               <Search className="w-5 h-5 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none" />
               <input 
                 type="text" 
-                placeholder="TÌM KIẾM HÀNH ĐỘNG..." 
+                placeholder={t('searchPlaceholder')} 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
@@ -210,13 +233,13 @@ export default function DashboardLayout({
                           className="w-full flex items-center gap-4 px-4 py-3 hover:bg-interaction hover:text-white rounded-xl transition-all group/item"
                         >
                           <result.icon className="w-5 h-5 group-hover/item:scale-110 transition-transform" />
-                          <span className="font-black uppercase italic tracking-tighter text-sm">{result.name}</span>
+                          <span className="font-black uppercase italic tracking-tighter text-sm">{getNavName(result.href)}</span>
                         </button>
                       ))}
                     </div>
                   ) : (
                     <div className="p-6 text-center text-foreground/40 font-bold italic text-xs">
-                      KHÔNG TÌM THẤY HÀNH ĐỘNG NÀO...
+                      {t('noResults')}
                     </div>
                   )}
                 </div>
@@ -274,4 +297,3 @@ export default function DashboardLayout({
     </div>
   );
 }
-

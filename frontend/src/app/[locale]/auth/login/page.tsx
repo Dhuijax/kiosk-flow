@@ -6,8 +6,10 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { getClient } from '@/lib/grpc/client';
 import { AuthService } from '@/gen/auth_connect';
 import { Lock, Mail, Store, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 function LoginForm() {
+  const t = useTranslations('Login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [tenantSlug, setTenantSlug] = useState(() => {
@@ -60,11 +62,11 @@ function LoginForm() {
       console.error('Login failed:', err);
       const errMsg = err instanceof Error ? err.message : String(err);
       if (errMsg.includes('unauthorized') || errMsg.includes('invalid')) {
-        setError('Email hoặc mật khẩu không chính xác.');
+        setError(t('errorInvalidCredentials'));
       } else if (errMsg.includes('tenant not found')) {
-        setError('Mã cửa hàng không tồn tại.');
+        setError(t('errorStoreNotFound'));
       } else {
-        setError('Hệ thống đang bận. Vui lòng thử lại sau.');
+        setError(t('errorSystemBusy'));
       }
     } finally {
       setLoading(false);
@@ -80,12 +82,12 @@ function LoginForm() {
         <h1 className="text-5xl font-black tracking-tighter uppercase italic text-foreground">
           KioskFlow
         </h1>
-        <p className="text-foreground/40 mt-3 font-bold uppercase text-[10px] tracking-[0.2em]">Hệ thống vận hành thông minh</p>
+        <p className="text-foreground/40 mt-3 font-bold uppercase text-[10px] tracking-[0.2em]">{t('subTitle')}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <label htmlFor="tenantSlug" className="text-[10px] font-black text-foreground/40 uppercase ml-1 tracking-widest italic">Mã cửa hàng</label>
+          <label htmlFor="tenantSlug" className="text-[10px] font-black text-foreground/40 uppercase ml-1 tracking-widest italic">{t('storeCode')}</label>
           <div className="relative group">
             <Store className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 group-focus-within:text-interaction transition-colors" />
             <input
@@ -101,7 +103,7 @@ function LoginForm() {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="email" className="text-[10px] font-black text-foreground/40 uppercase ml-1 tracking-widest italic">Email quản trị</label>
+          <label htmlFor="email" className="text-[10px] font-black text-foreground/40 uppercase ml-1 tracking-widest italic">{t('adminEmail')}</label>
           <div className="relative group">
             <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 group-focus-within:text-interaction transition-colors" />
             <input
@@ -117,7 +119,7 @@ function LoginForm() {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="password" className="text-[10px] font-black text-foreground/40 uppercase ml-1 tracking-widest italic">Mật khẩu</label>
+          <label htmlFor="password" className="text-[10px] font-black text-foreground/40 uppercase ml-1 tracking-widest italic">{t('password')}</label>
           <div className="relative group">
             <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 group-focus-within:text-interaction transition-colors" />
             <input
@@ -144,18 +146,22 @@ function LoginForm() {
           disabled={loading}
           className="btn-dynamic w-full py-5 text-lg flex items-center justify-center gap-3"
         >
-          {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'BẮT ĐẦU VẬN HÀNH'}
+          {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : t('startOperations')}
         </button>
       </form>
 
       <div className="mt-12 text-center text-[10px] font-black uppercase tracking-widest opacity-40">
-        Chưa có tài khoản? <a href="mailto:support@kioskflow.vn" className="text-interaction hover:underline underline-offset-4">Liên hệ hỗ trợ</a>
+        {t('noAccount')}{' '}
+        <a href="mailto:support@kioskflow.vn" className="text-interaction hover:underline underline-offset-4">
+          {t('contactSupport')}
+        </a>
       </div>
     </div>
   );
 }
 
 export default function LoginPage() {
+  const t = useTranslations('Login');
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
       {/* Background Decor */}
@@ -166,7 +172,7 @@ export default function LoginPage() {
       <Suspense fallback={
         <div className="w-full max-w-md ai-card p-12 flex flex-col items-center justify-center gap-6">
           <Loader2 className="w-12 h-12 animate-spin text-primary" />
-          <p className="font-black uppercase italic tracking-tighter opacity-40">Đang tải...</p>
+          <p className="font-black uppercase italic tracking-tighter opacity-40">{t('loading')}</p>
         </div>
       }>
         <LoginForm />

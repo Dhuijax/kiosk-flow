@@ -6,6 +6,7 @@ import { Table } from '@/gen/table_pb';
 import { TableService } from '@/gen/table_connect';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { X, QrCode, Printer, Download, Copy, Check, RefreshCw, AlertCircle, Sparkles } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface TableQrModalProps {
   floorPlanName: string;
@@ -22,6 +23,7 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
   token,
   onClose,
 }) => {
+  const t = useTranslations('POSTables');
   const [selectedTable, setSelectedTable] = useState<Table | null>(tables[0] || null);
   const [qrSvg, setQrSvg] = useState<string>('');
   const [qrUrl, setQrUrl] = useState<string>('');
@@ -40,11 +42,11 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
       setQrUrl(response.url);
     } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to load table QR:', err);
-      setError('Lỗi khi tải mã QR của bàn. Vui lòng thử lại.');
+      setError(t('qrError'));
     } finally {
       setLoading(false);
     }
-  }, [tenantId, token]);
+  }, [tenantId, token, t]);
 
   useEffect(() => {
     if (selectedTable) {
@@ -79,14 +81,14 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      alert('Vui lòng cho phép popup để thực hiện in ấn.');
+      alert(t('popupPermission'));
       return;
     }
 
     printWindow.document.write(`
       <html>
         <${'head'}>
-          <title>In mã QR Bàn - ${selectedTable.name}</title>
+          <title>${t('printTitle', { name: selectedTable.name })}</title>
           <style>
             @media print {
               @page {
@@ -165,11 +167,11 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
         </${'head'}>
         <body>
           <div class="container">
-            <div class="header">KioskFlow self-service</div>
+            <div class="header">${t('selfServiceHeader')}</div>
             <div class="title">${selectedTable.name}</div>
             <div class="qr-wrapper">${qrSvg}</div>
-            <div class="footer">QUÉT MÃ ĐỂ ĐẶT MÓN</div>
-            <div class="sub-footer">Cung cấp bởi kioskflow.com</div>
+            <div class="footer">${t('scanToOrder')}</div>
+            <div class="sub-footer">${t('poweredBy')}</div>
           </div>
           <script>
             window.onload = function() {
@@ -202,18 +204,18 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
 
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
-        alert('Vui lòng cho phép popup để in hàng loạt.');
+        alert(t('popupPrintAll'));
         return;
       }
 
       const qrsHtml = qrs.map(qr => `
         <div class="page-break">
           <div class="container">
-            <div class="header">KioskFlow self-service</div>
+            <div class="header">${t('selfServiceHeader')}</div>
             <div class="title">${qr.tableName}</div>
             <div class="qr-wrapper">${qr.svg}</div>
-            <div class="footer">QUÉT MÃ ĐỂ ĐẶT MÓN</div>
-            <div class="sub-footer">Cung cấp bởi kioskflow.com</div>
+            <div class="footer">${t('scanToOrder')}</div>
+            <div class="sub-footer">${t('poweredBy')}</div>
           </div>
         </div>
       `).join('');
@@ -221,7 +223,7 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
       printWindow.document.write(`
         <html>
           <${'head'}>
-            <title>In toàn bộ mã QR - ${floorPlanName}</title>
+            <title>${t('printAllTitle', { name: floorPlanName })}</title>
             <style>
               @media print {
                 @page {
@@ -323,7 +325,7 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
 
     } catch (err) {
       console.error('Failed to batch print QR codes:', err);
-      alert('Không thể tải toàn bộ mã QR để in.');
+      alert(t('printAllError'));
     } finally {
       setBatchPrinting(false);
     }
@@ -346,11 +348,11 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
               </div>
               <div>
                 <h3 className="text-lg font-black text-foreground uppercase tracking-tight italic flex items-center gap-2">
-                  Quản lý mã QR bàn
+                  {t('qrManage')}
                   <Sparkles size={16} className="text-indigo-400 animate-pulse" />
                 </h3>
                 <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest mt-0.5">
-                  Khu vực: <span className="text-foreground/60">{floorPlanName}</span>
+                  {t('zoneLabel')}<span className="text-foreground/60">{floorPlanName}</span>
                 </p>
               </div>
             </div>
@@ -365,7 +367,7 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
                 ) : (
                   <Printer size={14} />
                 )}
-                In hàng loạt ({tables.length} bàn)
+                {t('batchPrint', { count: tables.length })}
               </button>
               <button
                 onClick={onClose}
@@ -380,7 +382,7 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
           <div className="flex-1 overflow-hidden flex flex-col md:flex-row min-h-[400px]">
             {/* Left side: Tables Grid scrollable selection */}
             <div className="w-full md:w-2/5 border-r border-foreground/10 overflow-y-auto p-6 flex flex-col gap-3">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground/40 italic mb-1">Danh sách bàn</h4>
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground/40 italic mb-1">{t('tablesList')}</h4>
               {tables.map(table => {
                 const isSelected = selectedTable?.id === table.id;
                 return (
@@ -401,7 +403,7 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
                       </div>
                       <div>
                         <p className="text-sm font-black text-foreground">{table.name}</p>
-                        <p className="text-[9px] uppercase tracking-wider font-bold opacity-60 mt-0.5">{table.capacity} chỗ ngồi</p>
+                        <p className="text-[9px] uppercase tracking-wider font-bold opacity-60 mt-0.5">{t('seatsCapacity', { capacity: table.capacity })}</p>
                       </div>
                     </div>
                   </button>
@@ -415,7 +417,7 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
                 loading ? (
                   <div className="flex flex-col items-center justify-center gap-4 py-20">
                     <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
-                    <p className="text-foreground/40 text-xs font-black tracking-widest uppercase">Đang tải mã QR...</p>
+                    <p className="text-foreground/40 text-xs font-black tracking-widest uppercase">{t('loadingQr')}</p>
                   </div>
                 ) : error ? (
                   <div className="flex flex-col items-center justify-center gap-3 py-16 text-center max-w-sm">
@@ -425,7 +427,7 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
                       onClick={() => fetchTableQr(selectedTable.id)}
                       className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-black uppercase italic tracking-tighter"
                     >
-                      Tải lại
+                      {t('reload')}
                     </button>
                   </div>
                 ) : (
@@ -443,13 +445,13 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
 
                     <div className="text-center mt-5 mb-6">
                       <h4 className="text-base font-black text-foreground">{selectedTable.name}</h4>
-                      <p className="text-xs text-foreground/40 uppercase tracking-widest font-bold mt-1">Cơ chế QR gọi món tự phục vụ</p>
+                      <p className="text-xs text-foreground/40 uppercase tracking-widest font-bold mt-1">{t('selfService')}</p>
                     </div>
 
                     {/* Copy URL section */}
                     <div className="w-full bg-background border border-foreground/10 rounded-2xl p-3.5 mb-6 flex items-center justify-between gap-3">
                       <div className="flex-1 overflow-hidden pr-2">
-                        <p className="text-[9px] text-foreground/40 uppercase font-black tracking-wider">Đường dẫn đặt món</p>
+                        <p className="text-[9px] text-foreground/40 uppercase font-black tracking-wider">{t('urlLabel')}</p>
                         <p className="text-xs font-mono font-bold text-foreground truncate mt-0.5">{qrUrl}</p>
                       </div>
                       <button
@@ -470,13 +472,13 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
                         onClick={handleDownloadSvg}
                         className="flex-1 py-3.5 bg-foreground hover:bg-interaction text-background hover:text-white rounded-2xl text-xs font-black uppercase italic tracking-tighter transition-all flex items-center justify-center gap-2 border border-foreground/10 shadow-sm"
                       >
-                        <Download size={15} /> Tải file SVG
+                        <Download size={15} /> {t('downloadSvg')}
                       </button>
                       <button
                         onClick={handlePrintQr}
                         className="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-xs font-black uppercase italic tracking-tighter transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/10"
                       >
-                        <Printer size={15} /> In mã QR
+                        <Printer size={15} /> {t('printQrCode')}
                       </button>
                     </div>
                   </div>
@@ -484,7 +486,7 @@ export const TableQrModal: React.FC<TableQrModalProps> = ({
               ) : (
                 <div className="flex flex-col items-center justify-center text-foreground/30 py-20 text-center">
                   <QrCode size={48} className="stroke-[1] mb-3 animate-pulse" />
-                  <p className="text-xs font-black uppercase tracking-widest">Chọn một bàn để hiển thị QR</p>
+                  <p className="text-xs font-black uppercase tracking-widest">{t('selectToView')}</p>
                 </div>
               )}
             </div>

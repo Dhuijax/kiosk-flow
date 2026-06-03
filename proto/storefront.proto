@@ -1,0 +1,128 @@
+syntax = "proto3";
+
+package storefront;
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+service StorefrontService {
+  rpc GetStorefrontCMS (GetStorefrontCMSRequest) returns (StorefrontCMSResponse);
+  
+  rpc CreateReservation (CreateReservationRequest) returns (ReservationResponse);
+  rpc ListReservations (ListReservationsRequest) returns (ListReservationsResponse);
+  rpc UpdateReservationStatus (UpdateReservationStatusRequest) returns (ReservationResponse);
+
+  rpc StreamStorefrontChat (stream ChatMessage) returns (stream ChatMessage);
+  rpc GetChatHistory (GetChatHistoryRequest) returns (ChatHistoryResponse);
+}
+
+message Promotion {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string code = 4;
+  int32 discount_percent = 5;
+  int64 discount_amount = 6;
+  google.protobuf.Timestamp start_date = 7;
+  google.protobuf.Timestamp end_date = 8;
+  bool is_active = 9;
+}
+
+message News {
+  string id = 1;
+  string title = 2;
+  string summary = 3;
+  string content = 4;
+  string author = 5;
+  string image_url = 6;
+  google.protobuf.Timestamp created_at = 7;
+}
+
+message Partner {
+  string id = 1;
+  string name = 2;
+  string logo_url = 3;
+  string website_url = 4;
+}
+
+message Announcement {
+  string id = 1;
+  string title = 2;
+  string content = 3;
+  string level = 4;
+  google.protobuf.Timestamp start_date = 5;
+  google.protobuf.Timestamp end_date = 6;
+}
+
+message GetStorefrontCMSRequest {
+  string tenant_id = 1;
+}
+
+message StorefrontCMSResponse {
+  repeated Promotion promotions = 1;
+  repeated News news = 2;
+  repeated Partner partners = 3;
+  repeated Announcement announcements = 4;
+}
+
+message Reservation {
+  string id = 1;
+  string tenant_id = 2;
+  string branch_id = 3;
+  optional string table_id = 4;
+  string customer_name = 5;
+  string customer_phone = 6;
+  int32 guest_count = 7;
+  google.protobuf.Timestamp reservation_time = 8;
+  string note = 9;
+  string status = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+message CreateReservationRequest {
+  string branch_id = 1;
+  string customer_name = 2;
+  string customer_phone = 3;
+  int32 guest_count = 4;
+  google.protobuf.Timestamp reservation_time = 5;
+  string note = 6;
+}
+
+message ListReservationsRequest {
+  string branch_id = 1;
+  optional string status = 2;
+  common.PaginationRequest pagination = 3;
+}
+
+message ListReservationsResponse {
+  repeated Reservation reservations = 1;
+  common.PaginationResponse pagination = 2;
+}
+
+message UpdateReservationStatusRequest {
+  string id = 1;
+  string status = 2;
+  optional string table_id = 3;
+}
+
+message ReservationResponse {
+  Reservation reservation = 1;
+}
+
+message ChatMessage {
+  string id = 1;
+  string tenant_id = 2;
+  string conversation_id = 3;
+  string sender_type = 4;
+  string content = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message GetChatHistoryRequest {
+  string conversation_id = 1;
+}
+
+message ChatHistoryResponse {
+  repeated ChatMessage messages = 1;
+}

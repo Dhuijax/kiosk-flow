@@ -23,8 +23,10 @@ import { TableService } from '@/gen/table_connect';
 import { FloorPlan, Table } from '@/gen/table_pb';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useTranslations } from 'next-intl';
 
 export default function KioskSettings({ settings, updateTenantSettings }: KioskSettingsProps) {
+  const t = useTranslations('Dashboard.settings.kioskTab');
   const { tenantId, token, branchId } = useAuth();
   
   // Basic states
@@ -59,8 +61,8 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
       } else {
         // Seed default bound tablets for visual premium feel
         const defaultKiosks = {
-          'seeded-table-1': { model: 'iPad Air 5', battery: 94, online: true, lastPing: 'Vừa xong' },
-          'seeded-table-3': { model: 'Xiaomi Pad 6', battery: 78, online: true, lastPing: '2 phút trước' }
+          'seeded-table-1': { model: 'iPad Air 5', battery: 94, online: true, lastPing: 'justNow' },
+          'seeded-table-3': { model: 'Xiaomi Pad 6', battery: 78, online: true, lastPing: 'minsAgo' }
         };
         localStorage.setItem('kioskflow_active_table_kiosks', JSON.stringify(defaultKiosks));
         return defaultKiosks;
@@ -68,6 +70,16 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
     }
     return {};
   });
+
+  const translatePing = (ping: string) => {
+    if (ping === 'Vừa xong' || ping === 'justNow' || ping === 'just_now') {
+      return t('justNow');
+    }
+    if (ping === '2 phút trước' || ping === 'minsAgo' || ping === 'mins_ago') {
+      return t('minsAgo', { count: 2 });
+    }
+    return ping;
+  };
 
   // Fetch Floor Plans
   useEffect(() => {
@@ -136,7 +148,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
 
   const handleSavePin = () => {
     if (pinCode.length < 4) {
-      alert('Mã PIN phải dài ít nhất 4 ký số!');
+      alert(t('pinAlert'));
       return;
     }
     if (typeof window !== 'undefined') {
@@ -162,7 +174,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
         model: randomModel,
         battery: battery,
         online: true,
-        lastPing: 'Vừa xong'
+        lastPing: 'justNow'
       };
     }
     setBoundKiosks(updated);
@@ -173,7 +185,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
 
   // Launch Kiosk mode directly in new fullscreen browser window
   const handleLaunchKiosk = (tableId: string) => {
-    const checkPin = confirm(`Bật chế độ khóa Kiosk cho bàn này?\nTrình duyệt sẽ mở giao diện gọi món và khóa lại.\nMã PIN mở khóa hiện tại là: ${pinCode}`);
+    const checkPin = confirm(t('kioskLockConfirm', { pin: pinCode }));
     if (checkPin) {
       // Unify table ID seed to simulation if needed
       // Mark as bound if not already
@@ -198,9 +210,9 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
             </div>
             <div>
               <h3 className="text-xl md:text-2xl font-black uppercase italic tracking-tighter text-foreground">
-                Vận hành Kiosk Tablet
+                {t('title')}
               </h3>
-              <p className="text-xs font-bold text-foreground/40 uppercase tracking-widest mt-0.5">Cấu hình thời gian và mã khóa an toàn cho thiết bị tại bàn</p>
+              <p className="text-xs font-bold text-foreground/40 uppercase tracking-widest mt-0.5">{t('subtitle')}</p>
             </div>
           </div>
 
@@ -214,10 +226,10 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
             ) : saved ? (
               <>
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>ĐÃ LƯU</span>
+                <span>{t('saved')}</span>
               </>
             ) : (
-              <span>LƯU CẤU HÌNH</span>
+              <span>{t('saveConfig')}</span>
             )}
           </button>
         </div>
@@ -227,10 +239,10 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
           <div className="space-y-6">
             <h4 className="text-xs font-black uppercase tracking-widest text-foreground/40 italic flex items-center gap-2">
               <Timer className="w-4 h-4 text-primary" />
-              Tự động reset thiết bị
+              {t('autoReset')}
             </h4>
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-foreground/40 uppercase ml-1 tracking-widest italic">Thời gian chờ (Timeout - giây)</label>
+              <label className="text-[10px] font-black text-foreground/40 uppercase ml-1 tracking-widest italic">{t('timeoutLabel')}</label>
               <div className="flex items-center gap-4">
                 <input 
                   type="range" 
@@ -243,7 +255,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
                 />
                 <span className="w-16 text-center font-black italic text-lg text-primary">{timeout}s</span>
               </div>
-              <p className="text-[10px] font-bold text-foreground/30 italic">Hệ thống tự động xóa giỏ hàng và quay về trang chào sau thời gian không có thao tác.</p>
+              <p className="text-[10px] font-bold text-foreground/30 italic">{t('timeoutDesc')}</p>
             </div>
           </div>
 
@@ -251,11 +263,11 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
           <div className="space-y-6">
             <h4 className="text-xs font-black uppercase tracking-widest text-foreground/40 italic flex items-center gap-2">
               <Shield className="w-4 h-4 text-amber-500" />
-              Mã PIN bảo vệ Kiosk (Bàn tránh thoát trang)
+              {t('pinTitle')}
             </h4>
             
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-foreground/40 uppercase ml-1 tracking-widest italic">Mã PIN xác thực mở khóa</label>
+              <label className="text-[10px] font-black text-foreground/40 uppercase ml-1 tracking-widest italic">{t('pinLabel')}</label>
               <div className="flex items-center gap-3">
                 <div className="relative flex-1">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/40">
@@ -266,7 +278,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
                     maxLength={6}
                     value={pinCode}
                     onChange={(e) => setPinCode(e.target.value.replace(/\D/g, ''))}
-                    placeholder="Mã PIN 4-6 số"
+                    placeholder={t('pinPlaceholder')}
                     className="w-full bg-surface border border-foreground/10 focus:bg-white focus:border-primary rounded-xl py-3 pl-11 pr-12 text-sm text-foreground font-mono font-bold tracking-widest outline-none transition-all"
                   />
                   <button
@@ -284,11 +296,11 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
                   className="px-5 py-3.5 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 text-foreground font-black text-xs uppercase italic tracking-tighter rounded-xl transition-all flex items-center gap-2"
                 >
                   {pinSaved ? <Check size={14} className="text-emerald-500" /> : null}
-                  Cập nhật PIN
+                  {t('updatePin')}
                 </button>
               </div>
               <p className="text-[10px] font-bold text-foreground/30 italic">
-                Dùng mã PIN này trên các Tablet đặt tại bàn để nhân viên mở khóa cấu hình, thoát hoặc đổi sang bàn khác. Khách hàng sẽ không thể tự ý thoát nếu không có mã PIN này.
+                {t('pinDesc')}
               </p>
             </div>
           </div>
@@ -304,16 +316,16 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
             </div>
             <div>
               <h3 className="text-xl md:text-2xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
-                Sơ đồ kết nối Tablet tại bàn
+                {t('tableMapTitle')}
               </h3>
-              <p className="text-xs font-bold text-foreground/40 uppercase tracking-widest mt-0.5">Quản lý, kích hoạt nhanh và giám sát các thiết bị gọi món tại chỗ</p>
+              <p className="text-xs font-bold text-foreground/40 uppercase tracking-widest mt-0.5">{t('tableMapSubtitle')}</p>
             </div>
           </div>
 
           {/* Area filter */}
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40 italic flex items-center gap-1.5 flex-shrink-0">
-              <MapPin size={14} className="text-primary" /> Khu vực:
+              <MapPin size={14} className="text-primary" /> {t('area')}
             </span>
             <select
               value={selectedPlanId}
@@ -331,11 +343,11 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
         {loadingTables ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="w-10 h-10 text-primary animate-spin" />
-            <p className="text-xs font-black uppercase tracking-widest text-foreground/40">Đang tải danh sách bàn...</p>
+            <p className="text-xs font-black uppercase tracking-widest text-foreground/40">{t('loadingTables')}</p>
           </div>
         ) : tables.length === 0 ? (
           <div className="text-center py-16 text-foreground/30 font-bold italic text-xs">
-            Khu vực này hiện chưa được cấu hình bàn nào. Hãy cấu hình bàn tại mục Sơ đồ bàn.
+            {t('noTables')}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -344,7 +356,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
               // We also mock match IDs of seeded for preview visual
               const tableKey = table.id;
               const isBound = !!boundKiosks[tableKey] || table.name === 'Bàn 01' || table.name === 'Bàn 03';
-              const kioskInfo = boundKiosks[tableKey] || (table.name === 'Bàn 01' ? { model: 'iPad Air 5', battery: 94, online: true, lastPing: 'Vừa xong' } : table.name === 'Bàn 03' ? { model: 'Xiaomi Pad 6', battery: 78, online: true, lastPing: '2 phút trước' } : null);
+              const kioskInfo = boundKiosks[tableKey] || (table.name === 'Bàn 01' ? { model: 'iPad Air 5', battery: 94, online: true, lastPing: 'justNow' } : table.name === 'Bàn 03' ? { model: 'Xiaomi Pad 6', battery: 78, online: true, lastPing: 'minsAgo' } : null);
 
               return (
                 <div 
@@ -358,17 +370,17 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
                   <div className="flex items-start justify-between">
                     <div>
                       <h4 className="text-base font-black text-foreground">{table.name}</h4>
-                      <p className="text-[9px] uppercase tracking-wider font-bold opacity-40 mt-0.5">{table.capacity} chỗ ngồi</p>
+                      <p className="text-[9px] uppercase tracking-wider font-bold opacity-40 mt-0.5">{t('seatsCount', { count: table.capacity })}</p>
                     </div>
                     
                     {isBound ? (
                       <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-black uppercase tracking-wider rounded-lg shadow-md animate-pulse">
                         <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
-                        KIOSK ON
+                        {t('kioskOn')}
                       </span>
                     ) : (
                       <span className="px-2.5 py-1 bg-foreground/5 border border-foreground/10 text-foreground/40 text-[9px] font-black uppercase tracking-wider rounded-lg">
-                        CHƯA GÁN
+                        {t('notAssigned')}
                       </span>
                     )}
                   </div>
@@ -377,23 +389,23 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
                   {isBound && kioskInfo ? (
                     <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-3 text-xs space-y-1.5">
                       <div className="flex justify-between">
-                        <span className="text-foreground/40 font-bold uppercase text-[9px]">Thiết bị:</span>
+                        <span className="text-foreground/40 font-bold uppercase text-[9px]">{t('device')}</span>
                         <span className="text-foreground font-black uppercase italic tracking-tight text-[10px]">{kioskInfo.model}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-foreground/40 font-bold uppercase text-[9px]">Dung lượng Pin:</span>
+                        <span className="text-foreground/40 font-bold uppercase text-[9px]">{t('battery')}</span>
                         <span className={`font-black italic text-[10px] ${kioskInfo.battery < 20 ? 'text-rose-600' : 'text-emerald-600'}`}>
                           {kioskInfo.battery}%
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-foreground/40 font-bold uppercase text-[9px]">Kết nối cuối:</span>
-                        <span className="text-foreground/60 font-bold text-[9px]">{kioskInfo.lastPing}</span>
+                        <span className="text-foreground/40 font-bold uppercase text-[9px]">{t('lastConnection')}</span>
+                        <span className="text-foreground/60 font-bold text-[9px]">{translatePing(kioskInfo.lastPing)}</span>
                       </div>
                     </div>
                   ) : (
                     <div className="border border-dashed border-foreground/10 rounded-2xl p-4 flex items-center justify-center text-center text-[10px] font-bold text-foreground/30 italic">
-                      Không có thiết bị Kiosk nào được liên kết
+                      {t('noKioskLinked')}
                     </div>
                   )}
 
@@ -407,7 +419,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
                           : 'bg-foreground/5 border-foreground/10 text-foreground/60 hover:text-foreground hover:bg-foreground/10'
                       }`}
                     >
-                      {isBound ? 'Hủy gán máy' : 'Gán máy nhanh'}
+                      {isBound ? t('unbind') : t('bindQuick')}
                     </button>
                     
                     <button
@@ -416,7 +428,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
                       title="Mở giao diện gọi món và khóa Kiosk cho bàn này"
                     >
                       <MonitorPlay size={12} />
-                      Chạy Kiosk
+                      {t('runKiosk')}
                     </button>
                   </div>
                 </div>
@@ -432,7 +444,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
         <div className="ai-card p-8 md:p-12 space-y-6 bg-surface">
           <h4 className="text-sm font-black uppercase tracking-widest text-foreground/40 italic flex items-center gap-2">
             <Printer className="w-4 h-4 text-primary" />
-            Máy in hóa đơn tại quầy
+            {t('printerTitle')}
           </h4>
           <div className="space-y-4">
             <div className="p-6 bg-foreground/5 border border-foreground/10 rounded-3xl flex items-center justify-between shadow-sm">
@@ -444,7 +456,7 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
             </div>
             <button className="w-full py-4 border border-dashed border-foreground/10 rounded-3xl text-foreground/40 font-black uppercase italic tracking-tighter text-xs hover:border-foreground/30 hover:text-foreground transition-all flex items-center justify-center gap-3 shadow-sm bg-surface">
               <RefreshCw className="w-4 h-4" />
-              TÌM KIẾM MÁY IN KHÁC
+              {t('printerSearch')}
             </button>
           </div>
         </div>
@@ -453,19 +465,19 @@ export default function KioskSettings({ settings, updateTenantSettings }: KioskS
         <div className="ai-card p-8 md:p-12 space-y-6 bg-surface">
           <h4 className="text-sm font-black uppercase tracking-widest text-foreground/40 italic flex items-center gap-2">
             <Cpu className="w-4 h-4 text-amber-500" />
-            Thông số Kiosk Client
+            {t('kioskSpecsTitle')}
           </h4>
           <div className="space-y-4 font-black tracking-tighter uppercase italic text-xs">
              <div className="flex justify-between border-b border-foreground/5 pb-3">
-                <span className="text-foreground/40">Độ phân giải màn hình</span>
+                <span className="text-foreground/40">{t('resolution')}</span>
                 <span className="text-foreground">1920 x 1080 (HD)</span>
              </div>
              <div className="flex justify-between border-b border-foreground/5 pb-3">
-                <span className="text-foreground/40">Độ trễ Mạng gRPC-Web</span>
-                <span className="text-emerald-600 font-bold">12ms (Xuất sắc)</span>
+                <span className="text-foreground/40">{t('networkLatency')}</span>
+                <span className="text-emerald-600 font-bold">{t('latencyGood', { latency: 12 })}</span>
              </div>
              <div className="flex justify-between">
-                <span className="text-foreground/40">Phiên bản Client Engine</span>
+                <span className="text-foreground/40">{t('clientVersion')}</span>
                 <span className="text-foreground">v2.4.0-stable (Production)</span>
              </div>
           </div>

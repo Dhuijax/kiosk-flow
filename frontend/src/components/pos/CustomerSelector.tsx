@@ -8,6 +8,7 @@ import { CustomerService } from '@/gen/customer_connect';
 import { Customer } from '@/gen/customer_pb';
 import { motion, AnimatePresence } from 'framer-motion';
 import AddCustomerModal from '@/components/customers/AddCustomerModal';
+import { useTranslations } from 'next-intl';
 
 interface CustomerSelectorProps {
   onSelect: (customer: Customer | null) => void;
@@ -21,6 +22,7 @@ export default function CustomerSelector({ onSelect, selectedCustomer }: Custome
   const [loading, setLoading] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const { tenantId, token } = useAuth();
+  const t = useTranslations('CustomerSelector');
 
   const fetchCustomers = useCallback(async (query: string) => {
     if (!tenantId || !query) {
@@ -61,7 +63,7 @@ export default function CustomerSelector({ onSelect, selectedCustomer }: Custome
                 <span>{selectedCustomer.phone}</span>
                 <span className="mx-1">•</span>
                 <Star size={10} className="fill-current" />
-                <span>{selectedCustomer.points} ĐIỂM</span>
+                <span>{selectedCustomer.points} {t('points')}</span>
               </div>
             </div>
           </div>
@@ -82,8 +84,8 @@ export default function CustomerSelector({ onSelect, selectedCustomer }: Custome
               <User size={20} />
             </div>
             <div className="text-left">
-              <p className="font-black text-foreground/40 uppercase italic tracking-tighter leading-tight group-hover:text-interaction transition-colors">CHƯA CHỌN KHÁCH HÀNG</p>
-              <p className="text-[10px] font-bold text-foreground/20 uppercase tracking-widest">BẤM ĐỂ TÌM KIẾM HOẶC ĐĂNG KÝ</p>
+              <p className="font-black text-foreground/40 uppercase italic tracking-tighter leading-tight group-hover:text-interaction transition-colors">{t('noCustomer')}</p>
+              <p className="text-[10px] font-bold text-foreground/20 uppercase tracking-widest">{t('tapToSearch')}</p>
             </div>
           </div>
           <Search size={20} className="text-foreground/20 group-hover:text-interaction transition-colors" />
@@ -108,7 +110,7 @@ export default function CustomerSelector({ onSelect, selectedCustomer }: Custome
               className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-surface border border-foreground/10 rounded-[2.5rem] shadow-2xl z-[201] overflow-hidden flex flex-col max-h-[80vh]"
             >
               <div className="p-8 border-b border-foreground/10 flex items-center justify-between bg-background">
-                <h3 className="text-3xl font-black uppercase italic tracking-tighter">Tìm khách hàng</h3>
+                <h3 className="text-3xl font-black uppercase italic tracking-tighter">{t('searchTitle')}</h3>
                 <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-foreground/5 rounded-xl transition-colors">
                   <X size={24} />
                 </button>
@@ -120,7 +122,7 @@ export default function CustomerSelector({ onSelect, selectedCustomer }: Custome
                   <input 
                     autoFocus
                     type="text" 
-                    placeholder="NHẬP SỐ ĐIỆN THOẠI HOẶC TÊN..." 
+                    placeholder={t('searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="bg-transparent border-none outline-none flex-1 h-full py-0 font-black text-lg uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
@@ -131,7 +133,7 @@ export default function CustomerSelector({ onSelect, selectedCustomer }: Custome
                   {loading ? (
                     <div className="flex flex-col items-center py-10 gap-4">
                       <Loader2 className="w-8 h-8 animate-spin text-interaction" />
-                      <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Đang tra cứu dữ liệu...</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest opacity-40">{t('searching')}</p>
                     </div>
                   ) : customers.length > 0 ? (
                     <div className="grid grid-cols-1 gap-4">
@@ -155,8 +157,8 @@ export default function CustomerSelector({ onSelect, selectedCustomer }: Custome
                             </div>
                           </div>
                           <div className="flex flex-col items-end">
-                            <p className="text-interaction font-black text-lg italic tracking-tighter">{c.points} ĐIỂM</p>
-                            <p className="text-[8px] font-black uppercase tracking-widest opacity-30">Tích lũy</p>
+                            <p className="text-interaction font-black text-lg italic tracking-tighter">{c.points} {t('points')}</p>
+                            <p className="text-[8px] font-black uppercase tracking-widest opacity-30">{t('accumulated')}</p>
                           </div>
                         </button>
                       ))}
@@ -167,15 +169,15 @@ export default function CustomerSelector({ onSelect, selectedCustomer }: Custome
                         <X size={40} />
                       </div>
                       <div>
-                        <p className="text-xl font-black uppercase italic tracking-tighter text-foreground/40">Không tìm thấy kết quả</p>
-                        <p className="text-xs font-bold opacity-30 uppercase tracking-widest mt-1">Vui lòng kiểm tra lại số điện thoại</p>
+                        <p className="text-xl font-black uppercase italic tracking-tighter text-foreground/40">{t('noResults')}</p>
+                        <p className="text-xs font-bold opacity-30 uppercase tracking-widest mt-1">{t('checkPhone')}</p>
                       </div>
                       <button 
                         onClick={() => setIsAddModalOpen(true)}
                         className="flex items-center gap-3 px-8 py-4 bg-interaction text-white rounded-2xl font-black uppercase italic tracking-tighter hover:scale-105 transition-transform shadow-lg"
                       >
                         <UserPlus size={20} />
-                        ĐĂNG KÝ MỚI
+                        {t('registerNew')}
                       </button>
                     </div>
                   ) : null}

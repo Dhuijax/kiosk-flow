@@ -16,6 +16,7 @@ pub mod recipe;
 pub mod report;
 pub mod status;
 pub mod store;
+pub mod storefront;
 pub mod table;
 pub mod table_cart;
 pub mod tenant;

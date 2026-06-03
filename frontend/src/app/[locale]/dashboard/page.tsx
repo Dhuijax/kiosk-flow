@@ -172,14 +172,14 @@ export default function DashboardPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3 text-interaction font-black uppercase text-xs tracking-widest">
             <Sparkles className="w-5 h-5" />
-            <span>Hệ thống vận hành thông minh</span>
+            <span>{t('smartSystem')}</span>
           </div>
           <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground">
-            Xin chào, <span className="text-primary">Admin</span>
+            {t('welcomeAdmin')}
           </h1>
           <p className="text-foreground/40 font-bold flex items-center gap-2 italic">
             <Activity className="w-5 h-5 text-interaction" />
-            Tình trạng hệ thống: Hoạt động ổn định (99.9%)
+            {t('systemStatus')}
           </p>
         </div>
         
@@ -193,7 +193,7 @@ export default function DashboardPage() {
           <div className="h-10 w-1 bg-foreground/10 mx-2 hidden md:block rounded-full"></div>
           <Link href="/pos/order" className="btn-dynamic py-3 px-8 text-sm">
             <PlusCircle className="w-5 h-5" />
-            <span>GIAO DỊCH MỚI</span>
+            <span>{t('newTransaction')}</span>
           </Link>
         </div>
       </div>
@@ -201,15 +201,15 @@ export default function DashboardPage() {
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         <StatCard 
-          title="Doanh thu" 
+          title={t('revenue')} 
           value={stats.loading ? "..." : formatVND(stats.revenue)} 
-          trend={dateRange === 'today' ? "Hôm nay" : `Trong ${dateRange}`} 
+          trend={dateRange === 'today' ? t('today') : t('inPeriod', { period: t(`periods.${dateRange}`) })} 
           isUp={true} 
           icon={TrendingUp} 
           color="primary"
         />
         <StatCard 
-          title="Đơn hàng" 
+          title={t('orders')} 
           value={stats.loading ? "..." : stats.orderCount.toLocaleString()} 
           trend={stats.loading ? "" : `AOV: ${formatVND(stats.aov)}`} 
           isUp={true} 
@@ -217,17 +217,17 @@ export default function DashboardPage() {
           color="interaction"
         />
         <StatCard 
-          title="Sản phẩm" 
+          title={t('products')} 
           value={stats.loading ? "..." : stats.productCount.toString()} 
-          trend="Mặt hàng" 
+          trend={t('items')} 
           isUp={true} 
           icon={Package} 
           color="primary"
         />
         <StatCard 
-          title="Nhân viên" 
+          title={t('staff.cardTitle')} 
           value={stats.loading ? "..." : stats.staffCount.toString()} 
-          trend="Trực tuyến" 
+          trend={t('online')} 
           isUp={true} 
           icon={Users} 
           color="accent"
@@ -240,10 +240,10 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-2xl font-black uppercase italic tracking-tighter flex items-center gap-3">
               <TrendingUp className="w-6 h-6 text-interaction stroke-[3]" />
-              Biểu đồ tăng trưởng
+              {t('growthChart')}
             </h3>
             <div className="px-4 py-2 bg-foreground/5 rounded-xl text-[10px] font-black uppercase tracking-widest italic opacity-40">
-              Cập nhật 1 phút trước
+              {t('updatedAgo')}
             </div>
           </div>
           <div className="flex-1">
@@ -255,7 +255,7 @@ export default function DashboardPage() {
           <div className="ai-card bg-accent/5">
             <h3 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3 mb-6">
               <Sparkles className="w-6 h-6 text-primary stroke-[3]" />
-              Sản phẩm yêu thích
+              {t('topProducts')}
             </h3>
             <TopProducts products={reportData.topProducts} loading={reportData.loading} />
           </div>
@@ -263,12 +263,12 @@ export default function DashboardPage() {
           <div className="ai-card bg-red-500/5 border border-red-500/20 shadow-md">
             <h3 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-3 mb-6 text-red-600">
               <AlertTriangle className="w-6 h-6 stroke-[3]" />
-              Cảnh báo kho
+              {t('inventoryAlerts')}
             </h3>
             <div className="space-y-4">
               {reportData.stockAlerts.length === 0 && !reportData.loading && (
                 <div className="py-8 text-center text-foreground/20 italic text-xs">
-                  Kho hàng ổn định
+                  {t('inventoryStable')}
                 </div>
               )}
               {reportData.stockAlerts.map((alert, idx) => (
@@ -278,7 +278,7 @@ export default function DashboardPage() {
                 href="/dashboard/alerts" 
                 className="w-full py-4 text-xs font-black uppercase italic text-red-600 hover:underline tracking-widest text-center block"
               >
-                Xem chi tiết kho hàng
+                {t('viewDetails')}
               </Link>
             </div>
           </div>
@@ -290,12 +290,12 @@ export default function DashboardPage() {
         <div className="p-8 flex items-center justify-between border-b border-foreground/10">
           <h3 className="text-2xl font-black uppercase italic tracking-tighter flex items-center gap-3">
             <ShoppingCart className="w-6 h-6 stroke-[3] text-interaction" />
-            Giao dịch mới nhất
+            {t('recentTransactions')}
           </h3>
           <div className="flex items-center gap-4">
             <StatusBadge status="demo" />
             <Link href="/dashboard/orders" className="text-xs font-black uppercase tracking-widest text-foreground/40 hover:text-interaction transition-all flex items-center gap-2">
-              TẤT CẢ ĐƠN HÀNG
+              {t('allOrders')}
               <ArrowUpRight className="w-4 h-4" />
             </Link>
           </div>
@@ -304,18 +304,18 @@ export default function DashboardPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-foreground/5 text-foreground/40 text-[10px] font-black uppercase tracking-[0.2em]">
-                <th className="px-8 py-6">Mã đơn</th>
-                <th className="px-8 py-6">Vị trí</th>
-                <th className="px-8 py-6">Thời gian</th>
-                <th className="px-8 py-6 text-right">Tổng tiền</th>
-                <th className="px-8 py-6 text-center">Trạng thái</th>
+                <th className="px-8 py-6">{t('orderCode')}</th>
+                <th className="px-8 py-6">{t('location')}</th>
+                <th className="px-8 py-6">{t('time')}</th>
+                <th className="px-8 py-6 text-right">{t('total')}</th>
+                <th className="px-8 py-6 text-center">{t('status')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-foreground/5">
               {reportData.recentOrders.length === 0 && !reportData.loading && (
                 <tr>
                   <td colSpan={5} className="px-8 py-12 text-center text-foreground/20 italic text-sm">
-                    Chưa có giao dịch nào
+                    {t('noTransactions')}
                   </td>
                 </tr>
               )}
@@ -369,11 +369,12 @@ function StockAlertItem({ name, stock, min }: {
   stock: string;
   min: string;
 }) {
+  const t = useTranslations('Dashboard');
   return (
     <div className="p-4 bg-background border border-foreground/10 rounded-2xl flex items-center justify-between group hover:border-red-500/30 transition-all shadow-sm">
       <div className="space-y-1">
         <p className="text-sm font-black uppercase italic tracking-tighter text-foreground">{name}</p>
-        <p className="text-[10px] font-bold opacity-40 uppercase">{stock || `Tồn: ${stock} / Min: ${min}`}</p>
+        <p className="text-[10px] font-bold opacity-40 uppercase">{stock || `Stock: ${stock} / Min: ${min}`}</p>
       </div>
       <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
     </div>

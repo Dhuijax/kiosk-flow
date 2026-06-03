@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import CategoryTabs from '@/components/pos/CategoryTabs';
 import MenuGrid from '@/components/pos/MenuGrid';
 import OrderSummary from '@/components/pos/OrderSummary';
@@ -29,6 +30,8 @@ export default function OrderClient() {
   const { token, tenantId, branchId } = useAuth();
   const { items, clearCart, tableId, setTableId, total } = useOrderCart();
   const { pendingCount } = useOfflineSync();
+  const t = useTranslations('POSOrder');
+  const tHeader = useTranslations('POSHeader');
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,7 +69,7 @@ export default function OrderClient() {
 
   const handleCheckout = () => {
     if (!token || !tenantId || !branchId || items.length === 0) {
-      setStatus({ message: 'Không thể thanh toán!', type: 'error' });
+      setStatus({ message: t('paymentError'), type: 'error' });
       setTimeout(() => setStatus(null), 3000);
       return;
     }
@@ -81,7 +84,7 @@ export default function OrderClient() {
   const confirmAddItems = async () => {
     if (!token || !tenantId || !branchId || items.length === 0 || !existingOrderId) return;
     setIsSubmitting(true);
-    setStatus({ message: 'Đang thêm món vào bàn...', type: 'info' });
+    setStatus({ message: t('addingToTable'), type: 'info' });
     try {
       const orderClient = getAuthenticatedClient(OrderService, tenantId, token!);
 
@@ -96,14 +99,14 @@ export default function OrderClient() {
       const response = await orderClient.createOrder({
         branchId,
         tableId: "", // Leave blank so it doesn't overwrite table status
-        customerName: selectedCustomer?.name || "Bàn " + (existingOrder?.tableName || ""),
+        customerName: selectedCustomer?.name || t('tablePrefix') + (existingOrder?.tableName || ""),
         customerId: selectedCustomer?.id || "",
-        note: "Bổ sung món",
+        note: t('addItemsNote'),
         items: orderItems
       });
 
       if (!response.order) {
-        throw new Error("Không thể tạo đơn nháp bổ sung.");
+        throw new Error(t('addDraftError'));
       }
 
       // 2. Merge the temporary draft order into the existing table order
@@ -112,7 +115,7 @@ export default function OrderClient() {
         targetOrderId: existingOrderId
       });
 
-      setStatus({ message: 'Thêm món vào bàn thành công!', type: 'success' });
+      setStatus({ message: t('updateSuccess'), type: 'success' });
       clearCart();
       setTimeout(() => {
         setStatus(null);
@@ -120,7 +123,7 @@ export default function OrderClient() {
       }, 1500);
     } catch (err) {
       console.error('Failed to add items to existing order:', err);
-      setStatus({ message: 'Lỗi khi cập nhật bàn!', type: 'error' });
+      setStatus({ message: t('updateError'), type: 'error' });
       setTimeout(() => setStatus(null), 3000);
     } finally {
       setIsSubmitting(false);
@@ -156,7 +159,7 @@ export default function OrderClient() {
           createdAt: Date.now(),
           status: 'pending'
         });
-        setStatus({ message: 'Đã lưu đơn hàng ngoại tuyến!', type: 'info' });
+        setStatus({ message: t('offlineSaved'), type: 'info' });
         clearCart();
         setSelectedCustomer(null);
         setIsPaymentModalOpen(false);
@@ -184,7 +187,7 @@ export default function OrderClient() {
       });
 
       if (!response.order) {
-        throw new Error("Không thể tạo đơn hàng");
+        throw new Error(t('createOrderError'));
       }
 
       // 2. Process Payment
@@ -195,7 +198,7 @@ export default function OrderClient() {
         transactionRef: `KIOSK_${Date.now()}`
       });
 
-      setStatus({ message: 'Thanh toán & Đặt hàng thành công!', type: 'success' });
+      setStatus({ message: t('successMessage'), type: 'success' });
       clearCart();
       setSelectedCustomer(null);
       setIsPaymentModalOpen(false);
@@ -203,7 +206,7 @@ export default function OrderClient() {
       setTimeout(() => setStatus(null), 3000);
     } catch (err) {
       console.error('Payment/Order failed:', err);
-      setStatus({ message: 'Lỗi khi xử lý thanh toán!', type: 'error' });
+      setStatus({ message: t('processError'), type: 'error' });
       setTimeout(() => setStatus(null), 3000);
     } finally {
       setIsSubmitting(false);
@@ -212,7 +215,7 @@ export default function OrderClient() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden relative bg-background text-foreground">
-      <h1 className="sr-only">Hệ thống Kiosk AI - KioskFlow</h1>
+      <h1 className="sr-only">{t('kioskTitle')}</h1>
       
       {/* Toast Status */}
       <AnimatePresence>
@@ -238,7 +241,7 @@ export default function OrderClient() {
         <div className="flex-none bg-primary/15 border-b border-primary/20 px-12 py-3 flex items-center justify-between text-primary font-bold text-xs uppercase tracking-wider italic">
           <div className="flex items-center gap-3">
             <span className="w-2.5 h-2.5 bg-primary rounded-full animate-pulse" />
-            <span>Đang thêm món cho: <strong className="text-foreground">{existingOrder.tableName || "Bàn cũ"}</strong> (Đơn: #{existingOrder.orderNumber})</span>
+            <span>{t('addingFor')} <strong className="text-foreground">{existingOrder.tableName || t('oldTable')}</strong> (#{existingOrder.orderNumber})</span>
           </div>
           <button 
             onClick={() => {
@@ -247,7 +250,7 @@ export default function OrderClient() {
             }} 
             className="px-4 py-1 bg-primary/20 hover:bg-primary/30 text-[10px] font-black rounded-lg transition-all"
           >
-            HỦY BỎ
+            {t('cancel')}
           </button>
         </div>
       )}
@@ -259,7 +262,7 @@ export default function OrderClient() {
             <Search className="w-5 h-5 md:w-8 md:h-8 text-foreground opacity-40 group-focus-within:opacity-100 group-focus-within:text-interaction transition-all flex-none pointer-events-none translate-y-[1px]" />
             <input 
               type="text" 
-              placeholder="TÌM KIẾM SẢN PHẨM..." 
+              placeholder={t('searchPlaceholder')} 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none flex-1 h-full py-0 font-black text-sm md:text-2xl uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
@@ -270,14 +273,14 @@ export default function OrderClient() {
         <div className="flex items-center gap-3 md:gap-6 w-full md:w-auto">
           <button className="flex-1 md:flex-none px-4 md:px-8 py-3 md:py-5 bg-surface hover:bg-foreground hover:text-background border border-foreground/10 rounded-xl md:rounded-2xl transition-all shadow-sm font-black uppercase italic tracking-tighter flex items-center justify-center gap-3 text-xs md:text-base">
             <Filter className="w-4 h-4 md:w-6 md:h-6 stroke-[3]" />
-            LỌC
+            {tHeader('filter')}
           </button>
           
           <button 
             onClick={() => setIsOrderSummaryOpen(true)}
             className="md:hidden flex-1 px-4 py-3 bg-interaction text-white rounded-xl font-black uppercase italic tracking-tighter flex items-center justify-center gap-3 text-xs"
           >
-            GIỎ HÀNG ({items.length})
+            {tHeader('cartCount', { count: items.length })}
           </button>
         </div>
       </div>
@@ -352,7 +355,7 @@ export default function OrderClient() {
         <div className="fixed bottom-6 left-6 z-[160] px-4 py-2 bg-accent text-white rounded-full shadow-lg border border-white/20 flex items-center gap-3 animate-bounce">
           <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
           <span className="text-[10px] font-black uppercase tracking-widest italic">
-            {pendingCount} Đơn hàng đang chờ đồng bộ
+            {tHeader('pendingSyncCount', { count: pendingCount })}
           </span>
         </div>
       )}
@@ -372,8 +375,8 @@ export default function OrderClient() {
                 <Sparkles className="absolute inset-0 m-auto w-12 h-12 text-accent animate-pulse" />
               </div>
               <div className="text-center space-y-4">
-                <h2 className="text-4xl font-black text-foreground uppercase italic tracking-tighter">AI Đang Xử Lý...</h2>
-                <p className="text-lg font-bold opacity-40 uppercase tracking-widest">Hệ thống đang thấu hiểu lựa chọn của bạn</p>
+                <h2 className="text-4xl font-black text-foreground uppercase italic tracking-tighter">{tHeader('aiProcessing')}</h2>
+                <p className="text-lg font-bold opacity-40 uppercase tracking-widest">{tHeader('aiProcessingDesc')}</p>
               </div>
             </div>
           </motion.div>

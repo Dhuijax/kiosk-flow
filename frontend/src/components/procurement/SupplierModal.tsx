@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSupplier } from '@/hooks/useSupplier';
 import { Supplier, CreateSupplierRequest, UpdateSupplierRequest, DeleteSupplierRequest } from '@/gen/procurement_pb';
 import Portal from '@/components/ui/Portal';
+import { useTranslations } from 'next-intl';
 
 interface SupplierModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface SupplierModalProps {
 }
 
 export default function SupplierModal({ isOpen, onClose, onSuccess, supplier }: SupplierModalProps) {
+  const t = useTranslations('Inventory');
   const { createSupplier, updateSupplier, deleteSupplier, loading } = useSupplier();
   const [error, setError] = useState('');
   
@@ -48,7 +50,7 @@ export default function SupplierModal({ isOpen, onClose, onSuccess, supplier }: 
     setError('');
 
     if (!name.trim()) {
-      setError('Tên nhà cung cấp là bắt buộc');
+      setError(t('supplierModal.errRequiredName'));
       return;
     }
 
@@ -80,13 +82,13 @@ export default function SupplierModal({ isOpen, onClose, onSuccess, supplier }: 
         }
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra');
+      setError(err instanceof Error ? err.message : t('supplierModal.errCommon'));
     }
   };
 
   const handleDelete = async () => {
     if (!supplier) return;
-    if (!confirm(`Bạn có chắc muốn xóa nhà cung cấp "${supplier.name}"?`)) return;
+    if (!confirm(t('supplierModal.deleteConfirm', { name: supplier.name }))) return;
 
     try {
       const res = await deleteSupplier(new DeleteSupplierRequest({ id: supplier.id }));
@@ -95,7 +97,7 @@ export default function SupplierModal({ isOpen, onClose, onSuccess, supplier }: 
         onClose();
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Không thể xóa nhà cung cấp');
+      setError(err instanceof Error ? err.message : t('supplierModal.errDelete'));
     }
   };
 
@@ -123,9 +125,9 @@ export default function SupplierModal({ isOpen, onClose, onSuccess, supplier }: 
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-foreground uppercase italic tracking-tighter leading-tight">
-                    {supplier ? 'Cập nhật' : 'Thêm mới'} <span className="text-interaction">Nhà cung cấp</span>
+                    {supplier ? t('supplierModal.titleUpdate') : t('supplierModal.titleCreate')} <span className="text-interaction">{t('supplierModal.titleSupplier')}</span>
                   </h2>
-                  <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest mt-1 italic">Quản lý nguồn hàng</p>
+                  <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest mt-1 italic">{t('supplierModal.subtitle')}</p>
                 </div>
               </div>
               <button onClick={onClose} className="w-12 h-12 bg-background border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm group">
@@ -136,13 +138,13 @@ export default function SupplierModal({ isOpen, onClose, onSuccess, supplier }: 
             <form onSubmit={handleSubmit} className="p-10 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-3 col-span-full">
-                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Tên nhà cung cấp</label>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('supplierModal.labelName')}</label>
                   <input 
                     type="text" 
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="VD: CÔNG TY CỔ PHẦN NGUYÊN LIỆU F&B SÀI GÒN"
+                    placeholder={t('supplierModal.placeholderName')}
                     className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white focus:border-interaction focus:shadow-md transition-all font-black text-lg italic tracking-tighter shadow-sm"
                   />
                 </div>
@@ -150,13 +152,13 @@ export default function SupplierModal({ isOpen, onClose, onSuccess, supplier }: 
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1 flex items-center gap-2">
                     <Phone className="w-4 h-4 text-interaction" />
-                    Số điện thoại
+                    {t('supplierModal.labelPhone')}
                   </label>
                   <input 
                     type="text" 
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="VD: 0987654321"
+                    placeholder={t('supplierModal.placeholderPhone')}
                     className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white focus:border-interaction transition-all font-black text-sm italic tracking-tighter shadow-sm"
                   />
                 </div>
@@ -164,13 +166,13 @@ export default function SupplierModal({ isOpen, onClose, onSuccess, supplier }: 
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1 flex items-center gap-2">
                     <Mail className="w-4 h-4 text-interaction" />
-                    Email liên hệ
+                    {t('supplierModal.labelEmail')}
                   </label>
                   <input 
                     type="email" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="VD: supplier@example.com"
+                    placeholder={t('supplierModal.placeholderEmail')}
                     className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white focus:border-interaction transition-all font-black text-sm italic tracking-tighter shadow-sm"
                   />
                 </div>
@@ -178,13 +180,13 @@ export default function SupplierModal({ isOpen, onClose, onSuccess, supplier }: 
                 <div className="space-y-3 col-span-full">
                   <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1 flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-interaction" />
-                    Địa chỉ nhà xưởng / Kho hàng
+                    {t('supplierModal.labelAddress')}
                   </label>
                   <input 
                     type="text" 
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    placeholder="VD: 123 Đường Bưởi, Ba Đình, Hà Nội"
+                    placeholder={t('supplierModal.placeholderAddress')}
                     className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white focus:border-interaction transition-all font-black text-sm italic tracking-tighter shadow-sm"
                   />
                 </div>
@@ -204,7 +206,7 @@ export default function SupplierModal({ isOpen, onClose, onSuccess, supplier }: 
                     onClick={handleDelete}
                     disabled={loading}
                     className="w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm group"
-                    title="Xóa nhà cung cấp"
+                    title={t('supplierModal.deleteTitle')}
                   >
                     <Trash2 className="w-6 h-6 group-hover:scale-110 transition-transform" />
                   </button>
@@ -214,7 +216,7 @@ export default function SupplierModal({ isOpen, onClose, onSuccess, supplier }: 
                   disabled={loading}
                   className="btn-dynamic flex-1 py-5 text-lg"
                 >
-                  {loading ? <RefreshCw className="w-6 h-6 animate-spin" /> : supplier ? 'CẬP NHẬT THÔNG TIN' : 'THÊM NHÀ CUNG CẤP'}
+                  {loading ? <RefreshCw className="w-6 h-6 animate-spin" /> : supplier ? t('supplierModal.btnUpdate') : t('supplierModal.btnCreate')}
                 </button>
               </div>
             </form>

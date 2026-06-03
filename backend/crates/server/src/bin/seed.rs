@@ -57,7 +57,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 11. Seed SaaS Billing (Subscription and billing transactions)
     seed_billing(&pool, tenant_id).await?;
 
-    // 12. Seed Orders (Orders, order items, toppings, table mapping, payments)
+    // 12. Seed Storefront CMS
+    seed_storefront_cms(&pool, tenant_id).await?;
+
+    // 13. Seed Orders (Orders, order items, toppings, table mapping, payments)
     seed_orders(&pool, tenant_id, &branch_ids).await?;
 
     println!("\n✅ All data seeded successfully!");
@@ -1035,6 +1038,152 @@ async fn seed_orders(
         .execute(pool)
         .await?;
     }
+
+    Ok(())
+}
+
+async fn seed_storefront_cms(pool: &Pool<Postgres>, tenant_id: Uuid) -> anyhow::Result<()> {
+    println!("  - Seeding storefront CMS data (promotions, news, partners, announcements)...");
+
+    // Clear old data first to avoid duplicate primary key or unique errors on re-seed
+    sqlx::query("DELETE FROM promotions WHERE tenant_id = $1")
+        .bind(tenant_id)
+        .execute(pool)
+        .await?;
+    sqlx::query("DELETE FROM news WHERE tenant_id = $1")
+        .bind(tenant_id)
+        .execute(pool)
+        .await?;
+    sqlx::query("DELETE FROM partners WHERE tenant_id = $1")
+        .bind(tenant_id)
+        .execute(pool)
+        .await?;
+    sqlx::query("DELETE FROM announcements WHERE tenant_id = $1")
+        .bind(tenant_id)
+        .execute(pool)
+        .await?;
+
+    let now = chrono::Utc::now();
+    let start_date = now - chrono::Duration::days(1);
+    let end_date = now + chrono::Duration::days(30);
+
+    // 1. Seed Promotions
+    sqlx::query(
+        "INSERT INTO promotions (id, tenant_id, title, description, code, discount_percent, discount_amount, start_date, end_date, is_active) \
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true)"
+    )
+    .bind(Uuid::new_v4())
+    .bind(tenant_id)
+    .bind("Giảm 10% Tổng Hóa Đơn")
+    .bind(Some("Nhập mã KM10 để được giảm 10% tổng giá trị hóa đơn cho lần đặt bàn tiếp theo."))
+    .bind("KM10")
+    .bind(Some(10))
+    .bind(None::<i64>)
+    .bind(start_date)
+    .bind(end_date)
+    .execute(pool)
+    .await?;
+
+    sqlx::query(
+        "INSERT INTO promotions (id, tenant_id, title, description, code, discount_percent, discount_amount, start_date, end_date, is_active) \
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true)"
+    )
+    .bind(Uuid::new_v4())
+    .bind(tenant_id)
+    .bind("Tặng Bánh Ngọt Cho Tiệc Sinh Nhật")
+    .bind(Some("Ưu đãi đặc biệt: Tặng kèm 01 phần bánh Croissant bơ tỏi thơm giòn khi đặt bàn tiệc sinh nhật từ 4 người trở lên."))
+    .bind("SINHNHAT")
+    .bind(None::<i32>)
+    .bind(Some(20000))
+    .bind(start_date)
+    .bind(end_date)
+    .execute(pool)
+    .await?;
+
+    // 2. Seed News
+    sqlx::query(
+        "INSERT INTO news (id, tenant_id, title, summary, content, author, image_url) \
+         VALUES ($1, $2, $3, $4, $5, $6, $7)"
+    )
+    .bind(Uuid::new_v4())
+    .bind(tenant_id)
+    .bind("Ra Mắt Menu Đồ Uống Mùa Hè 2026")
+    .bind(Some("Khám phá hương vị tươi mát mới từ dòng Trà Trái Cây và Matcha Latte đá xay cực đã."))
+    .bind("Mùa hè này, chúng tôi mang đến cho bạn bộ sưu tập đồ uống hoàn toàn mới với các nguyên liệu trái cây nhiệt đới tươi ngon và Matcha Uji hảo hạng giúp giải nhiệt tức thì. Menu mới đã chính thức có mặt tại tất cả các chi nhánh từ ngày 01/06/2026.")
+    .bind(Some("Bếp Trưởng"))
+    .bind(Some("https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=800&auto=format&fit=crop&q=80"))
+    .execute(pool)
+    .await?;
+
+    sqlx::query(
+        "INSERT INTO news (id, tenant_id, title, summary, content, author, image_url) \
+         VALUES ($1, $2, $3, $4, $5, $6, $7)"
+    )
+    .bind(Uuid::new_v4())
+    .bind(tenant_id)
+    .bind("Câu Chuyện Thương Hiệu KioskFlow Bistro")
+    .bind(Some("Hành trình từ một quán cà phê phin nhỏ ở lòng Sài Gòn đến chuỗi Bistro hiện đại, ấm cúng."))
+    .bind("Khởi nguồn từ niềm đam mê hạt Robusta đậm đà rang mộc, chúng tôi đã xây dựng nên không gian thưởng thức ẩm thực kết hợp giữa cafe truyền thống Việt Nam và các món bánh sừng bò chuẩn Âu thơm ngậy. Sự hài lòng của quý khách là động lực phát triển mỗi ngày của chúng tôi.")
+    .bind(Some("Nhà Sáng Lập"))
+    .bind(Some("https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&auto=format&fit=crop&q=80"))
+    .execute(pool)
+    .await?;
+
+    // 3. Seed Partners
+    sqlx::query(
+        "INSERT INTO partners (id, tenant_id, name, logo_url, website_url) \
+         VALUES ($1, $2, $3, $4, $5)"
+    )
+    .bind(Uuid::new_v4())
+    .bind(tenant_id)
+    .bind("Vinamilk")
+    .bind(Some("https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Vinamilk_logo.svg/320px-Vinamilk_logo.svg.png"))
+    .bind(Some("https://www.vinamilk.com.vn"))
+    .execute(pool)
+    .await?;
+
+    sqlx::query(
+        "INSERT INTO partners (id, tenant_id, name, logo_url, website_url) \
+         VALUES ($1, $2, $3, $4, $5)",
+    )
+    .bind(Uuid::new_v4())
+    .bind(tenant_id)
+    .bind("Momo E-Wallet")
+    .bind(Some(
+        "https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png",
+    ))
+    .bind(Some("https://momo.vn"))
+    .execute(pool)
+    .await?;
+
+    // 4. Seed Announcements
+    sqlx::query(
+        "INSERT INTO announcements (id, tenant_id, title, content, level, start_date, end_date) \
+         VALUES ($1, $2, $3, $4, $5, $6, $7)"
+    )
+    .bind(Uuid::new_v4())
+    .bind(tenant_id)
+    .bind("Lịch Bảo Trì Hệ Thống Đặt Bàn")
+    .bind("Hệ thống đặt bàn trực tuyến sẽ được bảo trì định kỳ từ 23:00 ngày 10/06 đến 02:00 ngày 11/06. Quý khách vui lòng liên hệ hotline chi nhánh trong thời gian này.")
+    .bind("warning")
+    .bind(start_date)
+    .bind(end_date)
+    .execute(pool)
+    .await?;
+
+    sqlx::query(
+        "INSERT INTO announcements (id, tenant_id, title, content, level, start_date, end_date) \
+         VALUES ($1, $2, $3, $4, $5, $6, $7)"
+    )
+    .bind(Uuid::new_v4())
+    .bind(tenant_id)
+    .bind("Khai Trương Chi Nhánh 3 Tại Quận 2")
+    .bind("KioskFlow Bistro chính thức khai trương chi nhánh mới tại số 45 Song Hành, Thảo Điền, Quận 2 vào ngày 15/06/2026 với ưu đãi mua 1 tặng 1 toàn bộ menu uống.")
+    .bind("info")
+    .bind(start_date)
+    .bind(end_date)
+    .execute(pool)
+    .await?;
 
     Ok(())
 }

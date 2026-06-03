@@ -14,6 +14,7 @@ import { protoInt64 } from '@bufbuild/protobuf';
 import Portal from '@/components/ui/Portal';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { formatVND } from '@/lib/utils/format';
+import { useTranslations } from 'next-intl';
 
 interface PurchaseOrderModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ interface OrderItemRow {
 }
 
 export default function PurchaseOrderModal({ isOpen, onClose, onSuccess }: PurchaseOrderModalProps) {
+  const t = useTranslations('Inventory');
   const { branchId } = useAuth();
   const { createPurchaseOrder, loading: submitLoading } = useProcurement();
   const { listSuppliers } = useSupplier();
@@ -110,17 +112,17 @@ export default function PurchaseOrderModal({ isOpen, onClose, onSuccess }: Purch
     setError('');
 
     if (!selectedSupplierId) {
-      setError('Vui lòng chọn nhà cung cấp');
+      setError(t('purchaseOrderModal.errSelectSupplier'));
       return;
     }
 
     if (items.length === 0 || items.some(item => !item.ingredientId)) {
-      setError('Vui lòng chọn nguyên liệu cho tất cả các dòng');
+      setError(t('purchaseOrderModal.errSelectIngredient'));
       return;
     }
 
     if (items.some(item => item.quantity <= 0)) {
-      setError('Số lượng nhập phải lớn hơn 0');
+      setError(t('purchaseOrderModal.errQuantity'));
       return;
     }
 
@@ -149,7 +151,7 @@ export default function PurchaseOrderModal({ isOpen, onClose, onSuccess }: Purch
         onClose();
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Lỗi khi tạo phiếu nhập hàng');
+      setError(err instanceof Error ? err.message : t('purchaseOrderModal.errCreatePO'));
     }
   };
 
@@ -177,9 +179,9 @@ export default function PurchaseOrderModal({ isOpen, onClose, onSuccess }: Purch
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-foreground uppercase italic tracking-tighter leading-tight">
-                    Tạo mới <span className="text-interaction">Phiếu Nhập Hàng</span>
+                    {t('purchaseOrderModal.title')}
                   </h2>
-                  <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest mt-1 italic">Nhập kho tăng số lượng tồn kho nguyên liệu lập tức</p>
+                  <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest mt-1 italic">{t('purchaseOrderModal.subtitle')}</p>
                 </div>
               </div>
               <button onClick={onClose} className="w-12 h-12 bg-background border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm group">
@@ -190,10 +192,10 @@ export default function PurchaseOrderModal({ isOpen, onClose, onSuccess }: Purch
             <form onSubmit={handleSubmit} className="p-10 space-y-8 max-h-[70vh] overflow-y-auto">
               {/* Supplier selection */}
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Nhà cung cấp nguồn hàng</label>
+                <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('purchaseOrderModal.supplierLabel')}</label>
                 {suppliers.length === 0 ? (
                   <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 text-yellow-700 text-xs font-black uppercase italic tracking-tighter rounded-2xl">
-                    Chưa có nhà cung cấp nào hoạt động. Vui lòng tạo nhà cung cấp trước!
+                    {t('purchaseOrderModal.noSupplier')}
                   </div>
                 ) : (
                   <select
@@ -202,7 +204,7 @@ export default function PurchaseOrderModal({ isOpen, onClose, onSuccess }: Purch
                     className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white focus:border-interaction transition-all font-black text-sm uppercase italic tracking-tighter shadow-sm"
                   >
                     {suppliers.map(s => (
-                      <option key={s.id} value={s.id}>{s.name} ({s.phone || 'Không số ĐT'})</option>
+                      <option key={s.id} value={s.id}>{s.name} ({s.phone || t('purchaseOrderModal.noPhone')})</option>
                     ))}
                   </select>
                 )}
@@ -211,14 +213,14 @@ export default function PurchaseOrderModal({ isOpen, onClose, onSuccess }: Purch
               {/* Items List */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Chi tiết nguyên liệu nhập kho</label>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('purchaseOrderModal.ingredientsDetail')}</label>
                   <button 
                     type="button" 
                     onClick={handleAddItem}
                     className="flex items-center gap-2 text-interaction font-black uppercase text-[10px] tracking-widest italic hover:underline"
                   >
                     <PlusCircle className="w-4 h-4" />
-                    Thêm dòng mới
+                    {t('purchaseOrderModal.addNewRow')}
                   </button>
                 </div>
 
@@ -227,14 +229,14 @@ export default function PurchaseOrderModal({ isOpen, onClose, onSuccess }: Purch
                     <div key={idx} className="flex flex-col md:flex-row gap-4 items-end bg-foreground/5 p-6 rounded-2xl border border-foreground/5">
                       {/* Ingredient selector */}
                       <div className="flex-1 space-y-2 w-full">
-                        <span className="text-[9px] font-black text-foreground/40 uppercase tracking-wider italic">Nguyên liệu</span>
+                        <span className="text-[9px] font-black text-foreground/40 uppercase tracking-wider italic">{t('purchaseOrderModal.ingredient')}</span>
                         <select
                           required
                           value={item.ingredientId}
                           onChange={(e) => handleItemChange(idx, 'ingredientId', e.target.value)}
                           className="w-full px-4 py-3.5 bg-background border border-foreground/10 rounded-xl outline-none focus:bg-white focus:border-interaction transition-all font-black text-xs uppercase italic tracking-tighter"
                         >
-                          <option value="">-- CHỌN NGUYÊN LIỆU --</option>
+                          <option value="">{t('purchaseOrderModal.selectIngredientPlaceholder')}</option>
                           {ingredients.map(ing => (
                             <option key={ing.id} value={ing.id}>{ing.name} ({ing.unit})</option>
                           ))}
@@ -243,7 +245,7 @@ export default function PurchaseOrderModal({ isOpen, onClose, onSuccess }: Purch
 
                       {/* Quantity input */}
                       <div className="w-full md:w-32 space-y-2">
-                        <span className="text-[9px] font-black text-foreground/40 uppercase tracking-wider italic">Số lượng</span>
+                        <span className="text-[9px] font-black text-foreground/40 uppercase tracking-wider italic">{t('purchaseOrderModal.quantity')}</span>
                         <input
                           type="number"
                           step="any"
@@ -257,7 +259,7 @@ export default function PurchaseOrderModal({ isOpen, onClose, onSuccess }: Purch
 
                       {/* Unit Price input */}
                       <div className="w-full md:w-44 space-y-2">
-                        <span className="text-[9px] font-black text-foreground/40 uppercase tracking-wider italic">Đơn giá vốn (VND)</span>
+                        <span className="text-[9px] font-black text-foreground/40 uppercase tracking-wider italic">{t('purchaseOrderModal.costPrice')}</span>
                         <input
                           type="number"
                           required
@@ -284,7 +286,7 @@ export default function PurchaseOrderModal({ isOpen, onClose, onSuccess }: Purch
 
               {/* Total calculations */}
               <div className="flex items-center justify-between p-6 bg-interaction/5 border border-interaction/10 rounded-2xl">
-                <span className="text-sm font-black uppercase italic tracking-tighter text-foreground/60">Tổng giá trị phiếu nhập:</span>
+                <span className="text-sm font-black uppercase italic tracking-tighter text-foreground/60">{t('purchaseOrderModal.totalReceiptValue')}</span>
                 <span className="text-3xl font-black italic tracking-tighter text-interaction">{formatVND(calculateTotal())}</span>
               </div>
 
@@ -301,14 +303,14 @@ export default function PurchaseOrderModal({ isOpen, onClose, onSuccess }: Purch
                   onClick={onClose}
                   className="px-8 py-5 border border-foreground/10 rounded-2xl font-black uppercase italic tracking-widest text-xs hover:bg-foreground/5 transition-all text-foreground/60"
                 >
-                  Hủy bỏ
+                  {t('cancel')}
                 </button>
                 <button 
                   type="submit"
                   disabled={submitLoading || suppliers.length === 0}
                   className="btn-dynamic flex-1 py-5 text-lg"
                 >
-                  {submitLoading ? <RefreshCw className="w-6 h-6 animate-spin" /> : 'XÁC NHẬN NHẬP KHO & TĂNG TỒN KHỎ'}
+                  {submitLoading ? <RefreshCw className="w-6 h-6 animate-spin" /> : t('purchaseOrderModal.confirm')}
                 </button>
               </div>
             </form>

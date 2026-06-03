@@ -18,12 +18,14 @@ import SecuritySettings from '@/components/dashboard/settings/SecuritySettings';
 import KioskSettings from '@/components/dashboard/settings/KioskSettings';
 import BillingSettings from '@/components/dashboard/settings/BillingSettings';
 import StatusBadge from '@/components/ui/StatusBadge';
+import { useTranslations } from 'next-intl';
 
 type SettingsTab = 'store' | 'appearance' | 'notifications' | 'security' | 'kiosk' | 'billing';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('store');
   const { storeInfo, settings, loading, updateStore, updateTenantSettings } = useSettings();
+  const t = useTranslations('Dashboard.settings');
 
   interface NavItem {
     id: SettingsTab;
@@ -33,12 +35,12 @@ export default function SettingsPage() {
   }
 
   const navItems: NavItem[] = [
-    { id: 'store', name: 'Cửa hàng', icon: Store },
-    { id: 'appearance', name: 'Giao diện', icon: Palette },
-    { id: 'billing', name: 'Gói dịch vụ', icon: CreditCard },
-    { id: 'notifications', name: 'Thông báo', icon: Bell },
-    { id: 'security', name: 'Bảo mật', icon: Shield },
-    { id: 'kiosk', name: 'Thiết bị Kiosk', icon: Smartphone },
+    { id: 'store', name: t('tabs.store'), icon: Store },
+    { id: 'appearance', name: t('tabs.appearance'), icon: Palette },
+    { id: 'billing', name: t('tabs.billing'), icon: CreditCard },
+    { id: 'notifications', name: t('tabs.notifications'), icon: Bell },
+    { id: 'security', name: t('tabs.security'), icon: Shield },
+    { id: 'kiosk', name: t('tabs.kiosk'), icon: Smartphone },
   ];
 
   const renderContent = () => {
@@ -46,7 +48,7 @@ export default function SettingsPage() {
       return (
         <div className="ai-card p-12 flex flex-col items-center justify-center min-h-[400px] gap-4 text-center">
           <div className="w-12 h-12 border-4 border-interaction border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-black uppercase italic tracking-tighter text-foreground/40 italic">Đang tải cấu hình hệ thống...</p>
+          <p className="text-sm font-black uppercase italic tracking-tighter text-foreground/40 italic">{t('loading')}</p>
         </div>
       );
     }
@@ -88,20 +90,20 @@ export default function SettingsPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3 text-interaction font-black uppercase text-xs tracking-widest">
             <Sparkles className="w-5 h-5" />
-            <span>Cấu hình toàn hệ thống</span>
+            <span>{t('systemConfig')}</span>
           </div>
           <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground">
-            Thiết <span className="text-primary">Lập</span>
+            {t('titlePart1')} <span className="text-primary">{t('titlePart2')}</span>
           </h1>
           <p className="text-foreground/40 font-bold flex items-center gap-2 italic">
-            Quản lý vận hành và bảo mật cửa hàng của bạn
+            {t('subTitle')}
           </p>
         </div>
         
         <div className="flex flex-col items-end gap-3">
           <div className="flex items-center gap-2 px-4 py-2 bg-surface border border-foreground/10 rounded-full shadow-sm">
             <div className="w-2 h-2 rounded-full bg-success animate-pulse"></div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40 italic">Hệ thống đang trực tuyến</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40 italic">{t('systemOnline')}</span>
           </div>
           <StatusBadge status="live" />
         </div>
@@ -136,8 +138,8 @@ export default function SettingsPage() {
           </div>
           
           <div className="p-6 bg-accent/10 border border-dashed border-accent/40 rounded-3xl text-center shadow-sm">
-            <p className="text-[10px] font-black uppercase tracking-widest text-accent mb-2">Hỗ trợ kỹ thuật</p>
-            <p className="text-xs font-bold text-foreground opacity-60">Bạn cần giúp đỡ với cấu hình? <br /> Liên hệ AI Assistant.</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-accent mb-2">{t('techSupport')}</p>
+            <p className="text-xs font-bold text-foreground opacity-60" dangerouslySetInnerHTML={{ __html: t.raw('needHelp') }} />
           </div>
         </div>
 
@@ -149,4 +151,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-

@@ -7,6 +7,7 @@ import { formatVND, moneyToNumber } from '@/lib/utils/format';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Portal from '@/components/ui/Portal';
+import { useTranslations } from 'next-intl';
 
 interface ToppingModalProps {
   product: Product;
@@ -18,11 +19,12 @@ interface ToppingModalProps {
 export default function ToppingModal({ product, isOpen, onClose, onConfirm }: ToppingModalProps) {
   const [selectedToppings, setSelectedToppings] = useState<Topping[]>([]);
   const [quantity, setQuantity] = useState(1);
+  const t = useTranslations('ToppingModal');
 
   if (!isOpen) return null;
 
   const basePrice = moneyToNumber(product.price);
-  const toppingsPrice = selectedToppings.reduce((sum, t) => sum + moneyToNumber(t.price), 0);
+  const toppingsPrice = selectedToppings.reduce((sum, topping) => sum + moneyToNumber(topping.price), 0);
   const totalPrice = (basePrice + toppingsPrice) * quantity;
 
   const toggleTopping = (topping: Topping) => {
@@ -61,7 +63,7 @@ export default function ToppingModal({ product, isOpen, onClose, onConfirm }: To
                   )}
                   <div className="absolute top-4 left-4 px-3 py-1 bg-primary text-white rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
                     <Sparkles size={12} />
-                    <span>Nổi bật</span>
+                    <span>{t('featured')}</span>
                   </div>
                 </div>
                 
@@ -70,10 +72,10 @@ export default function ToppingModal({ product, isOpen, onClose, onConfirm }: To
                     {product.name}
                   </h2>
                   <p className="text-sm font-bold opacity-40 uppercase tracking-widest leading-relaxed">
-                    {product.description || "Món ăn đặc trưng được chuẩn bị công phu với nguyên liệu tươi sạch mỗi ngày."}
+                    {product.description || t('defaultDesc')}
                   </p>
                   <div className="pt-4 border-t-2 border-foreground/5">
-                    <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Giá gốc</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest opacity-40">{t('basePrice')}</span>
                     <p className="text-3xl font-black text-primary italic tracking-tighter">{formatVND(basePrice)}</p>
                   </div>
                 </div>
@@ -84,7 +86,7 @@ export default function ToppingModal({ product, isOpen, onClose, onConfirm }: To
                 <div className="p-8 md:p-12 flex-1 overflow-y-auto custom-scrollbar">
                   <div className="flex items-center justify-between mb-8">
                     <h3 className="text-2xl font-black uppercase italic tracking-tighter flex items-center gap-3">
-                      THÊM TOPPING <span className="px-3 py-1 bg-interaction text-white rounded-lg text-xs not-italic">TÙY CHỌN</span>
+                      {t('addTopping')} <span className="px-3 py-1 bg-interaction text-white rounded-lg text-xs not-italic">{t('optional')}</span>
                     </h3>
                     <button onClick={onClose} className="p-2 hover:bg-foreground/5 rounded-full transition-colors">
                       <X size={24} />
@@ -124,7 +126,7 @@ export default function ToppingModal({ product, isOpen, onClose, onConfirm }: To
                       })
                     ) : (
                       <div className="col-span-2 py-12 text-center bg-background rounded-3xl border border-dashed border-foreground/10">
-                        <p className="text-sm font-black uppercase italic tracking-tighter opacity-20">Sản phẩm này không có topping</p>
+                        <p className="text-sm font-black uppercase italic tracking-tighter opacity-20">{t('noTopping')}</p>
                       </div>
                     )}
                   </div>
@@ -150,14 +152,14 @@ export default function ToppingModal({ product, isOpen, onClose, onConfirm }: To
 
                   <div className="flex items-center gap-8 w-full sm:w-auto">
                     <div className="text-right hidden sm:block">
-                      <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Tổng tiền</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest opacity-40">{t('totalPrice')}</span>
                       <p className="text-4xl font-black text-primary italic tracking-tighter">{formatVND(totalPrice)}</p>
                     </div>
                     <button 
                       onClick={handleConfirm}
                       className="flex-1 sm:flex-none btn-dynamic px-12 py-6 text-xl group"
                     >
-                      <span>THÊM VÀO GIỎ</span>
+                      <span>{t('addToCart')}</span>
                       <ShoppingBag className="w-6 h-6 group-hover:rotate-12 transition-transform" />
                     </button>
                   </div>

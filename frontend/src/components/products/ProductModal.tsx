@@ -17,6 +17,7 @@ import { useIngredient } from '@/hooks/useIngredient';
 import { Ingredient } from '@/gen/ingredient_pb';
 import { ProductIngredient, ProductIngredientInput } from '@/gen/recipe_pb';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 
 interface ProductModalProps {
@@ -42,6 +43,7 @@ interface FormData {
 }
 
 export default function ProductModal({ isOpen, onClose, onSuccess, editingProduct }: ProductModalProps) {
+  const t = useTranslations('Products');
   const { token, tenantId } = useAuth();
   const { getRecipe, setRecipe } = useRecipe();
   const { listIngredients } = useIngredient();
@@ -236,7 +238,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
       onClose();
     } catch (err) {
       console.error('Failed to save product:', err);
-      alert('Có lỗi xảy ra khi lưu sản phẩm.');
+      alert(t('productModal.errSave'));
     } finally {
       setLoading(false);
     }
@@ -254,8 +256,8 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                 <Package className="w-7 h-7 stroke-[3]" />
               </div>
               <div>
-                <h2 className="text-2xl font-black text-foreground uppercase italic tracking-tighter leading-tight">{editingProduct ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}</h2>
-                <p className="text-[10px] font-black text-foreground/40 uppercase tracking-[0.2em] mt-1">Thông tin chi tiết và giá bán niêm yết</p>
+                <h2 className="text-2xl font-black text-foreground uppercase italic tracking-tighter leading-tight">{editingProduct ? t('productModal.editTitle') : t('productModal.createTitle')}</h2>
+                <p className="text-[10px] font-black text-foreground/40 uppercase tracking-[0.2em] mt-1">{t('productModal.subtitle')}</p>
               </div>
             </div>
             <button onClick={onClose} className="w-12 h-12 bg-background border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm">
@@ -266,8 +268,8 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
           {/* Tabs Navigation */}
           <div className="px-8 border-b border-foreground/5 bg-foreground/5 flex gap-2">
             {[
-              { id: 'info', label: 'Thông tin cơ bản', icon: Info },
-              { id: 'recipe', label: 'Công thức (BOM)', icon: RefreshCw },
+              { id: 'info', label: t('productModal.tabBasicInfo'), icon: Info },
+              { id: 'recipe', label: t('productModal.tabRecipe'), icon: RefreshCw },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -300,20 +302,20 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
               <div className="lg:col-span-7 space-y-10">
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1 flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-interaction" /> Tên sản phẩm *
+                    <Tag className="w-4 h-4 text-interaction" /> {t('productModal.labelName')}
                   </label>
                   <input 
                     required
                     value={formData.name}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="VÍ DỤ: CÀ PHÊ MUỐI, TRÀ SỮA..."
+                    placeholder={t('productModal.placeholderName')}
                     className="w-full px-8 py-5 bg-surface border border-foreground/10 rounded-[2rem] outline-none focus:bg-white transition-all font-black text-xl uppercase italic tracking-tighter shadow-sm"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-8">
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Mã SKU</label>
+                    <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('productModal.labelSku')}</label>
                     <input 
                       value={formData.sku}
                       onChange={e => setFormData({ ...formData, sku: e.target.value })}
@@ -322,14 +324,14 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                     />
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Danh mục</label>
+                    <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('productModal.labelCategory')}</label>
                     <div className="relative">
                       <select 
                         value={formData.categoryId}
                         onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
                         className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all appearance-none font-bold text-sm uppercase italic tracking-tighter shadow-sm"
                       >
-                        <option value="">CHỌN DANH MỤC</option>
+                        <option value="">{t('productModal.placeholderCategory')}</option>
                         {categories.map(c => <option key={c.id} value={c.id}>{c.name.toUpperCase()}</option>)}
                       </select>
                       <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 pointer-events-none" />
@@ -340,7 +342,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                 <div className="grid grid-cols-2 gap-8">
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1 flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-primary" /> Giá bán *
+                      <DollarSign className="w-4 h-4 text-primary" /> {t('productModal.labelPrice')}
                     </label>
                     <div className="relative">
                       <input 
@@ -354,7 +356,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Giá vốn</label>
+                    <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('productModal.labelCostPrice')}</label>
                     <div className="relative">
                       <input 
                         type="number"
@@ -369,13 +371,13 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
 
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1 flex items-center gap-2">
-                    <Info className="w-4 h-4 text-interaction" /> Mô tả sản phẩm
+                    <Info className="w-4 h-4 text-interaction" /> {t('productModal.labelDescription')}
                   </label>
                   <textarea 
                     rows={4}
                     value={formData.description}
                     onChange={e => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="GHI CHÚ VỀ SẢN PHẨM..."
+                    placeholder={t('productModal.placeholderDescription')}
                     className="w-full px-8 py-5 bg-background border border-foreground/10 rounded-3xl outline-none focus:bg-white transition-all font-bold text-sm uppercase italic tracking-tighter resize-none shadow-sm"
                   />
                 </div>
@@ -385,13 +387,13 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
               <div className="lg:col-span-5 space-y-10">
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1 flex items-center gap-2">
-                    <ImageIcon className="w-4 h-4 text-interaction" /> Link ảnh sản phẩm
+                    <ImageIcon className="w-4 h-4 text-interaction" /> {t('productModal.labelImageUrl')}
                   </label>
                   <div className="relative">
                     <input 
                       value={formData.imageUrl}
                       onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
-                      placeholder="HTTPS://EXAMPLE.COM/IMAGE.JPG"
+                      placeholder={t('productModal.placeholderImageUrl')}
                       className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-xs shadow-sm"
                     />
                   </div>
@@ -401,20 +403,20 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                     ) : (
                       <div className="text-center opacity-10">
                         <ImageIcon className="w-16 h-16 mx-auto mb-4" />
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em]">XEM TRƯỚC ẢNH</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em]">{t('productModal.imagePreview')}</p>
                       </div>
                     )}
                   </div>
                 </div>
 
                 <div className="space-y-6 bg-foreground/5 p-8 rounded-[2rem] border border-foreground/5 shadow-sm">
-                  <h3 className="text-[10px] font-black text-foreground/20 uppercase tracking-[0.3em] mb-4">Cài đặt nâng cao</h3>
+                  <h3 className="text-[10px] font-black text-foreground/20 uppercase tracking-[0.3em] mb-4">{t('productModal.labelAdvanced')}</h3>
                   
                   <div className="space-y-4">
                     {[
-                      { label: 'Đang kinh doanh', key: 'isActive' },
-                      { label: 'Cho phép Toppings', key: 'allowTopping' },
-                      { label: 'Theo dõi kho', key: 'trackInventory' }
+                      { label: t('productModal.optionActive'), key: 'isActive' },
+                      { label: t('productModal.optionAllowTopping'), key: 'allowTopping' },
+                      { label: t('productModal.optionTrackInventory'), key: 'trackInventory' }
                     ].map((item) => (
                       <label key={item.key} className="flex items-center justify-between group cursor-pointer bg-background p-4 rounded-2xl border border-foreground/5 hover:border-interaction/20 transition-all shadow-sm">
                         <span className="text-xs font-black uppercase italic tracking-tighter text-foreground/60 group-hover:text-interaction transition-colors">{item.label}</span>
@@ -434,10 +436,10 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
 
                 {formData.allowTopping && (
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Toppings áp dụng</label>
+                    <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('productModal.labelTopping')}</label>
                     <div className="flex flex-wrap gap-2 max-h-48 overflow-auto p-6 bg-foreground/5 rounded-[2rem] border border-foreground/5 custom-scrollbar shadow-inner">
                       {toppings.length === 0 ? (
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-20 w-full text-center py-6 italic">Chưa có topping nào</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-20 w-full text-center py-6 italic">{t('productModal.noTopping')}</p>
                       ) : (
                         toppings.map(t => {
                           const isSelected = formData.toppingIds.includes(t.id);
@@ -481,8 +483,8 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl font-black uppercase italic tracking-tighter">Định mức nguyên liệu</h3>
-                  <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest mt-1">Thiết lập công thức chế biến cho sản phẩm này</p>
+                  <h3 className="text-xl font-black uppercase italic tracking-tighter">{t('productModal.labelRecipeTitle')}</h3>
+                  <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest mt-1">{t('productModal.recipeSubtitle')}</p>
                 </div>
                 {recipeLoading && <RefreshCw className="w-5 h-5 animate-spin text-interaction" />}
               </div>
@@ -491,12 +493,12 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                 {/* Search & Add */}
                 <div className="lg:col-span-4 space-y-6">
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Tìm nguyên liệu</label>
+                    <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('productModal.labelSearchIngredient')}</label>
                     <div className="relative">
                       <input 
                         value={ingredientSearch}
                         onChange={e => setIngredientSearch(e.target.value)}
-                        placeholder="VÍ DỤ: ĐƯỜNG, SỮA..."
+                        placeholder={t('productModal.placeholderSearchIngredient')}
                         className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm uppercase italic tracking-tighter shadow-sm"
                       />
                       {isSearching && <RefreshCw className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-foreground/20" />}
@@ -508,7 +510,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                       <div className="space-y-4">
                         {searchResults.length > 0 && (
                           <div className="space-y-2">
-                            <p className="text-[8px] font-black text-foreground/20 uppercase tracking-widest ml-2">Nguyên liệu</p>
+                            <p className="text-[8px] font-black text-foreground/20 uppercase tracking-widest ml-2">{t('productModal.headingIngredient')}</p>
                             {searchResults.map(ing => (
                               <button
                                 key={ing.id}
@@ -528,7 +530,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                         
                         {productSearchResults.length > 0 && (
                           <div className="space-y-2">
-                            <p className="text-[8px] font-black text-interaction/40 uppercase tracking-widest ml-2">Phụ phẩm / Sản phẩm khác</p>
+                            <p className="text-[8px] font-black text-interaction/40 uppercase tracking-widest ml-2">{t('productModal.headingProduct')}</p>
                             {productSearchResults.map(prod => (
                               <button
                                 key={prod.id}
@@ -538,7 +540,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                               >
                                 <div className="text-left">
                                   <p className="text-xs font-black uppercase italic tracking-tighter text-interaction">{prod.name}</p>
-                                  <p className="text-[8px] font-bold text-foreground/40 uppercase">{prod.unit || 'Đơn vị'}</p>
+                                  <p className="text-[8px] font-bold text-foreground/40 uppercase">{prod.unit || t('productModal.unitFallback')}</p>
                                 </div>
                                 <RefreshCw className="w-4 h-4 text-interaction/20 group-hover:text-interaction transition-colors" />
                               </button>
@@ -550,7 +552,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                       <div className="flex flex-col items-center justify-center h-full opacity-20 py-10">
                         <Package className="w-12 h-12 mb-4" />
                         <p className="text-[10px] font-black uppercase tracking-widest italic text-center px-6">
-                          {ingredientSearch.length < 2 ? 'NHẬP TÊN ĐỂ TÌM KIẾM' : 'KHÔNG TÌM THẤY KẾT QUẢ'}
+                          {ingredientSearch.length < 2 ? t('productModal.searchHint') : t('productModal.searchNoResults')}
                         </p>
                       </div>
                     )}
@@ -561,15 +563,15 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                 <div className="lg:col-span-8">
                   <div className="bg-surface rounded-[2.5rem] border border-foreground/10 overflow-hidden shadow-inner min-h-[400px]">
                     <div className="bg-foreground/5 px-8 py-4 border-b border-foreground/5 flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">Nguyên liệu đã chọn ({recipeIngredients.length})</span>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">Định lượng</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">{t('productModal.selectedIngredientsHeader', { count: recipeIngredients.length })}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">{t('productModal.bomHeader')}</span>
                     </div>
 
                     <div className="p-4 space-y-4">
                       {recipeIngredients.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 opacity-10">
                           <RefreshCw className="w-16 h-16 mb-4" />
-                          <p className="text-sm font-black uppercase italic tracking-widest">Chưa có công thức</p>
+                          <p className="text-sm font-black uppercase italic tracking-widest">{t('productModal.noRecipe')}</p>
                         </div>
                       ) : (
                         recipeIngredients.map((item) => (
@@ -584,11 +586,11 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                               <div className="flex items-center gap-2">
                                 <h4 className="text-sm font-black uppercase italic tracking-tighter">{item.ingredientName}</h4>
                                 {productSearchResults.some(p => p.id === item.ingredientId) && (
-                                  <span className="text-[8px] bg-interaction/10 text-interaction px-1.5 py-0.5 rounded-full font-black uppercase">Phụ phẩm</span>
+                                  <span className="text-[8px] bg-interaction/10 text-interaction px-1.5 py-0.5 rounded-full font-black uppercase">{t('productModal.byproductBadge')}</span>
                                 )}
                               </div>
                               <div className="flex items-center gap-4 mt-1">
-                                <p className="text-[10px] font-bold text-foreground/40 uppercase">Đơn vị: {item.unit}</p>
+                                <p className="text-[10px] font-bold text-foreground/40 uppercase">{t('productModal.unitLabel', { unit: item.unit })}</p>
                                 <button 
                                   type="button"
                                   onClick={() => toggleIngredientCustomizable(item.ingredientId)}
@@ -599,7 +601,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                                       : "bg-foreground/5 text-foreground/20 border-foreground/10 hover:border-foreground/30"
                                   )}
                                 >
-                                  {item.isCustomizable ? 'Cho phép tùy chỉnh' : 'Cố định'}
+                                  {item.isCustomizable ? t('productModal.recipeCustomizable') : t('productModal.recipeFixed')}
                                 </button>
                               </div>
                             </div>
@@ -634,10 +636,9 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
                     <div className="flex items-start gap-4">
                       <Info className="w-5 h-5 text-interaction mt-1" />
                       <div>
-                        <p className="text-xs font-black text-interaction uppercase italic tracking-tighter">Ghi chú vận hành</p>
+                        <p className="text-xs font-black text-interaction uppercase italic tracking-tighter">{t('productModal.operationNotesTitle')}</p>
                         <p className="text-[10px] text-interaction/60 font-medium leading-relaxed mt-1 italic">
-                          Hệ thống sẽ tự động trừ tồn kho nguyên liệu tương ứng ngay khi đơn hàng được hoàn tất. 
-                          Hãy đảm bảo định lượng (số lượng) được nhập chính xác theo đơn vị cơ bản trong kho.
+                          {t('productModal.operationNotesContent')}
                         </p>
                       </div>
                     </div>
@@ -655,7 +656,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
               onClick={onClose}
               className="px-8 py-4 text-foreground/40 font-black uppercase italic tracking-tighter text-sm hover:text-foreground transition-colors"
             >
-              Hủy bỏ
+              {t('productModal.btnCancel')}
             </button>
             <button 
               type="submit"
@@ -664,7 +665,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, editingProduc
               className="btn-dynamic px-12 py-4 text-sm"
             >
               {loading ? <RefreshCw className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
-              <span>{editingProduct ? 'Cập nhật' : 'Lưu sản phẩm'}</span>
+              <span>{editingProduct ? t('productModal.btnUpdate') : t('productModal.btnCreate')}</span>
             </button>
           </div>
         </div>

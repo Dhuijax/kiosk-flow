@@ -7,6 +7,7 @@ import { CategoryService } from '@/gen/category_connect';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import CategoryModal from './CategoryModal';
+import { useTranslations } from 'next-intl';
 
 interface CategoryTreeProps {
   onSelect: (categoryId: string | null) => void;
@@ -14,6 +15,7 @@ interface CategoryTreeProps {
 }
 
 export default function CategoryTree({ onSelect, selectedId }: CategoryTreeProps) {
+  const t = useTranslations('Products');
   const { token, tenantId } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,7 +112,7 @@ export default function CategoryTree({ onSelect, selectedId }: CategoryTreeProps
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-sm font-black text-foreground uppercase italic tracking-tighter flex items-center gap-3">
           <Layers className="w-5 h-5 text-interaction stroke-[3]" />
-          Phân loại
+          {t('categories')}
         </h2>
         <button 
           onClick={() => {
@@ -127,11 +129,11 @@ export default function CategoryTree({ onSelect, selectedId }: CategoryTreeProps
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4 opacity-20">
             <Sparkles className="w-10 h-10 animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-widest italic">Đang tải...</span>
+            <span className="text-[10px] font-black uppercase tracking-widest italic">{t('loading')}</span>
           </div>
         ) : categories.length === 0 ? (
           <div className="text-center py-20 opacity-20">
-            <p className="text-[10px] font-black uppercase tracking-widest">Trống rỗng</p>
+            <p className="text-[10px] font-black uppercase tracking-widest">{t('empty')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -145,7 +147,7 @@ export default function CategoryTree({ onSelect, selectedId }: CategoryTreeProps
               onClick={() => onSelect(null)}
             >
               <Layers className={`w-5 h-5 ${selectedId === null ? 'text-white' : 'text-foreground/20'}`} />
-              <span className="text-xs font-black uppercase italic tracking-tighter">Tất cả món</span>
+              <span className="text-xs font-black uppercase italic tracking-tighter">{t('allProducts')}</span>
             </div>
             {renderCategories()}
           </div>

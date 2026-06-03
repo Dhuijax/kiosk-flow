@@ -2,6 +2,7 @@
 
 import { Package, Plus, Sparkles } from 'lucide-react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { Product } from '@/gen/product_pb';
 import { formatVND } from '@/lib/utils/format';
 import { cn } from '@/lib/utils';
@@ -14,6 +15,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, onAddToCart, stockQuantity = 999 }: ProductCardProps) {
   const isSoldOut = product.trackInventory && stockQuantity <= 0;
+  const t = useTranslations('POSOrder');
 
   return (
     <button
@@ -44,7 +46,7 @@ export default function ProductCard({ product, onAddToCart, stockQuantity = 999 
         {isSoldOut && (
           <div className="absolute inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-10">
             <div className="bg-red-500 border border-white/20 px-6 py-2 rounded-xl shadow-lg -rotate-12">
-              <span className="text-white font-black uppercase italic tracking-tighter text-xl">HẾT HÀNG</span>
+              <span className="text-white font-black uppercase italic tracking-tighter text-xl">{t('soldOut')}</span>
             </div>
           </div>
         )}
@@ -53,7 +55,7 @@ export default function ProductCard({ product, onAddToCart, stockQuantity = 999 
         {!isSoldOut && (
           <div className="absolute top-4 left-4 px-3 py-1 bg-interaction text-white rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <Sparkles className="w-3 h-3" />
-            <span>Thông minh</span>
+            <span>{t('smart')}</span>
           </div>
         )}
 
@@ -73,7 +75,7 @@ export default function ProductCard({ product, onAddToCart, stockQuantity = 999 
         
         <div className="flex items-end justify-between">
           <div className="flex flex-col">
-            <span className="text-[10px] uppercase font-black opacity-40 mb-1">Giá bán</span>
+            <span className="text-[10px] uppercase font-black opacity-40 mb-1">{t('price')}</span>
             <span className="text-primary font-black text-2xl tracking-tighter leading-tight">
               {formatVND(product.price)}
             </span>
@@ -88,7 +90,7 @@ export default function ProductCard({ product, onAddToCart, stockQuantity = 999 
               "text-[8px] font-bold px-2 py-0.5 rounded border border-foreground/10",
               stockQuantity < 10 ? "text-red-500 bg-red-50" : "text-foreground/40 bg-foreground/5"
             )}>
-              Kho: {stockQuantity}
+              {t('stock', { quantity: stockQuantity })}
             </span>
           )}
         </div>

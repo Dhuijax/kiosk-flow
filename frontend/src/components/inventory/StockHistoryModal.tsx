@@ -4,6 +4,7 @@ import { useInventory } from '@/hooks/useInventory';
 import { StockHistoryEntry, GetStockHistoryRequest } from '@/gen/inventory_pb';
 
 import Portal from '@/components/ui/Portal';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface StockHistoryModalProps {
   isOpen: boolean;
@@ -16,6 +17,8 @@ interface StockHistoryModalProps {
 }
 
 export default function StockHistoryModal({ isOpen, onClose, product }: StockHistoryModalProps) {
+  const t = useTranslations('Inventory');
+  const locale = useLocale();
   const { getStockHistory, loading } = useInventory();
   const [history, setHistory] = useState<StockHistoryEntry[]>([]);
 
@@ -52,11 +55,11 @@ export default function StockHistoryModal({ isOpen, onClose, product }: StockHis
 
   const getTypeName = (type: string) => {
     switch (type) {
-      case 'sale': return 'Bán hàng';
-      case 'purchase': return 'Nhập hàng';
-      case 'adjustment': return 'Điều chỉnh';
-      case 'transfer': return 'Chuyển kho';
-      case 'return': return 'Trả hàng';
+      case 'sale': return t('stockHistoryModal.types.sale');
+      case 'purchase': return t('stockHistoryModal.types.purchase');
+      case 'adjustment': return t('stockHistoryModal.types.adjustment');
+      case 'transfer': return t('stockHistoryModal.types.transfer');
+      case 'return': return t('stockHistoryModal.types.return');
       default: return type.toUpperCase();
     }
   };
@@ -72,7 +75,7 @@ export default function StockHistoryModal({ isOpen, onClose, product }: StockHis
                 <History className="w-6 h-6 stroke-[3]" />
               </div>
               <div>
-                <h2 className="text-2xl font-black text-foreground uppercase italic tracking-tighter">Lịch sử kho</h2>
+                <h2 className="text-2xl font-black text-foreground uppercase italic tracking-tighter">{t('stockHistoryModal.title')}</h2>
                 <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">{product.name}</p>
               </div>
             </div>
@@ -89,21 +92,21 @@ export default function StockHistoryModal({ isOpen, onClose, product }: StockHis
             {loading && history.length === 0 ? (
               <div className="py-32 flex flex-col items-center gap-6">
                 <div className="w-16 h-16 border-4 border-interaction border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-foreground/20 italic">Đang tải lịch sử...</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-foreground/20 italic">{t('stockHistoryModal.loading')}</p>
               </div>
             ) : history.length === 0 ? (
               <div className="py-32 flex flex-col items-center gap-6 opacity-20">
                 <History className="w-20 h-20" />
-                <p className="text-sm font-black uppercase italic tracking-tighter">Chưa có giao dịch nào</p>
+                <p className="text-sm font-black uppercase italic tracking-tighter">{t('stockHistoryModal.noTransactions')}</p>
               </div>
             ) : (
               <table className="w-full text-left border-collapse">
                 <thead className="sticky top-0 bg-background border-b border-foreground/10 z-10">
                   <tr className="text-foreground/40 text-[10px] font-black uppercase tracking-[0.2em] italic">
-                    <th className="px-10 py-5 font-black">Thời gian</th>
-                    <th className="px-10 py-5 font-black">Loại</th>
-                    <th className="px-10 py-5 font-black text-right">Biến động</th>
-                    <th className="px-10 py-5 font-black">Chi tiết</th>
+                    <th className="px-10 py-5 font-black">{t('stockHistoryModal.colTime')}</th>
+                    <th className="px-10 py-5 font-black">{t('stockHistoryModal.colType')}</th>
+                    <th className="px-10 py-5 font-black text-right">{t('stockHistoryModal.colChange')}</th>
+                    <th className="px-10 py-5 font-black">{t('stockHistoryModal.colDetail')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-foreground/5">
@@ -111,8 +114,8 @@ export default function StockHistoryModal({ isOpen, onClose, product }: StockHis
                     <tr key={entry.id} className="hover:bg-foreground/[0.02] transition-colors group">
                       <td className="px-10 py-6">
                         <div className="flex flex-col">
-                          <span className="text-foreground font-black text-sm italic tracking-tighter">{new Date(entry.createdAt).toLocaleDateString('vi-VN')}</span>
-                          <span className="text-foreground/40 text-[10px] font-bold tracking-widest">{new Date(entry.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="text-foreground font-black text-sm italic tracking-tighter">{new Date(entry.createdAt).toLocaleDateString(locale)}</span>
+                          <span className="text-foreground/40 text-[10px] font-bold tracking-widest">{new Date(entry.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                       </td>
                       <td className="px-10 py-6">
@@ -128,7 +131,7 @@ export default function StockHistoryModal({ isOpen, onClose, product }: StockHis
                       </td>
                       <td className="px-10 py-6">
                         <div className="flex flex-col gap-1.5 max-w-[240px]">
-                          <p className="text-foreground text-xs font-bold leading-relaxed truncate" title={entry.note || ''}>{entry.note || 'Hệ thống tự động'}</p>
+                          <p className="text-foreground text-xs font-bold leading-relaxed truncate" title={entry.note || ''}>{entry.note || t('stockHistoryModal.autoSystem')}</p>
                           <div className="flex items-center gap-2 opacity-40">
                             <User className="w-3 h-3" />
                             <span className="text-[10px] font-black uppercase tracking-widest truncate">{entry.createdBy || 'SYSTEM'}</span>
@@ -146,13 +149,13 @@ export default function StockHistoryModal({ isOpen, onClose, product }: StockHis
           <div className="px-10 py-6 bg-background/30 border-t border-foreground/10 flex justify-between items-center">
             <p className="text-[10px] text-foreground/40 font-black uppercase tracking-[0.2em] italic flex items-center gap-3">
               <FileText className="w-4 h-4 opacity-40" />
-              Tối đa 50 giao dịch gần nhất
+              {t('stockHistoryModal.maxRecordsHelp')}
             </p>
             <button 
               onClick={onClose}
               className="btn-dynamic px-8 py-3 text-xs"
             >
-              ĐÓNG CỬA SỔ
+              {t('stockHistoryModal.btnClose')}
             </button>
           </div>
         </div>

@@ -4,6 +4,7 @@ use http::header::{HeaderName, HeaderValue};
 use std::net::SocketAddr;
 use tonic::transport::Server;
 
+use infra::storefront_repository::StorefrontRepository;
 use proto_gen::auth::auth_service_server::AuthServiceServer;
 use proto_gen::billing::billing_service_server::BillingServiceServer;
 use proto_gen::branch::branch_service_server::BranchServiceServer;
@@ -24,6 +25,7 @@ use proto_gen::store::{
     store_service_server::StoreServiceServer,
     tenant_settings_service_server::TenantSettingsServiceServer,
 };
+use proto_gen::storefront::storefront_service_server::StorefrontServiceServer;
 use proto_gen::table::table_service_server::TableServiceServer;
 use proto_gen::table_cart::table_cart_service_server::TableCartServiceServer;
 use services::auth::AuthServiceImpl;
@@ -42,6 +44,7 @@ use services::recipe::RecipeServiceImpl;
 use services::report::ReportServiceImpl;
 use services::status::StatusServiceImpl;
 use services::store::{StoreServiceImpl, TenantSettingsServiceImpl};
+use services::storefront::StorefrontServiceImpl;
 use services::table::TableServiceImpl;
 use services::table_cart::TableCartServiceImpl;
 
@@ -105,6 +108,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ));
 
     let waste_repo = Arc::new(infra::waste_repository::WasteRepository::new(pool.clone()));
+    let storefront_repo = Arc::new(StorefrontRepository::new(pool.clone()));
 
     // 3. Initialize Services
     let auth_service =
@@ -153,6 +157,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let alert_service = AlertServiceImpl::new(procurement_repo.clone());
     let status_service = StatusServiceImpl::new();
     let billing_service = BillingServiceImpl::new(pool.clone());
+    let storefront_service =
+        StorefrontServiceImpl::new(storefront_repo.clone(), redis_manager.clone());
 
     let auth_interceptor = get_auth_interceptor(config.jwt_secret.clone());
 
@@ -194,6 +200,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         BillingServiceServer::with_interceptor(billing_service, auth_interceptor.clone());
     let table_cart_server =
         TableCartServiceServer::with_interceptor(table_cart_service, auth_interceptor.clone());
+    let storefront_server =
+        StorefrontServiceServer::with_interceptor(storefront_service, auth_interceptor.clone());
 
     // 4. Setup gRPC Reflection
     let ext_descriptor_set = tonic_reflection::server::Builder::configure()
@@ -263,6 +271,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let alert_server = tonic_web::enable(alert_server);
     let billing_server = tonic_web::enable(billing_server);
     let table_cart_server = tonic_web::enable(table_cart_server);
+    let storefront_server = tonic_web::enable(storefront_server);
 
     // 6. Spawn Axum HTTP Webhook Server on port + 1
     let webhook_addr = SocketAddr::from(([0, 0, 0, 0], addr.port() + 1));
@@ -305,6 +314,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_service(alert_server)
         .add_service(billing_server)
         .add_service(table_cart_server)
+        .add_service(storefront_server)
         .serve(addr)
         .await?;
 

@@ -8,9 +8,12 @@ import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Bell, Check, X, Coffee, Clock, User, Trash2, RefreshCw } from 'lucide-react';
 import { formatVND } from '@/lib/utils/format';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function QRAlertListener() {
   const { tenantId, token, branchId } = useAuth();
+  const t = useTranslations('QRAlert');
+  const locale = useLocale();
   
   // Real-time notifications state
   const [activeAlerts, setActiveAlerts] = useState<Order[]>([]);
@@ -141,7 +144,7 @@ export default function QRAlertListener() {
 
     } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to approve order:', err);
-      alert('Không thể phê duyệt đơn hàng: ' + (err.message || 'Lỗi kết nối'));
+      alert(t('approveError') + (err.message || t('connectionError')));
     } finally {
       setApprovingId(null);
     }
@@ -150,14 +153,14 @@ export default function QRAlertListener() {
   // Reject / Cancel action
   const handleCancel = async (orderId: string) => {
     if (!tenantId || !token) return;
-    if (!confirm('Bạn có chắc chắn muốn hủy bỏ yêu cầu đặt món này?')) return;
+    if (!confirm(t('cancelConfirm'))) return;
     
     setCancellingId(orderId);
     try {
       const client = getAuthenticatedClient(OrderService, tenantId, token);
       await client.cancelOrder({
         id: orderId,
-        reason: 'Thu ngân từ chối duyệt'
+        reason: t('cancelReason')
       });
       
       // Remove alert
@@ -168,7 +171,7 @@ export default function QRAlertListener() {
 
     } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('Failed to cancel order:', err);
-      alert('Không thể hủy đơn hàng: ' + (err.message || 'Lỗi kết nối'));
+      alert(t('cancelError') + (err.message || t('connectionError')));
     } finally {
       setCancellingId(null);
     }
@@ -198,14 +201,14 @@ export default function QRAlertListener() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-white text-sm">{order.tableName || 'Bàn gọi món'}</span>
+                      <span className="font-extrabold text-white text-sm">{order.tableName || t('tableOrder')}</span>
                       <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-indigo-500/20 text-indigo-400 uppercase tracking-widest">
                         QR Order
                       </span>
                     </div>
                     <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
                       <User size={12} className="opacity-75" />
-                      Khách: {order.customerName || 'Vãng lai'}
+                      {t('customer', { name: order.customerName || t('walkIn') })}
                     </p>
                   </div>
                 </div>
@@ -213,7 +216,7 @@ export default function QRAlertListener() {
                   onClick={() => handleCancel(order.id)}
                   disabled={cancellingId === order.id}
                   className="h-7 w-7 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 flex items-center justify-center transition-all"
-                  title="Hủy đơn đặt"
+                  title={t('cancelOrder')}
                 >
                   <X size={16} />
                 </button>
@@ -235,7 +238,7 @@ export default function QRAlertListener() {
                   onClick={() => setSelectedOrder(order)}
                   className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-[11px] font-black uppercase italic tracking-tighter transition-all flex items-center justify-center gap-1.5 border border-slate-700/50"
                 >
-                  Xem chi tiết
+                  {t('viewDetails')}
                 </button>
                 <button
                   onClick={() => handleApprove(order.id)}
@@ -247,7 +250,7 @@ export default function QRAlertListener() {
                   ) : (
                     <Check size={14} />
                   )}
-                  Phê duyệt
+                  {t('approve')}
                 </button>
               </div>
             </motion.div>
@@ -273,15 +276,15 @@ export default function QRAlertListener() {
                 </div>
                 <div>
                   <h3 className="text-base font-black text-foreground uppercase tracking-tight italic flex items-center gap-2">
-                    Xác nhận yêu cầu gọi món
+                    {t('confirmTitle')}
                   </h3>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                      Bàn: {selectedOrder.tableName}
+                      {t('table', { name: selectedOrder.tableName })}
                     </span>
                     <span className="h-1 w-1 rounded-full bg-slate-600"></span>
                     <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                      Mã đơn: #{selectedOrder.orderNumber}
+                      {t('orderCode', { code: selectedOrder.orderNumber })}
                     </span>
                   </div>
                 </div>
@@ -301,16 +304,16 @@ export default function QRAlertListener() {
                 <div className="flex items-center gap-3">
                   <User className="text-indigo-400 flex-shrink-0" size={18} />
                   <div>
-                    <span className="text-[9px] uppercase font-black tracking-wider text-slate-500">Khách đặt</span>
-                    <p className="text-xs font-black text-white">{selectedOrder.customerName || 'Khách vãng lai'}</p>
+                    <span className="text-[9px] uppercase font-black tracking-wider text-slate-500">{t('guestLabel')}</span>
+                    <p className="text-xs font-black text-white">{selectedOrder.customerName || t('walkInGuest')}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Clock className="text-indigo-400 flex-shrink-0" size={18} />
                   <div>
-                    <span className="text-[9px] uppercase font-black tracking-wider text-slate-500">Thời gian gửi</span>
+                    <span className="text-[9px] uppercase font-black tracking-wider text-slate-500">{t('sentTime')}</span>
                     <p className="text-xs font-bold text-white">
-                      {selectedOrder.createdAt ? new Date(Number(selectedOrder.createdAt.seconds) * 1000).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--:--'}
+                      {selectedOrder.createdAt ? new Date(Number(selectedOrder.createdAt.seconds) * 1000).toLocaleTimeString(locale === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--:--'}
                     </p>
                   </div>
                 </div>
@@ -318,7 +321,7 @@ export default function QRAlertListener() {
 
               {/* Items catalog breakdown list */}
               <div className="space-y-3">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 italic">Chi tiết các món uống yêu cầu</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 italic">{t('itemsDetail')}</h4>
                 <div className="border border-slate-800/90 rounded-2xl p-4.5 bg-[#141A30]/30 flex flex-col gap-3 max-h-48 overflow-y-auto">
                   {selectedOrder.items.map((item, idx) => (
                     <div key={idx} className="flex flex-col gap-1 pb-3 border-b border-slate-800/80 last:border-0 last:pb-0">
@@ -340,7 +343,7 @@ export default function QRAlertListener() {
                       )}
                       {item.note && (
                         <p className="text-[10px] text-amber-500 font-bold pl-3 mt-0.5">
-                          ★ Ghi chú: {item.note}
+                          {t('noteLabel', { note: item.note })}
                         </p>
                       )}
                     </div>
@@ -352,7 +355,7 @@ export default function QRAlertListener() {
               {selectedOrder.note && (
                 <div className="bg-amber-500/5 border border-amber-500/10 rounded-2xl p-4 flex flex-col gap-1">
                   <span className="text-[9px] uppercase font-black tracking-wider text-amber-500 flex items-center gap-1">
-                    ★ Ghi chú từ bàn đặt
+                    {t('tableNote')}
                   </span>
                   <p className="text-xs text-amber-200/90 font-medium italic">{selectedOrder.note}</p>
                 </div>
@@ -361,16 +364,16 @@ export default function QRAlertListener() {
               {/* Total Summary */}
               <div className="bg-[#141A30]/50 border border-slate-800 p-4 rounded-2xl flex flex-col gap-2">
                 <div className="flex justify-between text-xs font-bold text-slate-400">
-                  <span>Tạm tính</span>
+                  <span>{t('subtotal')}</span>
                   <span>{formatVND(Number(selectedOrder.subtotal?.units || 0))}</span>
                 </div>
                 <div className="flex justify-between text-xs font-bold text-slate-400">
-                  <span>Thuế VAT (10%)</span>
+                  <span>{t('vat')}</span>
                   <span>{formatVND(Number(selectedOrder.taxAmount?.units || 0))}</span>
                 </div>
                 <div className="h-px bg-slate-800/80 my-1.5" />
                 <div className="flex justify-between items-center text-sm font-black text-white uppercase tracking-tight italic">
-                  <span>Tổng tiền</span>
+                  <span>{t('total')}</span>
                   <span className="text-lg text-indigo-400">{formatVND(Number(selectedOrder.total?.units || 0))}</span>
                 </div>
               </div>
@@ -383,7 +386,7 @@ export default function QRAlertListener() {
                 disabled={cancellingId === selectedOrder.id}
                 className="flex-1 py-3.5 bg-rose-500/10 hover:bg-rose-500/15 border border-rose-500/20 text-rose-400 rounded-2xl text-xs font-black uppercase italic tracking-tighter transition-all flex items-center justify-center gap-2"
               >
-                <Trash2 size={16} /> Từ chối duyệt
+                <Trash2 size={16} /> {t('reject')}
               </button>
               <button
                 onClick={() => handleApprove(selectedOrder.id)}
@@ -395,7 +398,7 @@ export default function QRAlertListener() {
                 ) : (
                   <Check size={16} />
                 )}
-                Phê duyệt ngay
+                {t('approveNow')}
               </button>
             </div>
 

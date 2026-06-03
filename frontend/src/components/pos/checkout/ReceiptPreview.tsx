@@ -3,7 +3,9 @@
 import React from 'react';
 import { Printer, X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { formatVND } from '@/lib/utils/format';
 
 interface ReceiptData {
   orderNumber: string;
@@ -25,10 +27,7 @@ interface ReceiptPreviewProps {
 
 export default function ReceiptPreview({ data, onClose, onPrint }: ReceiptPreviewProps) {
   const { currentBranch } = useAuth();
-  
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
-  };
+  const t = useTranslations('ReceiptPreview');
 
   return (
     <div className="flex flex-col items-center gap-10 py-10 h-full">
@@ -47,23 +46,23 @@ export default function ReceiptPreview({ data, onClose, onPrint }: ReceiptPrevie
             {currentBranch?.name || 'KIOSKFLOW POS'}
           </h1>
           <div className="text-[10px] text-foreground/40 font-black uppercase tracking-[0.2em] leading-relaxed">
-            <p>{currentBranch?.address || '123 ĐƯỜNG CÔNG NGHỆ, TP. HCM'}</p>
-            <p>HOTLINE: {currentBranch?.phone || '1900 1234'}</p>
+            <p>{currentBranch?.address || t('addressFallback')}</p>
+            <p>{t('hotline', { phone: currentBranch?.phone || '1900 1234' })}</p>
           </div>
         </div>
 
         {/* Info Box */}
         <div className="border-y border-dashed border-foreground/10 py-6 mb-8 space-y-2 text-[11px] font-black uppercase italic tracking-tighter">
           <div className="flex justify-between">
-            <span className="opacity-40">Số đơn:</span>
+            <span className="opacity-40">{t('orderNumber')}</span>
             <span>#{data.orderNumber}</span>
           </div>
           <div className="flex justify-between">
-            <span className="opacity-40">Thời gian:</span>
+            <span className="opacity-40">{t('date')}</span>
             <span>{data.date}</span>
           </div>
           <div className="flex justify-between">
-            <span className="opacity-40">Thu ngân:</span>
+            <span className="opacity-40">{t('cashier')}</span>
             <span className="text-interaction">{data.cashierName}</span>
           </div>
         </div>
@@ -74,9 +73,9 @@ export default function ReceiptPreview({ data, onClose, onPrint }: ReceiptPrevie
             <div key={i} className="flex justify-between items-start text-xs font-black uppercase italic tracking-tighter">
               <div className="flex-1 pr-6">
                 <p className="leading-tight">{item.name}</p>
-                <p className="text-[10px] opacity-40 not-italic mt-1">{item.quantity} x {formatCurrency(item.price)}</p>
+                <p className="text-[10px] opacity-40 not-italic mt-1">{item.quantity} x {formatVND(item.price)}</p>
               </div>
-              <span className="text-sm">{formatCurrency(item.price * item.quantity)}</span>
+              <span className="text-sm">{formatVND(item.price * item.quantity)}</span>
             </div>
           ))}
         </div>
@@ -84,28 +83,28 @@ export default function ReceiptPreview({ data, onClose, onPrint }: ReceiptPrevie
         {/* Totals */}
         <div className="border-t border-dashed border-foreground/10 pt-6 space-y-3 mb-10">
           <div className="flex justify-between text-xs font-black uppercase italic tracking-tighter opacity-60">
-            <span>Tạm tính</span>
-            <span>{formatCurrency(data.subtotal)}</span>
+            <span>{t('subtotal')}</span>
+            <span>{formatVND(data.subtotal)}</span>
           </div>
           <div className="flex justify-between text-xs font-black uppercase italic tracking-tighter opacity-60">
-            <span>Thuế VAT (10%)</span>
-            <span>{formatCurrency(data.tax)}</span>
+            <span>{t('tax')}</span>
+            <span>{formatVND(data.tax)}</span>
           </div>
           <div className="flex justify-between text-2xl font-black pt-4 mt-4 border-t border-foreground/5 uppercase italic tracking-tighter">
-            <span>TỔNG CỘNG</span>
-            <span className="text-primary">{formatCurrency(data.total)}</span>
+            <span>{t('total')}</span>
+            <span className="text-primary">{formatVND(data.total)}</span>
           </div>
         </div>
 
         {/* Payment Info */}
         <div className="bg-foreground/5 p-6 rounded-2xl mb-10 border border-foreground/5">
           <div className="flex justify-between text-[11px] font-black uppercase italic tracking-tighter">
-            <span className="opacity-20 tracking-[0.3em]">Hình thức</span>
+            <span className="opacity-20 tracking-[0.3em]">{t('paymentMethod')}</span>
             <span className="text-interaction">{data.paymentMethod}</span>
           </div>
           {data.notes && (
             <div className="mt-4 pt-4 border-t border-foreground/5">
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-20 mb-2">Ghi chú</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-20 mb-2">{t('notes')}</p>
               <p className="text-[10px] italic font-bold opacity-60">&quot;{data.notes}&quot;</p>
             </div>
           )}
@@ -118,7 +117,7 @@ export default function ReceiptPreview({ data, onClose, onPrint }: ReceiptPrevie
               <div className="w-full h-full bg-foreground/5 rounded animate-pulse" />
             </div>
           </div>
-          <p className="text-[10px] font-black text-foreground/20 uppercase tracking-[0.4em]">Cảm ơn & Hẹn gặp lại!</p>
+          <p className="text-[10px] font-black text-foreground/20 uppercase tracking-[0.4em]">{t('thankYou')}</p>
         </div>
 
         {/* Paper Edge Zigzag */}
@@ -136,14 +135,14 @@ export default function ReceiptPreview({ data, onClose, onPrint }: ReceiptPrevie
           className="btn-dynamic px-10 py-4 text-sm"
         >
           <Printer size={20} className="stroke-[3] transition-transform group-hover:scale-110" />
-          <span>IN HÓA ĐƠN</span>
+          <span>{t('printBtn')}</span>
         </button>
         <button 
           onClick={onClose}
           className="px-10 py-4 bg-background border border-foreground/10 rounded-2xl font-black text-sm uppercase italic tracking-tighter text-foreground/40 hover:text-foreground hover:border-foreground/20 transition-all shadow-sm"
         >
           <X size={20} className="stroke-[3]" />
-          <span>ĐÓNG</span>
+          <span>{t('closeBtn')}</span>
         </button>
       </div>
     </div>

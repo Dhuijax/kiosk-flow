@@ -3,6 +3,8 @@
 import React from 'react';
 import { ShoppingBag } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
+import { formatVND } from '@/lib/utils/format';
 
 interface Item {
   name: string;
@@ -18,9 +20,7 @@ interface CheckoutSummaryProps {
 }
 
 export default function CheckoutSummary({ items, subtotal, tax, total }: CheckoutSummaryProps) {
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
-  };
+  const t = useTranslations('CheckoutSummary');
 
   return (
     <div className="bg-surface border border-foreground/10 rounded-[2.5rem] overflow-hidden shadow-sm flex flex-col h-full">
@@ -29,7 +29,7 @@ export default function CheckoutSummary({ items, subtotal, tax, total }: Checkou
           <div className="w-12 h-12 rounded-2xl bg-interaction/10 flex items-center justify-center text-interaction shadow-sm">
             <ShoppingBag className="w-6 h-6 stroke-[3]" />
           </div>
-          Tóm tắt đơn hàng
+          {t('title')}
         </h2>
       </div>
 
@@ -48,25 +48,25 @@ export default function CheckoutSummary({ items, subtotal, tax, total }: Checkou
                 {item.name}
               </p>
             </div>
-            <p className="text-foreground/40 text-sm font-bold tracking-tighter">{formatCurrency(item.price * item.quantity)}</p>
+            <p className="text-foreground/40 text-sm font-bold tracking-tighter">{formatVND(item.price * item.quantity)}</p>
           </motion.div>
         ))}
       </div>
 
       <div className="p-10 bg-background/50 border-t border-foreground/10 space-y-4">
         <div className="flex justify-between text-foreground/40 text-xs font-black uppercase italic tracking-tighter">
-          <span>Tạm tính</span>
-          <span className="">{formatCurrency(subtotal)}</span>
+          <span>{t('subtotal')}</span>
+          <span className="">{formatVND(subtotal)}</span>
         </div>
         <div className="flex justify-between text-foreground/40 text-xs font-black uppercase italic tracking-tighter">
-          <span>Thuế (10%)</span>
-          <span className="">{formatCurrency(tax)}</span>
+          <span>{t('tax')}</span>
+          <span className="">{formatVND(tax)}</span>
         </div>
         <div className="pt-6 border-t border-foreground/10 flex justify-between items-end">
           <div>
-            <p className="text-foreground/20 text-[10px] uppercase tracking-[0.2em] font-black italic mb-2">Tổng thanh toán</p>
+            <p className="text-foreground/20 text-[10px] uppercase tracking-[0.2em] font-black italic mb-2">{t('total')}</p>
             <p className="text-4xl text-primary font-black italic tracking-tighter leading-none">
-              {formatCurrency(total)}
+              {formatVND(total)}
             </p>
           </div>
         </div>

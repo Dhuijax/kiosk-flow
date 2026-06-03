@@ -3,8 +3,8 @@ import { Metadata } from 'next';
 import OrderClient from './OrderClient';
 
 export const metadata: Metadata = {
-  title: 'Bán hàng - KioskFlow',
-  description: 'Màn hình bán hàng chính của KioskFlow. Hỗ trợ thao tác nhanh, tìm kiếm và phân loại sản phẩm.',
+  title: 'POS Sales - KioskFlow',
+  description: 'Main POS sales screen for KioskFlow. Supports quick actions, search and product categorization.',
 };
 
 export default function OrderPage() {

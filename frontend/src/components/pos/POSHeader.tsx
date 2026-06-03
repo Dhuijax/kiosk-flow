@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Link, useRouter } from '@/i18n/routing';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useTranslations, useLocale } from 'next-intl';
 import { 
   LogOut, 
   Store,
@@ -17,6 +18,9 @@ import ZReportModal from '@/components/pos/ZReportModal';
 export default function POSHeader() {
   const router = useRouter();
   const { logout } = useAuth();
+  const t = useTranslations('POSHeader');
+  const tCommon = useTranslations('Common');
+  const locale = useLocale();
   const [zReportOpen, setZReportOpen] = useState(false);
 
   return (
@@ -26,7 +30,7 @@ export default function POSHeader() {
           <div className="w-8 h-8 md:w-10 md:h-10 border border-foreground/20 rounded-lg flex items-center justify-center bg-surface shadow-sm group-hover:bg-interaction group-hover:text-white transition-all">
             <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 stroke-[3]" />
           </div>
-          <span className="text-[10px] md:text-sm font-black uppercase italic tracking-tighter hidden xs:block">Dashboard</span>
+          <span className="text-[10px] md:text-sm font-black uppercase italic tracking-tighter hidden xs:block">{tCommon('dashboard')}</span>
         </Link>
         
         <div className="flex items-center gap-2 md:gap-4 p-2 md:p-3 bg-surface border border-foreground/10 rounded-xl md:rounded-2xl shadow-sm">
@@ -34,8 +38,8 @@ export default function POSHeader() {
             <Store className="w-5 h-5 md:w-6 md:h-6" />
           </div>
           <div className="hidden sm:block">
-            <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest opacity-40">Chi nhánh</p>
-            <p className="text-xs md:text-sm font-black text-foreground uppercase italic tracking-tighter">Cửa hàng chính</p>
+            <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest opacity-40">{t('branch')}</p>
+            <p className="text-xs md:text-sm font-black text-foreground uppercase italic tracking-tighter">{t('mainStore')}</p>
           </div>
         </div>
       </div>
@@ -45,7 +49,7 @@ export default function POSHeader() {
         <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-accent/5 border border-foreground/10 rounded-2xl">
           <Clock className="w-5 h-5 text-primary stroke-[3]" />
           <span className="text-lg font-black text-foreground italic tracking-tighter">
-            {new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+            {new Date().toLocaleTimeString(locale === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
 
@@ -54,7 +58,7 @@ export default function POSHeader() {
             <p className="text-sm font-black text-foreground uppercase italic tracking-tighter">Cashier Mode</p>
             <div className="flex items-center justify-end gap-1">
               <span className="w-2 h-2 bg-interaction rounded-full animate-pulse"></span>
-              <span className="text-[10px] text-interaction font-black uppercase tracking-tighter italic">Online</span>
+              <span className="text-[10px] text-interaction font-black uppercase tracking-tighter italic">{tCommon('serving')}</span>
             </div>
           </div>
           <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-surface border border-foreground/10 flex items-center justify-center shadow-sm">
@@ -65,10 +69,10 @@ export default function POSHeader() {
         <button 
           onClick={() => setZReportOpen(true)}
           className="flex items-center gap-2 px-4 h-10 md:h-12 bg-primary text-white border border-primary/20 rounded-lg md:rounded-xl shadow-sm hover:bg-interaction transition-all font-black uppercase italic tracking-tighter text-xs cursor-pointer"
-          title="Chốt ca & Xuất Z-Report"
+          title={t('closeShiftTooltip')}
         >
           <Printer className="w-5 h-5" />
-          <span className="hidden sm:inline">Chốt ca</span>
+          <span className="hidden sm:inline">{t('closeShift')}</span>
         </button>
 
         <button 
@@ -77,7 +81,7 @@ export default function POSHeader() {
             router.push('/auth/login');
           }}
           className="w-10 h-10 md:w-12 md:h-12 bg-red-500 text-white border border-red-600/20 rounded-lg md:rounded-xl flex items-center justify-center shadow-sm hover:bg-red-600 transition-all cursor-pointer"
-          title="Đăng xuất"
+          title={t('logoutTooltip')}
         >
           <LogOut className="w-5 h-5 md:w-6 md:h-6 stroke-[3]" />
         </button>

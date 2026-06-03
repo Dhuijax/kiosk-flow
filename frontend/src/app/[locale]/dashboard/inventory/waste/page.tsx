@@ -18,6 +18,7 @@ import { WasteLogItem } from '@/gen/inventory_pb';
 import LogWasteModal from '@/components/inventory/LogWasteModal';
 import { formatVND, formatDateTime } from '@/lib/utils/format';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useTranslations } from 'next-intl';
 import { 
   PieChart, 
   Pie, 
@@ -32,6 +33,7 @@ import {
 } from 'recharts';
 
 export default function WasteManagementPage() {
+  const t = useTranslations('Inventory');
   const { branchId } = useAuth();
   const { listWasteLogs, loading } = useInventory();
   const [wasteLogs, setWasteLogs] = useState<WasteLogItem[]>([]);
@@ -72,7 +74,7 @@ export default function WasteManagementPage() {
       reasonCounts[r].cost += log.cost;
     });
 
-    let mostCommonReason = 'Chưa xác định';
+    let mostCommonReason = 'UNKNOWN';
     let maxReasonCount = 0;
     Object.entries(reasonCounts).forEach(([reason, data]) => {
       if (data.count > maxReasonCount) {
@@ -84,11 +86,11 @@ export default function WasteManagementPage() {
     // Item frequency
     const itemCosts: Record<string, number> = {};
     wasteLogs.forEach(log => {
-      const name = log.productName || log.ingredientName || 'Ẩn danh';
+      const name = log.productName || log.ingredientName || t('noName');
       itemCosts[name] = (itemCosts[name] || 0) + log.cost;
     });
 
-    let mostWastedItem = 'Chưa có';
+    let mostWastedItem = t('noName');
     let maxItemCost = 0;
     Object.entries(itemCosts).forEach(([name, cost]) => {
       if (cost > maxItemCost) {
@@ -109,11 +111,12 @@ export default function WasteManagementPage() {
   // Translate reasons to Vietnamese human-readable format
   const getReasonLabel = (reason: string) => {
     switch (reason) {
-      case 'WRONG_RECIPE': return 'Sai công thức pha chế';
-      case 'SPOILED': return 'Hết hạn/Hỏng kho';
-      case 'DAMAGED': return 'Vật lý/Đổ vỡ';
-      case 'EXPIRED': return 'Nguyên liệu hết hạn';
-      case 'OTHER': return 'Lý do khác';
+      case 'WRONG_RECIPE': return t('commonReason');
+      case 'SPOILED': return t('spoiled');
+      case 'DAMAGED': return t('damaged');
+      case 'EXPIRED': return t('expired');
+      case 'OTHER': return t('other');
+      case 'UNKNOWN': return t('unknownReason');
       default: return reason;
     }
   };
@@ -140,7 +143,7 @@ export default function WasteManagementPage() {
   const chartDataByItem = useMemo(() => {
     const itemCosts: Record<string, number> = {};
     wasteLogs.forEach(log => {
-      const name = log.productName || log.ingredientName || 'Không tên';
+      const name = log.productName || log.ingredientName || t('noName');
       itemCosts[name] = (itemCosts[name] || 0) + log.cost;
     });
 
@@ -157,13 +160,13 @@ export default function WasteManagementPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3 text-red-500 font-black uppercase text-xs tracking-widest">
             <AlertTriangle className="w-5 h-5 stroke-[3]" />
-            <span>QUẢN LÝ THẤT THOÁT & HAO HỤT VẬN HÀNH</span>
+            <span>{t('spoilageTitle')}</span>
           </div>
           <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground">
-            Báo Hỏng & <span className="text-red-500">Hao Hụt</span>
+            {t('spoilageHeadline').split(' ')[0]} <span className="text-red-500">{t('spoilageHeadline').split(' ').slice(1).join(' ')}</span>
           </h1>
           <p className="text-foreground/40 font-bold flex items-center gap-2 italic">
-            Theo dõi, phân tích tổn thất tài chính và quản lý khấu trừ nguyên liệu/sản phẩm lỗi.
+            {t('spoilageDesc')}
           </p>
         </div>
 
@@ -173,7 +176,7 @@ export default function WasteManagementPage() {
             className="btn-dynamic py-4 px-8 text-sm h-14 bg-red-500 hover:bg-red-600 hover:border-red-600"
           >
             <PlusCircle className="w-5 h-5" />
-            <span>BÁO HỎNG VẬT TƯ</span>
+            <span>{t('logWasteBtn')}</span>
           </button>
         </div>
       </div>
@@ -184,41 +187,41 @@ export default function WasteManagementPage() {
           href="/dashboard/inventory" 
           className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
         >
-          Tồn kho tổng quan
+          {t('inventoryOverview')}
         </Link>
         <Link 
           href="/dashboard/inventory/ingredients" 
           className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
         >
-          Danh sách nguyên liệu
+          {t('ingredientsList')}
         </Link>
         <Link 
           href="/dashboard/inventory/suppliers" 
           className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
         >
-          Nhà cung cấp
+          {t('suppliers')}
         </Link>
         <Link 
           href="/dashboard/inventory/procurement" 
           className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
         >
-          Phiếu nhập hàng
+          {t('purchaseOrders')}
         </Link>
         <Link 
           href="/dashboard/inventory/waste" 
           className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest bg-red-500/10 text-red-500 border border-red-500/20 transition-all"
         >
-          Báo hỏng & hao hụt
+          {t('wasteReport')}
         </Link>
       </div>
 
       {/* KPI Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {[
-          { label: 'Tổng tổn thất tài chính', value: formatVND(stats.totalCost), sub: 'Thiệt hại tích lũy', icon: DollarSign, color: 'bg-red-500' },
-          { label: 'Số vụ báo cáo hỏng', value: `${stats.totalEvents} lần`, sub: 'Lịch sử báo hỏng', icon: FileText, color: 'bg-orange-500' },
-          { label: 'Lý do phổ biến nhất', value: getReasonLabel(stats.mostCommonReason), sub: 'Nguyên nhân chính', icon: AlertTriangle, color: 'bg-yellow-500' },
-          { label: 'Thất thoát nặng nhất', value: stats.mostWastedItem, sub: 'Mặt hàng hao hụt lớn', icon: TrendingUp, color: 'bg-emerald-500' },
+          { label: t('totalFinancialLoss'), value: formatVND(stats.totalCost), sub: t('accumulatedDamage'), icon: DollarSign, color: 'bg-red-500' },
+          { label: t('reportedSpoilageCount'), value: `${stats.totalEvents} ${t('actions.history')}`, sub: t('spoilageHistory'), icon: FileText, color: 'bg-orange-500' },
+          { label: t('primaryCause'), value: getReasonLabel(stats.mostCommonReason), sub: t('commonReason'), icon: AlertTriangle, color: 'bg-yellow-500' },
+          { label: t('worstDamagedItem'), value: stats.mostWastedItem, sub: t('highlyWastedItem'), icon: TrendingUp, color: 'bg-emerald-500' },
         ].map((metric, idx) => (
           <div
             key={idx}
@@ -229,7 +232,7 @@ export default function WasteManagementPage() {
                 <metric.icon size={26} className="stroke-[3]" />
               </div>
               <div className="font-mono text-[9px] font-black uppercase text-foreground/40 italic">
-                Thời gian thực
+                {t('realtime')}
               </div>
             </div>
             <div>
@@ -249,8 +252,8 @@ export default function WasteManagementPage() {
           {/* Reason breakdown chart */}
           <div className="ai-card p-10 flex flex-col justify-between border border-foreground/5">
             <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-red-500">Phân tích cơ cấu</p>
-              <h3 className="text-2xl font-black uppercase italic tracking-tighter">Hao hụt theo nguyên nhân</h3>
+              <p className="text-[10px] font-black uppercase tracking-widest text-red-500">{t('structureAnalysis')}</p>
+              <h3 className="text-2xl font-black uppercase italic tracking-tighter">{t('lossByCause')}</h3>
             </div>
             
             <div className="h-[250px] w-full relative my-6">
@@ -271,7 +274,7 @@ export default function WasteManagementPage() {
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value: number | string | unknown) => [formatVND(Number(value || 0)), 'Tổn thất']}
+                    formatter={(value: number | string | unknown) => [formatVND(Number(value || 0)), t('estimatedLoss')]}
                     contentStyle={{ 
                       backgroundColor: 'var(--color-surface)', 
                       border: '1px solid rgba(0,0,0,0.1)', 
@@ -283,7 +286,7 @@ export default function WasteManagementPage() {
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <PieIcon className="w-6 h-6 text-red-500/60" />
-                <span className="text-[10px] font-black uppercase opacity-40 mt-1">Lý do hỏng</span>
+                <span className="text-[10px] font-black uppercase opacity-40 mt-1">{t('wasteReason')}</span>
               </div>
             </div>
             
@@ -305,8 +308,8 @@ export default function WasteManagementPage() {
           {/* Top Wasted Items Chart */}
           <div className="lg:col-span-2 ai-card p-10 flex flex-col justify-between border border-foreground/5">
             <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-red-500 font-bold">Thất thoát cao</p>
-              <h3 className="text-2xl font-black uppercase italic tracking-tighter">Sản phẩm / Nguyên liệu thiệt hại lớn</h3>
+              <p className="text-[10px] font-black uppercase tracking-widest text-red-500 font-bold">{t('highLoss')}</p>
+              <h3 className="text-2xl font-black uppercase italic tracking-tighter">{t('highlyDamagedLabel')}</h3>
             </div>
 
             <div className="h-[300px] w-full my-6">
@@ -326,7 +329,7 @@ export default function WasteManagementPage() {
                     tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
                   />
                   <Tooltip
-                    formatter={(value: number | string | unknown) => [formatVND(Number(value || 0)), 'Hao hụt']}
+                    formatter={(value: number | string | unknown) => [formatVND(Number(value || 0)), t('estimatedLoss')]}
                     contentStyle={{ 
                       backgroundColor: 'var(--color-surface)', 
                       border: '1px solid rgba(0,0,0,0.1)', 
@@ -344,7 +347,7 @@ export default function WasteManagementPage() {
             </div>
 
             <div className="bg-red-500/5 p-4 rounded-2xl flex items-center justify-between text-xs font-black uppercase italic tracking-tighter">
-              <span className="text-red-500/70">Tổng hao hụt Top 5 sản phẩm/nguyên liệu:</span>
+              <span className="text-red-500/70">{t('totalLossTop5')}</span>
               <span className="text-red-500 text-sm">
                 {formatVND(chartDataByItem.reduce((sum, item) => sum + item.cost, 0))}
               </span>
@@ -363,13 +366,13 @@ export default function WasteManagementPage() {
           <div className="w-20 h-20 bg-red-500/5 rounded-3xl flex items-center justify-center border border-red-500/10 mb-6">
             <AlertTriangle className="w-10 h-10 text-red-500" />
           </div>
-          <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground mb-2">Chưa có bản ghi hao hụt</h3>
+          <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground mb-2">{t('noWasteRecords')}</h3>
           <p className="text-foreground/40 max-w-md font-bold text-sm italic mb-8">
-            Tuyệt vời! Hệ thống chưa ghi nhận hoặc báo cáo bất kỳ hao hụt vật tư hay sản phẩm hỏng nào ở chi nhánh này.
+            {t('noWasteRecordsDesc')}
           </p>
           <button onClick={() => setIsModalOpen(true)} className="btn-dynamic py-4 px-8 text-sm bg-red-500 hover:bg-red-600 hover:border-red-600">
             <PlusCircle className="w-5 h-5" />
-            <span>BÁO HỎNG LẦN ĐẦU TIÊN</span>
+            <span>{t('logFirstSpoilage')}</span>
           </button>
         </div>
       ) : (
@@ -377,10 +380,10 @@ export default function WasteManagementPage() {
           <div className="p-8 border-b border-foreground/5 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Calendar className="w-5 h-5 text-red-500" />
-              <h3 className="text-lg font-black uppercase italic tracking-tighter">Nhật ký chi tiết báo hỏng</h3>
+              <h3 className="text-lg font-black uppercase italic tracking-tighter">{t('detailedSpoilageLog')}</h3>
             </div>
             <span className="text-[10px] font-black uppercase italic tracking-widest text-foreground/40">
-              Tổng {wasteLogs.length} bản ghi
+              {t('totalRecordsLabel', { count: wasteLogs.length })}
             </span>
           </div>
 
@@ -388,13 +391,13 @@ export default function WasteManagementPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-foreground/5 text-foreground/40 text-[10px] font-black uppercase tracking-[0.2em]">
-                  <th className="px-8 py-6">Thời gian</th>
-                  <th className="px-8 py-6">Chi tiết vật tư</th>
-                  <th className="px-8 py-6">Phân loại</th>
-                  <th className="px-8 py-6">Số lượng</th>
-                  <th className="px-8 py-6">Lý do</th>
-                  <th className="px-8 py-6 text-right">Ước tính thiệt hại</th>
-                  <th className="px-8 py-6">Người báo cáo</th>
+                  <th className="px-8 py-6">{t('time')}</th>
+                  <th className="px-8 py-6">{t('materialDetails')}</th>
+                  <th className="px-8 py-6">{t('category')}</th>
+                  <th className="px-8 py-6">{t('quantity')}</th>
+                  <th className="px-8 py-6">{t('reason')}</th>
+                  <th className="px-8 py-6 text-right">{t('estimatedLoss')}</th>
+                  <th className="px-8 py-6">{t('reporter')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-foreground/5 font-black uppercase tracking-tighter text-sm italic">
@@ -410,17 +413,17 @@ export default function WasteManagementPage() {
                       </td>
                       <td className="px-8 py-6">
                         <div className="space-y-1">
-                          <p className="font-black text-foreground tracking-tighter text-base">{displayName || 'Không xác định'}</p>
+                          <p className="font-black text-foreground tracking-tighter text-base">{displayName || t('unknownReason')}</p>
                           {log.note && (
                             <p className="text-[10px] text-foreground/40 uppercase tracking-widest font-bold normal-case truncate max-w-[200px]">
-                              Chú thích: {log.note}
+                              {t('noteLabel', { note: log.note })}
                             </p>
                           )}
                         </div>
                       </td>
                       <td className="px-8 py-6">
                         <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${badgeBg}`}>
-                          {isProduct ? 'Thành phẩm' : 'Nguyên liệu'}
+                          {isProduct ? t('finishedProduct') : t('rawMaterial')}
                         </span>
                       </td>
                       <td className="px-8 py-6 text-lg text-foreground">
@@ -443,7 +446,7 @@ export default function WasteManagementPage() {
                       </td>
                       <td className="px-8 py-6 text-xs text-foreground/50 font-bold normal-case flex items-center gap-2 py-8">
                         <User className="w-4 h-4 text-foreground/40" />
-                        <span>{log.createdBy || 'Hệ thống'}</span>
+                        <span>{log.createdBy || 'System'}</span>
                       </td>
                     </tr>
                   );

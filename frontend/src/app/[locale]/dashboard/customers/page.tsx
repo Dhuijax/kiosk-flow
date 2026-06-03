@@ -26,6 +26,7 @@ import { format } from 'date-fns';
 import Dropdown from '@/components/ui/Dropdown';
 import CustomerDetailModal from '@/components/customers/CustomerDetailModal';
 import { Trash2, Edit2, Info } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 const getTier = (points: number) => {
   if (points >= 5000) return 'PLATINUM';
@@ -44,6 +45,7 @@ const getTierColor = (tier: string) => {
 };
 
 export default function CustomersPage() {
+  const t = useTranslations('Customers');
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -70,14 +72,14 @@ export default function CustomersPage() {
   }, [tenantId, token, searchQuery]);
 
   const handleDelete = async (id: string) => {
-    if (!tenantId || !window.confirm('BẠN CÓ CHẮC CHẮN MUỐN XÓA KHÁCH HÀNG NÀY?')) return;
+    if (!tenantId || !window.confirm(t('confirmDelete'))) return;
     try {
       const client = getAuthenticatedClient(CustomerService, tenantId, token || undefined);
       await client.deleteCustomer({ id });
       fetchCustomers();
     } catch (err) {
       console.error('Failed to delete customer:', err);
-      alert('Không thể xóa khách hàng. Vui lòng thử lại sau.');
+      alert(t('errorDelete'));
     }
   };
 
@@ -112,12 +114,12 @@ export default function CustomersPage() {
         <div className="space-y-3">
           <div className="flex items-center gap-3 text-interaction font-black uppercase text-xs tracking-widest">
             <Heart className="w-5 h-5 fill-current" />
-            <span>Quan hệ khách hàng</span>
+            <span>{t('relations')}</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter text-foreground leading-tight">
-            Khách <span className="text-primary">Thân Thiết</span>
+            {t('loyalCustomers').split(' ')[0]} <span className="text-primary">{t('loyalCustomers').split(' ').slice(1).join(' ')}</span>
           </h1>
-          <p className="text-foreground/40 font-bold italic text-lg">Quản lý lòng trung thành và thấu hiểu hành vi khách hàng.</p>
+          <p className="text-foreground/40 font-bold italic text-lg">{t('customersDesc')}</p>
         </div>
         <button 
           onClick={() => {
@@ -127,7 +129,7 @@ export default function CustomersPage() {
           className="btn-dynamic px-10 py-5 text-xl"
         >
           <Plus className="w-6 h-6 stroke-[4]" />
-          <span>THÊM THÀNH VIÊN</span>
+          <span>{t('addMember')}</span>
         </button>
       </div>
 
@@ -138,7 +140,7 @@ export default function CustomersPage() {
             <Crown size={40} className="stroke-[2.5]" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-1">Thành viên tích cực</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-1">{t('activeMember')}</p>
             <p className="text-4xl font-black italic tracking-tighter text-foreground">1,248</p>
           </div>
         </div>
@@ -147,7 +149,7 @@ export default function CustomersPage() {
             <Star size={40} className="stroke-[2.5] fill-current" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-1">Điểm đã cấp</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-1">{t('pointsGranted')}</p>
             <p className="text-4xl font-black italic tracking-tighter text-foreground">452K</p>
           </div>
         </div>
@@ -156,7 +158,7 @@ export default function CustomersPage() {
             <TrendingUp size={40} className="stroke-[2.5]" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-1">Tỷ lệ quay lại</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-1">{t('returnRate')}</p>
             <p className="text-4xl font-black italic tracking-tighter text-foreground">64%</p>
           </div>
         </div>
@@ -168,7 +170,7 @@ export default function CustomersPage() {
           <Search className="w-7 h-7 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none" />
           <input 
             type="text" 
-            placeholder="TÌM THEO TÊN, SỐ ĐIỆN THOẠI HOẶC EMAIL..." 
+            placeholder={t('searchPlaceholder')} 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="bg-transparent border-none outline-none flex-1 h-full py-0 font-black text-lg uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
@@ -190,12 +192,12 @@ export default function CustomersPage() {
           </div>
         ) : filteredCustomers.length === 0 ? (
           <div className="col-span-full py-20 text-center space-y-4">
-            <p className="text-2xl font-black uppercase italic tracking-tighter text-foreground/40">Không tìm thấy khách hàng</p>
+            <p className="text-2xl font-black uppercase italic tracking-tighter text-foreground/40">{t('noCustomers')}</p>
             <button 
               onClick={() => setIsModalOpen(true)}
               className="text-interaction font-bold uppercase text-xs tracking-widest hover:underline"
             >
-              Đăng ký thành viên mới ngay
+              {t('registerMemberNow')}
             </button>
           </div>
         ) : (
@@ -244,9 +246,9 @@ export default function CustomersPage() {
                         </button>
                       }
                       items={[
-                        { label: 'Chi tiết', icon: <Info size={14} />, onClick: () => handleViewDetail(customer) },
-                        { label: 'Sửa', icon: <Edit2 size={14} />, onClick: () => handleEdit(customer) },
-                        { label: 'Xóa', icon: <Trash2 size={14} />, variant: 'danger', onClick: () => handleDelete(customer.id) },
+                        { label: t('detail'), icon: <Info size={14} />, onClick: () => handleViewDetail(customer) },
+                        { label: t('edit'), icon: <Edit2 size={14} />, onClick: () => handleEdit(customer) },
+                        { label: t('delete'), icon: <Trash2 size={14} />, variant: 'danger', onClick: () => handleDelete(customer.id) },
                       ]}
                     />
                   </div>
@@ -254,15 +256,15 @@ export default function CustomersPage() {
                   {/* Stats Bar */}
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-6 p-6 bg-background rounded-2xl border border-foreground/5">
                     <div>
-                      <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">Điểm tích lũy</p>
+                      <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">{t('accumulatedPoints')}</p>
                       <p className="text-xl font-black italic tracking-tighter text-foreground">{Number(customer.points).toLocaleString()}</p>
                     </div>
                     <div>
-                      <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">Tổng chi tiêu</p>
+                      <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">{t('totalSpent')}</p>
                       <p className="text-xl font-black italic tracking-tighter text-foreground">0M</p>
                     </div>
                     <div className="hidden md:block">
-                      <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">Số đơn hàng</p>
+                      <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">{t('ordersCount')}</p>
                       <p className="text-xl font-black italic tracking-tighter text-foreground">0</p>
                     </div>
                   </div>
@@ -271,13 +273,13 @@ export default function CustomersPage() {
                   <div className="flex items-center justify-between pt-4 border-t-2 border-foreground/5">
                     <div className="flex items-center gap-2 text-foreground/30 font-black uppercase text-[10px] tracking-widest italic">
                       <Calendar size={14} />
-                      <span>Tham gia: {customer.createdAt ? format(new Date(Number(customer.createdAt.seconds) * 1000), 'dd/MM/yyyy') : '-'}</span>
+                      <span>{t('joined')}: {customer.createdAt ? format(new Date(Number(customer.createdAt.seconds) * 1000), 'dd/MM/yyyy') : '-'}</span>
                     </div>
                     <button 
                       onClick={() => handleViewDetail(customer)}
                       className="flex items-center gap-2 text-interaction font-black uppercase text-xs italic tracking-tighter group-hover:translate-x-2 transition-transform"
                     >
-                      Chi tiết 
+                      {t('detail')} 
                       <ChevronRight size={14} className="stroke-[3]" />
                     </button>
                   </div>
@@ -295,11 +297,11 @@ export default function CustomersPage() {
           <Sparkles size={40} className="animate-pulse" />
         </div>
         <div className="flex-1 space-y-2 z-10">
-          <h4 className="text-2xl font-black uppercase italic tracking-tighter">AI Insight: Nhóm khách hàng tiềm năng</h4>
-          <p className="font-bold opacity-60">Dựa trên dữ liệu 30 ngày qua, có 42 khách hàng hạng Silver sắp đạt hạng Gold. Hãy gửi voucher ưu đãi để thúc đẩy chuyển đổi.</p>
+          <h4 className="text-2xl font-black uppercase italic tracking-tighter">{t('aiInsight')}</h4>
+          <p className="font-bold opacity-60">{t('aiInsightDesc')}</p>
         </div>
         <button className="bg-background text-foreground px-8 py-4 rounded-2xl font-black uppercase italic tracking-tighter text-sm hover:bg-accent transition-all z-10 whitespace-nowrap">
-          GỬI CHIẾN DỊCH NGAY
+          {t('sendCampaign')}
         </button>
       </div>
 

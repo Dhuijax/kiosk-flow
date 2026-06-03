@@ -33,8 +33,11 @@ import {
 import { motion } from 'framer-motion';
 import { useReport } from '@/hooks/useReport';
 import { AdvancedAnalyticsResponse } from '@/gen/report_pb';
+import { formatVND } from '@/lib/utils/format';
+import { useTranslations } from 'next-intl';
 
 export default function ReportsPage() {
+  const t = useTranslations('Reports');
   const [period, setPeriod] = useState<'DAILY' | 'WEEKLY' | 'MONTHLY'>('WEEKLY');
   const { fetchAdvancedAnalytics, loading } = useReport();
   const [analyticsData, setAnalyticsData] = useState<AdvancedAnalyticsResponse | null>(null);
@@ -85,25 +88,25 @@ export default function ReportsPage() {
 
   // Fallback / Seed mock metrics if database aggregates are pristine/empty
   const fallbackRevenueSummary = [
-    { name: 'Tiền mặt', value: 12450000, fill: colors.cash },
-    { name: 'Thẻ POS', value: 8900000, fill: colors.card },
-    { name: 'Ví MoMo', value: 9240000, fill: colors.momo },
-    { name: 'ZaloPay', value: 4320000, fill: colors.zalopay },
-    { name: 'VNPAY/Chuyển khoản', value: 7950000, fill: colors.transfer },
+    { name: t('cash'), value: 12450000, fill: colors.cash },
+    { name: t('pos'), value: 8900000, fill: colors.card },
+    { name: t('momo'), value: 9240000, fill: colors.momo },
+    { name: t('zalopay'), value: 4320000, fill: colors.zalopay },
+    { name: t('transfer'), value: 7950000, fill: colors.transfer },
   ];
 
   const fallbackCombos = [
-    { comboName: 'Combo Cà Phê & Bánh Sừng Bò', quantitySold: 120, revenue: { units: 7200000 } },
-    { comboName: 'Combo Trà Đào & Bánh Flan', quantitySold: 95, revenue: { units: 4750000 } },
-    { comboName: 'Combo Gia Đình Cuối Tuần', quantitySold: 42, revenue: { units: 6300000 } },
-    { comboName: 'Combo Sinh Viên Sáng Tạo', quantitySold: 88, revenue: { units: 2640000 } },
+    { comboName: t('fallbackCombo1'), quantitySold: 120, revenue: { units: 7200000 } },
+    { comboName: t('fallbackCombo2'), quantitySold: 95, revenue: { units: 4750000 } },
+    { comboName: t('fallbackCombo3'), quantitySold: 42, revenue: { units: 6300000 } },
+    { comboName: t('fallbackCombo4'), quantitySold: 88, revenue: { units: 2640000 } },
   ];
 
   const fallbackWastes = [
-    { ingredientName: 'Hạt Cà Phê Robusta', wastedQuantity: 2.5, unit: 'kg', wasteCost: { units: 450000 } },
-    { ingredientName: 'Sữa Đặc Có Đường', wastedQuantity: 4.8, unit: 'hộp', wasteCost: { units: 120000 } },
-    { ingredientName: 'Đào Ngâm Miếng', wastedQuantity: 3.2, unit: 'lon', wasteCost: { units: 192000 } },
-    { ingredientName: 'Trà Đen Lộc Phát', wastedQuantity: 1.5, unit: 'kg', wasteCost: { units: 180000 } },
+    { ingredientName: t('robusta'), wastedQuantity: 2.5, unit: t('kilo'), wasteCost: { units: 450000 } },
+    { ingredientName: t('condensedMilk'), wastedQuantity: 4.8, unit: t('boxes'), wasteCost: { units: 120000 } },
+    { ingredientName: t('peaches'), wastedQuantity: 3.2, unit: t('cans'), wasteCost: { units: 192000 } },
+    { ingredientName: t('blackTea'), wastedQuantity: 1.5, unit: t('kilo'), wasteCost: { units: 180000 } },
   ];
 
   // Process data from gRPC response
@@ -111,7 +114,7 @@ export default function ReportsPage() {
     if (!analyticsData || !analyticsData.revenueByMethod || analyticsData.revenueByMethod.length === 0) {
       return fallbackRevenueSummary;
     }
-    const labels = ['Tiền mặt', 'Thẻ POS', 'Ví MoMo', 'ZaloPay', 'VNPAY/Chuyển khoản'];
+    const labels = [t('cash'), t('pos'), t('momo'), t('zalopay'), t('transfer')];
     const codes = [colors.cash, colors.card, colors.momo, colors.zalopay, colors.transfer];
     
     return analyticsData.revenueByMethod.map((item: { units: bigint | number }, idx: number) => ({
@@ -179,12 +182,12 @@ export default function ReportsPage() {
         <div className="space-y-3">
           <div className="flex items-center gap-3 text-interaction font-black uppercase text-xs tracking-widest">
             <Target className="w-5 h-5" />
-            <span>Phân tích dữ liệu doanh nghiệp</span>
+            <span>{t('analyticsTitle')}</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter text-foreground leading-tight">
-            Báo Cáo <span className="text-primary">Chuyên Sâu</span>
+            {t('titlePart1')} <span className="text-primary">{t('titlePart2')}</span>
           </h1>
-          <p className="text-foreground/40 font-bold italic text-lg">Hao hụt kho, cơ cấu doanh thu & xu hướng mua sắm Combo.</p>
+          <p className="text-foreground/40 font-bold italic text-lg">{t('subtitle')}</p>
         </div>
         
         <div className="flex items-center gap-4">
@@ -197,7 +200,7 @@ export default function ReportsPage() {
                   period === p ? 'bg-foreground text-background shadow-md' : 'text-foreground/40 hover:text-foreground'
                 }`}
               >
-                {p === 'DAILY' ? 'Hôm nay' : p === 'WEEKLY' ? '7 Ngày qua' : '30 Ngày qua'}
+                {p === 'DAILY' ? t('today') : p === 'WEEKLY' ? t('last7Days') : t('last30Days')}
               </button>
             ))}
           </div>
@@ -206,7 +209,7 @@ export default function ReportsPage() {
             onClick={loadAnalytics}
             disabled={loading}
             className="p-4 bg-surface border border-foreground/10 rounded-2xl text-foreground/60 hover:text-foreground cursor-pointer shadow-sm active:scale-95 transition"
-            title="Tải lại dữ liệu"
+            title={t('refreshTitle')}
           >
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -216,7 +219,7 @@ export default function ReportsPage() {
             className="btn-dynamic px-6 py-4 bg-accent text-foreground hover:shadow-lg transition"
           >
             <Download size={20} className="stroke-[3]" />
-            <span className="hidden sm:inline">XUẤT FILE EXCEL</span>
+            <span className="hidden sm:inline">{t('exportExcel')}</span>
           </button>
         </div>
       </div>
@@ -224,10 +227,10 @@ export default function ReportsPage() {
       {/* Dynamic KPI summary counters */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {[
-          { label: 'Tổng doanh thu', value: `${(totalRevenue / 1000000).toFixed(1)}M`, sub: `${totalRevenue.toLocaleString('vi-VN')}đ`, icon: DollarSign, color: 'bg-primary' },
-          { label: 'Doanh số Combo', value: `${totalComboQty} đơn`, sub: 'Các sản phẩm đi kèm', icon: ShoppingBag, color: 'bg-interaction' },
-          { label: 'Hao hụt kho nguyên liệu', value: `-${(totalWastedCost / 1000).toFixed(1)}K`, sub: `${totalWastedCost.toLocaleString('vi-VN')}đ tổn thất`, icon: TrendingUp, color: 'bg-accent' },
-          { label: 'Hiệu suất ca làm', value: '98.6%', sub: 'Hệ thống trực tuyến', icon: Users, color: 'bg-foreground' },
+          { label: t('totalRevenue'), value: `${(totalRevenue / 1000000).toFixed(1)}M`, sub: formatVND(totalRevenue), icon: DollarSign, color: 'bg-primary' },
+          { label: t('comboSales'), value: t('unitsCount', { count: totalComboQty }), sub: t('comboSalesSub'), icon: ShoppingBag, color: 'bg-interaction' },
+          { label: t('ingredientsLoss'), value: `-${(totalWastedCost / 1000).toFixed(1)}K`, sub: `${formatVND(totalWastedCost)} ${t('lossCost').toLowerCase()}`, icon: TrendingUp, color: 'bg-accent' },
+          { label: t('shiftPerformance'), value: '98.6%', sub: t('shiftPerformanceSub'), icon: Users, color: 'bg-foreground' },
         ].map((metric, idx) => (
           <motion.div
             key={idx}
@@ -241,7 +244,7 @@ export default function ReportsPage() {
                 <metric.icon size={28} className="stroke-[3]" />
               </div>
               <div className="flex items-center gap-1 font-mono text-[9px] font-black uppercase text-foreground/40 italic">
-                Thời gian thực
+                {t('realtime')}
               </div>
             </div>
             <div>
@@ -259,8 +262,8 @@ export default function ReportsPage() {
         {/* Revenue Shares by Method */}
         <div className="ai-card p-10 flex flex-col justify-between">
           <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-interaction">Cơ cấu tài chính</p>
-            <h3 className="text-2xl font-black uppercase italic tracking-tighter">Phương thức thanh toán</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-interaction">{t('financialStructure')}</p>
+            <h3 className="text-2xl font-black uppercase italic tracking-tighter">{t('paymentMethod')}</h3>
           </div>
           
           <div className="h-[260px] w-full relative my-6">
@@ -281,7 +284,7 @@ export default function ReportsPage() {
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value: any) => [`${Number(value || 0).toLocaleString('vi-VN')}đ`, 'Doanh thu']}
+                  formatter={(value: any) => [formatVND(Number(value || 0)), t('revenue')]}
                   contentStyle={{ 
                     backgroundColor: 'var(--color-surface)', 
                     border: '1px solid rgba(0,0,0,0.1)', 
@@ -293,7 +296,7 @@ export default function ReportsPage() {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               <span className="text-3xl font-black italic tracking-tighter">VND</span>
-              <span className="text-[10px] font-black uppercase opacity-40">TỔNG THU</span>
+              <span className="text-[10px] font-black uppercase opacity-40">{t('totalIncome')}</span>
             </div>
           </div>
           
@@ -305,7 +308,7 @@ export default function ReportsPage() {
                   <span className="font-black uppercase italic tracking-tighter text-foreground/75">{item.name}</span>
                 </div>
                 <span className="font-mono font-black text-foreground">
-                  {item.value.toLocaleString('vi-VN')}đ
+                  {formatVND(item.value)}
                 </span>
               </div>
             ))}
@@ -315,8 +318,8 @@ export default function ReportsPage() {
         {/* Combo Trend Popularity */}
         <div className="lg:col-span-2 ai-card p-10 flex flex-col justify-between">
           <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-primary">Chiến lược Loyalty</p>
-            <h3 className="text-2xl font-black uppercase italic tracking-tighter">Xu hướng tiêu dùng Combo</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-primary">{t('loyaltyStrategy')}</p>
+            <h3 className="text-2xl font-black uppercase italic tracking-tighter">{t('comboTrends')}</h3>
           </div>
 
           <div className="h-[320px] w-full my-6">
@@ -336,7 +339,7 @@ export default function ReportsPage() {
                   tick={{ fill: 'var(--color-foreground)', fontWeight: 'bold', fontSize: 10, opacity: 0.5 }}
                 />
                 <Tooltip
-                  formatter={(value: any, name: any) => [value || '', name === 'quantitySold' ? 'Số lượng bán' : 'Doanh thu']}
+                  formatter={(value: any, name: any) => [value || '', name === 'quantitySold' ? t('comboSalesCount') : t('revenue')]}
                   contentStyle={{ 
                     backgroundColor: 'var(--color-surface)', 
                     border: '1px solid rgba(0,0,0,0.1)', 
@@ -356,19 +359,19 @@ export default function ReportsPage() {
           <div className="space-y-4 bg-foreground/5 p-5 rounded-2xl">
             <p className="text-[10px] font-black uppercase tracking-widest text-foreground/40 italic flex items-center gap-2">
               <Info className="w-3.5 h-3.5 text-primary" />
-              Thông tin bổ trợ combo
+              {t('comboInfo')}
             </p>
             <div className="grid grid-cols-2 gap-4 text-xs font-bold">
               <div>
-                <p className="opacity-40">Combo bán chạy nhất</p>
+                <p className="opacity-40">{t('bestSellingCombo')}</p>
                 <p className="font-black text-foreground uppercase italic tracking-tighter mt-0.5">
-                  {comboTrends[0]?.comboName || 'Chưa ghi nhận'}
+                  {comboTrends[0]?.comboName || t('noneRecorded')}
                 </p>
               </div>
               <div>
-                <p className="opacity-40">Tỉ trọng doanh số combo</p>
+                <p className="opacity-40">{t('comboRatio')}</p>
                 <p className="font-black text-interaction uppercase italic tracking-tighter mt-0.5">
-                  {((totalComboQty > 0 ? (comboTrends[0]?.quantitySold / totalComboQty) * 100 : 0)).toFixed(1)}% Tổng số
+                  {t('totalOf', { percentage: ((totalComboQty > 0 ? (comboTrends[0]?.quantitySold / totalComboQty) * 100 : 0)).toFixed(1) })}
                 </p>
               </div>
             </div>
@@ -378,8 +381,8 @@ export default function ReportsPage() {
         {/* Stock wastage adjustments line analysis */}
         <div className="lg:col-span-3 ai-card p-10 flex flex-col justify-between gap-6">
           <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-accent">Kiểm soát vận hành</p>
-            <h3 className="text-2xl font-black uppercase italic tracking-tighter">Hao hụt & Điều chỉnh kho nguyên liệu</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-accent">{t('operationalControl')}</p>
+            <h3 className="text-2xl font-black uppercase italic tracking-tighter">{t('lossAdjustment')}</h3>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-center">
@@ -404,12 +407,12 @@ export default function ReportsPage() {
                     axisLine={false} 
                     tickLine={false} 
                     tick={{ fill: 'var(--color-foreground)', fontWeight: 'bold', fontSize: 10, opacity: 0.5 }}
-                    tickFormatter={(val) => `${val.toLocaleString()}đ`}
+                    tickFormatter={(val) => formatVND(val)}
                   />
                   <Tooltip
                     formatter={(value: any) => [
-                      `${Number(value || 0).toLocaleString('vi-VN')}đ`, 
-                      'Chi phí thất thoát'
+                      formatVND(Number(value || 0)), 
+                      t('lossCost')
                     ]}
                     contentStyle={{ 
                       backgroundColor: 'var(--color-surface)', 
@@ -433,17 +436,17 @@ export default function ReportsPage() {
             {/* Explanatory text & total cost representation */}
             <div className="space-y-6 lg:border-l lg:border-foreground/5 lg:pl-8">
               <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-widest text-red-500 italic">Tổng thiệt hại vận hành</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-red-500 italic">{t('totalOperationalLoss')}</p>
                 <h4 className="text-4xl font-black text-red-500 italic tracking-tighter leading-none">
-                  -{totalWastedCost.toLocaleString('vi-VN')}đ
+                  -{formatVND(totalWastedCost)}
                 </h4>
                 <p className="text-xs text-foreground/40 font-bold italic">
-                  Thiệt hại do điều chỉnh chênh lệch hàng lỗi, pha hỏng hoặc hết hạn sử dụng.
+                  {t('lossDesc')}
                 </p>
               </div>
 
               <div className="space-y-3">
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Mặt hàng hao hụt lớn</p>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-40">{t('highestWasted')}</p>
                 {ingredientWastes.slice(0, 2).map((item: { ingredientName: string; wastedQuantity: number; unit: string }, idx: number) => (
                   <div key={idx} className="bg-foreground/5 p-3.5 rounded-xl flex items-center justify-between text-xs font-bold">
                     <span>{item.ingredientName}</span>

@@ -15,9 +15,12 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { OrderService } from '@/gen/order_connect';
 import { Order, OrderStatus } from '@/gen/order_pb';
+import { useLocale, useTranslations } from 'next-intl';
 
 export default function OrdersPage() {
   const { token, tenantId, branchId } = useAuth();
+  const locale = useLocale();
+  const t = useTranslations('Orders');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,25 +71,25 @@ export default function OrdersPage() {
       case OrderStatus.COMPLETED:
         return (
           <span className="flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black bg-interaction text-white border border-foreground/10 uppercase italic tracking-tighter shadow-sm">
-            <CheckCircle2 className="w-3 h-3" /> Hoàn thành
+            <CheckCircle2 className="w-3 h-3" /> {t('completed')}
           </span>
         );
       case OrderStatus.CANCELLED:
         return (
           <span className="flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black bg-red-500 text-white border border-foreground/10 uppercase italic tracking-tighter shadow-sm">
-            <Ban className="w-3 h-3" /> Đã hủy
+            <Ban className="w-3 h-3" /> {t('cancelled')}
           </span>
         );
       case OrderStatus.PAID:
         return (
           <span className="flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black bg-blue-500 text-white border border-foreground/10 uppercase italic tracking-tighter shadow-sm">
-            Đã thanh toán
+            {t('paid')}
           </span>
         );
       default:
         return (
           <span className="flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black bg-accent text-foreground border border-foreground/10 uppercase italic tracking-tighter shadow-sm">
-            <Clock className="w-3 h-3" /> Đang xử lý
+            <Clock className="w-3 h-3" /> {t('processing')}
           </span>
         );
     }
@@ -94,16 +97,16 @@ export default function OrdersPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const formatCurrency = (amount: any) => {
-    if (!amount) return '0 đ';
+    if (!amount) return t('zeroVnd');
     const num = Number(amount.units) + Number(amount.nanos) / 1e9;
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
+    return new Intl.NumberFormat(locale === 'vi' ? 'vi-VN' : 'en-US', { style: 'currency', currency: 'VND' }).format(num);
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const formatDate = (timestamp: any) => {
     if (!timestamp) return 'N/A';
     const date = new Date(Number(timestamp.seconds) * 1000);
-    return date.toLocaleString('vi-VN');
+    return date.toLocaleString(locale === 'vi' ? 'vi-VN' : 'en-US');
   };
 
   return (
@@ -113,12 +116,12 @@ export default function OrdersPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3 text-primary font-black uppercase text-xs tracking-widest">
             <Receipt className="w-5 h-5" />
-            <span>Quản lý Bán hàng</span>
+            <span>{t('salesManagement')}</span>
           </div>
           <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground">
-            Danh sách <span className="text-interaction">Đơn hàng</span>
+            {t('ordersList').split(' ')[0]} <span className="text-interaction">{t('ordersList').split(' ').slice(1).join(' ')}</span>
           </h1>
-          <p className="text-foreground/40 font-bold italic">Theo dõi toàn bộ lịch sử giao dịch và đơn hàng.</p>
+          <p className="text-foreground/40 font-bold italic">{t('ordersDesc')}</p>
         </div>
         <div className="flex gap-4">
           <button 
@@ -136,7 +139,7 @@ export default function OrdersPage() {
           <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none" />
           <input 
             type="text" 
-            placeholder="TÌM THEO MÃ ĐƠN HOẶC TÊN KHÁCH..." 
+            placeholder={t('searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="bg-transparent border-none outline-none flex-1 h-full py-0 font-black text-sm uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
@@ -151,7 +154,7 @@ export default function OrdersPage() {
                 : 'bg-background text-foreground/40 border-foreground/10 hover:border-foreground/40'
             }`}
           >
-            Hoàn thành
+            {t('completed')}
           </button>
           <button 
             onClick={() => {
@@ -159,7 +162,7 @@ export default function OrdersPage() {
               setStatusFilter(null);
             }}
             className="w-14 h-14 bg-surface border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-sm"
-            title="Xóa bộ lọc"
+            title={t('clearFilters')}
           >
             <Filter className="w-6 h-6 stroke-[3]" />
           </button>
@@ -172,12 +175,12 @@ export default function OrdersPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-foreground/5 text-foreground/40 text-[10px] font-black uppercase tracking-[0.2em]">
-                <th className="px-8 py-6">Mã đơn</th>
-                <th className="px-8 py-6">Khách hàng</th>
-                <th className="px-8 py-6 text-center">Thời gian</th>
-                <th className="px-8 py-6 text-right">Tổng tiền</th>
-                <th className="px-8 py-6">Trạng thái</th>
-                <th className="px-8 py-6 text-right">Thao tác</th>
+                <th className="px-8 py-6">{t('orderId')}</th>
+                <th className="px-8 py-6">{t('customer')}</th>
+                <th className="px-8 py-6 text-center">{t('time')}</th>
+                <th className="px-8 py-6 text-right">{t('totalAmount')}</th>
+                <th className="px-8 py-6">{t('status')}</th>
+                <th className="px-8 py-6 text-right">{t('actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-foreground/5">
@@ -194,7 +197,7 @@ export default function OrdersPage() {
                   <td colSpan={6} className="px-8 py-32 text-center">
                     <div className="flex flex-col items-center gap-6 opacity-20">
                       <Receipt className="w-20 h-20" />
-                      <p className="text-xl font-black uppercase italic tracking-tighter">Không tìm thấy đơn hàng</p>
+                      <p className="text-xl font-black uppercase italic tracking-tighter">{t('noOrders')}</p>
                     </div>
                   </td>
                 </tr>
@@ -205,9 +208,9 @@ export default function OrdersPage() {
                       <span className="text-lg font-black text-foreground uppercase italic tracking-tighter group-hover:text-interaction transition-all">{order.orderNumber}</span>
                     </td>
                     <td className="px-8 py-6">
-                      <p className="text-sm font-bold">{order.customerName || 'Khách vãng lai'}</p>
+                      <p className="text-sm font-bold">{order.customerName || t('walkInCustomer')}</p>
                       {order.cashierName && (
-                        <p className="text-[10px] text-foreground/40 font-black uppercase tracking-widest">Thu ngân: {order.cashierName}</p>
+                        <p className="text-[10px] text-foreground/40 font-black uppercase tracking-widest">{t('cashier', { name: order.cashierName })}</p>
                       )}
                     </td>
                     <td className="px-8 py-6 text-center">
@@ -223,7 +226,7 @@ export default function OrdersPage() {
                       <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
                         <button 
                           className="w-12 h-12 bg-surface border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white shadow-sm transition-all"
-                          title="Chi tiết"
+                          title={t('details')}
                         >
                           <Eye className="w-5 h-5 stroke-[3]" />
                         </button>

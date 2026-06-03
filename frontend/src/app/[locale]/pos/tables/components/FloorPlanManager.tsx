@@ -11,9 +11,11 @@ import { TableQrModal } from './TableQrModal';
 import { Map as MapIcon, Edit3, Save, X, RefreshCw, QrCode } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 export default function FloorPlanManager() {
   const router = useRouter();
+  const t = useTranslations('POSTables');
   const { tenantId, token, branchId } = useAuth();
   const [floorPlans, setFloorPlans] = useState<FloorPlan[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
@@ -113,8 +115,8 @@ export default function FloorPlanManager() {
             <MapIcon size={20} />
           </div>
           <div className="whitespace-nowrap mr-2">
-            <h2 className="text-lg font-black text-foreground uppercase italic tracking-tighter">Khu vực</h2>
-            <p className="text-[10px] text-foreground/40 uppercase font-black tracking-widest leading-tight">Sơ đồ bàn</p>
+            <h2 className="text-lg font-black text-foreground uppercase italic tracking-tighter">{t('zone')}</h2>
+            <p className="text-[10px] text-foreground/40 uppercase font-black tracking-widest leading-tight">{t('floorPlan')}</p>
           </div>
           
           <div className="h-10 w-px bg-foreground/10 mx-2" />
@@ -142,13 +144,13 @@ export default function FloorPlanManager() {
                 onClick={() => setIsEditMode(false)}
                 className="flex items-center gap-2 px-4 py-2 bg-background hover:bg-foreground/5 text-foreground/40 rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all border border-transparent shadow-sm"
               >
-                <X size={16} /> Hủy
+                <X size={16} /> {t('cancel')}
               </button>
               <button
                 onClick={saveLayout}
                 className="flex items-center gap-2 px-5 py-2 bg-primary hover:bg-interaction text-white rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all shadow-md border border-primary/20"
               >
-                <Save size={16} /> Lưu sơ đồ
+                <Save size={16} /> {t('saveFloor')}
               </button>
             </>
           ) : (
@@ -163,13 +165,13 @@ export default function FloorPlanManager() {
                 onClick={() => setShowQrManager(true)}
                 className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all shadow-md border border-indigo-500/20"
               >
-                <QrCode size={16} /> Mã QR Bàn
+                <QrCode size={16} /> {t('qrCode')}
               </button>
               <button
                 onClick={() => setIsEditMode(true)}
                 className="flex items-center gap-2 px-5 py-2 bg-foreground text-background rounded-xl text-xs font-black uppercase italic tracking-tighter transition-all border border-foreground/10 shadow-md hover:bg-interaction hover:text-white"
               >
-                <Edit3 size={16} /> Chỉnh sửa
+                <Edit3 size={16} /> {t('edit')}
               </button>
             </>
           )}
@@ -182,7 +184,7 @@ export default function FloorPlanManager() {
           <div className="absolute inset-0 flex items-center justify-center bg-slate-950/20 backdrop-blur-sm rounded-3xl z-20">
             <div className="flex flex-col items-center gap-4">
               <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-              <p className="text-slate-400 text-xs font-bold tracking-widest uppercase">Đang tải sơ đồ...</p>
+              <p className="text-slate-400 text-xs font-bold tracking-widest uppercase">{t('loadingFloor')}</p>
             </div>
           </div>
         ) : null}

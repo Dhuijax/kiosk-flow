@@ -20,6 +20,7 @@ import { AuthService } from '@/gen/auth_connect';
 import { User } from '@/gen/auth_pb';
 import AddStaffModal from '@/components/staff/AddStaffModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 export default function StaffPage() {
   const { token, tenantId } = useAuth();
@@ -29,6 +30,7 @@ export default function StaffPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<User | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
+  const t = useTranslations('Dashboard.staff');
 
   const fetchStaff = useCallback(async (showLoading = true) => {
     if (!token || !tenantId) return;
@@ -60,17 +62,17 @@ export default function StaffPage() {
   }, [token, fetchStaff]);
 
   const handleDeleteStaff = async (id: string) => {
-    if (!token || !tenantId || !confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) return;
+    if (!token || !tenantId || !confirm(t('confirmDelete'))) return;
 
     try {
       const client = getAuthenticatedClient(AuthService, tenantId, token);
       await client.deleteStaff({ id });
-      setStatus({ message: 'Xóa nhân viên thành công!', type: 'success' });
+      setStatus({ message: t('deleteSuccess'), type: 'success' });
       fetchStaff();
       setTimeout(() => setStatus(null), 3000);
     } catch (err: unknown) {
       console.error('Failed to delete staff:', err);
-      setStatus({ message: 'Lỗi khi xóa nhân viên!', type: 'error' });
+      setStatus({ message: t('deleteError'), type: 'error' });
       setTimeout(() => setStatus(null), 3000);
     }
   };
@@ -110,9 +112,9 @@ export default function StaffPage() {
             <div className="w-12 h-12 bg-primary border border-foreground/10 rounded-2xl flex items-center justify-center shadow-sm">
               <Users className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-5xl font-black text-foreground uppercase italic tracking-tighter">Nhân sự</h1>
+            <h1 className="text-5xl font-black text-foreground uppercase italic tracking-tighter">{t('title')}</h1>
           </div>
-          <p className="text-foreground/40 font-bold uppercase text-[10px] tracking-widest ml-16">Quản lý đội ngũ vận hành hệ thống</p>
+          <p className="text-foreground/40 font-bold uppercase text-[10px] tracking-widest ml-16">{t('subtitle')}</p>
         </div>
         
         <button 
@@ -120,7 +122,7 @@ export default function StaffPage() {
           className="btn-dynamic px-8 py-4 group"
         >
           <UserPlus className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-          <span>THÊM NHÂN VIÊN</span>
+          <span>{t('addStaffBtn')}</span>
         </button>
       </div>
 
@@ -130,7 +132,7 @@ export default function StaffPage() {
           <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none" />
           <input 
             type="text" 
-            placeholder="TÌM KIẾM NHÂN VIÊN..." 
+            placeholder={t('searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="bg-transparent border-none outline-none flex-1 h-full py-0 font-black text-lg uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
@@ -139,7 +141,7 @@ export default function StaffPage() {
         
         <div className="flex gap-4">
           <div className="bg-background border border-foreground/10 rounded-2xl px-8 py-4 flex flex-col justify-center shadow-sm min-w-[160px]">
-            <span className="text-[10px] font-black uppercase opacity-40">Hiển thị</span>
+            <span className="text-[10px] font-black uppercase opacity-40">{t('displayLabel')}</span>
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-black italic tracking-tighter text-interaction">{filteredStaff.length}</span>
               <span className="text-sm font-black uppercase opacity-20 italic">/ {staff.length}</span>
@@ -163,7 +165,7 @@ export default function StaffPage() {
         ) : filteredStaff.length === 0 ? (
           <div className="col-span-full py-32 flex flex-col items-center justify-center gap-6 bg-surface border border-foreground/10 border-dashed rounded-3xl opacity-40">
             <Users size={80} />
-            <p className="text-2xl font-black uppercase italic tracking-tighter">Không tìm thấy nhân viên nào</p>
+            <p className="text-2xl font-black uppercase italic tracking-tighter">{t('notFound')}</p>
           </div>
         ) : (
           filteredStaff.map((member) => (

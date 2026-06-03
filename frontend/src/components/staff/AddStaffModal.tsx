@@ -7,8 +7,8 @@ import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { AuthService } from '@/gen/auth_connect';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User } from '@/gen/auth_pb';
-
 import Portal from '@/components/ui/Portal';
+import { useTranslations } from 'next-intl';
 
 interface AddStaffModalProps {
   isOpen: boolean;
@@ -21,6 +21,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, initialData 
   const { token, tenantId } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const t = useTranslations('Dashboard.staff.modal');
   
   const [formData, setFormData] = useState({
     email: '',
@@ -72,7 +73,6 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, initialData 
           id: initialData.id,
           fullName: formData.fullName,
           role: formData.role,
-          //isActive: true, // Optional
         });
       } else {
         await client.createStaff({
@@ -88,7 +88,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, initialData 
       onClose();
     } catch (err: unknown) {
       console.error('Failed to save staff:', err);
-      setError(isEdit ? 'Lỗi khi cập nhật nhân viên.' : 'Lỗi khi thêm nhân viên. Email có thể đã tồn tại.');
+      setError(isEdit ? t('errorUpdate') : t('errorCreate'));
     } finally {
       setLoading(false);
     }
@@ -122,10 +122,10 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, initialData 
                 </div>
                 <div>
                   <h2 className="text-3xl font-black uppercase italic tracking-tighter text-foreground">
-                    {isEdit ? 'Cập nhật nhân viên' : 'Thêm nhân viên'}
+                    {isEdit ? t('editTitle') : t('addTitle')}
                   </h2>
                   <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
-                    {isEdit ? `Chỉnh sửa thông tin ${formData.fullName}` : 'Mở rộng đội ngũ vận hành'}
+                    {isEdit ? t('editDesc', { name: formData.fullName }) : t('addDesc')}
                   </p>
                 </div>
               </div>
@@ -138,20 +138,20 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, initialData 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Full Name */}
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Họ và tên</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">{t('labelFullName')}</label>
                   <input 
                     type="text" 
                     required
                     value={formData.fullName}
                     onChange={(e) => setFormData({...formData, fullName: e.target.value})}
                     className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm uppercase italic shadow-sm"
-                    placeholder="NGUYỄN VĂN A"
+                    placeholder={t('placeholderFullName')}
                   />
                 </div>
 
                 {/* Email */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Email quản trị</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">{t('labelEmail')}</label>
                   <div className="relative group">
                     <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 group-focus-within:text-interaction transition-colors" />
                     <input 
@@ -161,7 +161,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, initialData 
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
                       className="w-full pl-14 pr-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm shadow-sm disabled:opacity-50"
-                      placeholder="admin@kioskflow.vn"
+                      placeholder={t('placeholderEmail')}
                     />
                   </div>
                 </div>
@@ -169,7 +169,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, initialData 
                 {/* Password */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">
-                    {isEdit ? 'Mật khẩu mới (Để trống nếu không đổi)' : 'Mật khẩu tạm thời'}
+                    {isEdit ? t('labelPasswordEdit') : t('labelPassword')}
                   </label>
                   <div className="relative group">
                     <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 group-focus-within:text-interaction transition-colors" />
@@ -179,14 +179,14 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, initialData 
                       value={formData.password}
                       onChange={(e) => setFormData({...formData, password: e.target.value})}
                       className="w-full pl-14 pr-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm shadow-sm"
-                      placeholder={isEdit ? "••••••••" : "Nhập mật khẩu"}
+                      placeholder={isEdit ? "••••••••" : t('placeholderPassword')}
                     />
                   </div>
                 </div>
 
                 {/* Role */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Vai trò hệ thống</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">{t('labelRole')}</label>
                   <div className="relative">
                     <Shield className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20" />
                     <select 
@@ -194,17 +194,17 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, initialData 
                       onChange={(e) => setFormData({...formData, role: e.target.value})}
                       className="w-full pl-14 pr-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic appearance-none shadow-sm"
                     >
-                      <option value="Staff">Nhân viên</option>
-                      <option value="Manager">Quản lý</option>
-                      <option value="Cook">Đầu bếp</option>
-                      <option value="Cashier">Thu ngân</option>
+                      <option value="Staff">{t('roles.Staff')}</option>
+                      <option value="Manager">{t('roles.Manager')}</option>
+                      <option value="Cook">{t('roles.Cook')}</option>
+                      <option value="Cashier">{t('roles.Cashier')}</option>
                     </select>
                   </div>
                 </div>
 
                 {/* Branch */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Phân bổ chi nhánh</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">{t('labelBranch')}</label>
                   <div className="relative">
                     <Briefcase className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20" />
                     <select 
@@ -212,7 +212,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, initialData 
                       onChange={(e) => setFormData({...formData, branchId: e.target.value})}
                       className="w-full pl-14 pr-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-black text-sm uppercase italic appearance-none shadow-sm"
                     >
-                      <option value="">Tất cả chi nhánh</option>
+                      <option value="">{t('branches.all')}</option>
                     </select>
                   </div>
                 </div>
@@ -237,7 +237,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, initialData 
                 onClick={onClose}
                 className="px-8 py-4 font-black uppercase italic tracking-tighter text-foreground/40 hover:text-foreground transition-colors"
               >
-                Hủy bỏ
+                {t('cancelBtn')}
               </button>
               <button 
                 onClick={handleSubmit}
@@ -248,7 +248,7 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, initialData 
                   <Loader2 className="w-6 h-6 animate-spin" />
                 ) : (
                   <>
-                    <span>{isEdit ? 'LƯU THAY ĐỔI' : 'XÁC NHẬN THÊM'}</span>
+                    <span>{isEdit ? t('saveBtn') : t('confirmBtn')}</span>
                     <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
                   </>
                 )}
@@ -260,5 +260,3 @@ export default function AddStaffModal({ isOpen, onClose, onSuccess, initialData 
     </Portal>
   );
 }
-
-

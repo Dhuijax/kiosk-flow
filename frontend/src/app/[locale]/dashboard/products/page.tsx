@@ -6,8 +6,10 @@ import CategoryTree from '@/components/products/CategoryTree';
 import ProductList from '@/components/products/ProductList';
 import ProductModal from '@/components/products/ProductModal';
 import { Product } from '@/gen/product_pb';
+import { useTranslations } from 'next-intl';
 
 export default function ProductsPage() {
+  const t = useTranslations('Products');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined);
@@ -35,12 +37,12 @@ export default function ProductsPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3 text-interaction font-black uppercase text-xs tracking-widest">
             <LayoutGrid className="w-5 h-5" />
-            <span>Thực đơn & Danh mục</span>
+            <span>{t('menuAndCategories')}</span>
           </div>
           <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground">
-            Quản lý <span className="text-primary">Sản phẩm</span>
+            {t('productsManagement').split(' ')[0]} <span className="text-primary">{t('productsManagement').split(' ').slice(1).join(' ')}</span>
           </h1>
-          <p className="text-foreground/40 font-bold italic">Tổ chức thực đơn, thiết lập giá và quản lý toppings.</p>
+          <p className="text-foreground/40 font-bold italic">{t('productsDesc')}</p>
         </div>
         
         <div className="flex items-center gap-6 bg-surface p-4 border border-foreground/10 rounded-3xl shadow-sm">
@@ -68,7 +70,7 @@ export default function ProductsPage() {
             className="btn-dynamic px-8 py-4 text-sm"
           >
             <PackagePlus className="w-5 h-5" />
-            <span>THÊM SẢN PHẨM</span>
+            <span>{t('addProduct')}</span>
           </button>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Table, TableStatus } from '@/gen/table_pb';
 import { Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface TableElementProps {
   table: Table;
@@ -19,6 +20,8 @@ export const TableElement: React.FC<TableElementProps> = ({
   onPositionChange,
   onClick,
 }) => {
+  const t = useTranslations('POSTables');
+
   const getStatusColor = (status: TableStatus) => {
     switch (status) {
       case TableStatus.AVAILABLE:
@@ -36,11 +39,11 @@ export const TableElement: React.FC<TableElementProps> = ({
 
   const statusLabel = (status: TableStatus) => {
     switch (status) {
-      case TableStatus.AVAILABLE: return 'Trống';
-      case TableStatus.OCCUPIED: return 'Đang dùng';
-      case TableStatus.RESERVED: return 'Đặt trước';
-      case TableStatus.CLEANING: return 'Đang dọn';
-      default: return 'Không xác định';
+      case TableStatus.AVAILABLE: return t('available');
+      case TableStatus.OCCUPIED: return t('occupied');
+      case TableStatus.RESERVED: return t('reserved');
+      case TableStatus.CLEANING: return t('cleaning');
+      default: return t('unknown');
     }
   };
 
@@ -71,7 +74,7 @@ export const TableElement: React.FC<TableElementProps> = ({
       <div className="font-black text-xl italic tracking-tighter uppercase">{table.name}</div>
       <div className="flex items-center text-[10px] opacity-60 uppercase font-black tracking-widest italic">
         <Users size={12} className="mr-1" />
-        {table.capacity} chỗ
+        {t('capacity', { capacity: table.capacity })}
       </div>
       
       <div className="mt-2 px-2 py-0.5 rounded-full text-[8px] font-black bg-foreground/10 uppercase tracking-tighter">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Layers, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Category } from '@/gen/category_pb';
 import { CategoryService } from '@/gen/category_connect';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
@@ -14,10 +15,11 @@ interface CategoryTabsProps {
 
 export default function CategoryTabs({ onSelect, selectedId }: CategoryTabsProps) {
   const { token, tenantId } = useAuth();
+  const t = useTranslations('POSOrder');
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
-
+  
   const fetchCategories = useCallback(async () => {
     if (!token || !tenantId) return;
     setLoading(true);
@@ -72,7 +74,7 @@ export default function CategoryTabs({ onSelect, selectedId }: CategoryTabsProps
             `}
           >
             <Layers className="w-5 h-5" />
-            TẤT CẢ
+            {t('allCategories')}
           </button>
 
           {loading ? (

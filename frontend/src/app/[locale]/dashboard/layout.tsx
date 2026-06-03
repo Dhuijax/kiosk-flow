@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAlert } from '@/hooks/useAlert';
+import { getAuthenticatedClient } from '@/lib/grpc/client';
+import { StorefrontService } from '@/gen/storefront_connect';
 
 import StatusBadge from '@/components/ui/StatusBadge';
 import BranchSwitcher from '@/components/dashboard/BranchSwitcher';
@@ -41,21 +43,21 @@ interface NavigationItem {
 }
 
 const navigation: NavigationItem[] = [
-  { name: 'Tổng quan', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Bán hàng', href: '/pos/order', icon: Store },
-  { name: 'Đơn hàng', href: '/dashboard/orders', icon: Receipt },
-  { name: 'Khách hàng', href: '/dashboard/customers', icon: Heart },
-  { name: 'Báo cáo', href: '/dashboard/reports', icon: TrendingUp },
-  { name: 'Nhân viên', href: '/dashboard/staff', icon: Users },
-  { name: 'Sản phẩm', href: '/dashboard/products', icon: Package },
-  { name: 'Kho hàng', href: '/dashboard/inventory', icon: Package },
-  { name: 'Nguyên liệu', href: '/dashboard/inventory/ingredients', icon: Box },
-  { name: 'Nhà cung cấp', href: '/dashboard/inventory/suppliers', icon: Users },
-  { name: 'Nhập hàng', href: '/dashboard/inventory/procurement', icon: ShoppingCart },
-  { name: 'Báo hỏng', href: '/dashboard/inventory/waste', icon: AlertTriangle },
-  { name: 'Cảnh báo', href: '/dashboard/alerts', icon: AlertTriangle },
-  { name: 'Chi nhánh', href: '/dashboard/branches', icon: MapPin },
-  { name: 'Cấu hình', href: '/dashboard/settings', icon: Settings },
+  { name: 'overview', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'pos', href: '/pos/order', icon: Store },
+  { name: 'orders', href: '/dashboard/orders', icon: Receipt },
+  { name: 'customers', href: '/dashboard/customers', icon: Heart },
+  { name: 'reports', href: '/dashboard/reports', icon: TrendingUp },
+  { name: 'staff', href: '/dashboard/staff', icon: Users },
+  { name: 'products', href: '/dashboard/products', icon: Package },
+  { name: 'inventory', href: '/dashboard/inventory', icon: Package },
+  { name: 'ingredients', href: '/dashboard/inventory/ingredients', icon: Box },
+  { name: 'suppliers', href: '/dashboard/inventory/suppliers', icon: Users },
+  { name: 'procurement', href: '/dashboard/inventory/procurement', icon: ShoppingCart },
+  { name: 'waste', href: '/dashboard/inventory/waste', icon: AlertTriangle },
+  { name: 'alerts', href: '/dashboard/alerts', icon: AlertTriangle },
+  { name: 'branches', href: '/dashboard/branches', icon: MapPin },
+  { name: 'settings', href: '/dashboard/settings', icon: Settings },
 ];
 
 
@@ -67,11 +69,12 @@ export default function DashboardLayout({
   const t = useTranslations('Dashboard');
   const pathname = usePathname();
   const router = useRouter();
-  const { logout, branchId } = useAuth();
+  const { logout, branchId, tenantId, token } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const { listStockAlerts } = useAlert();
   const [toastAlert, setToastAlert] = useState<{ message: string; type: 'success' | 'alert' } | null>(null);
   const [seenAlertIds] = useState<Set<string>>(() => new Set());
+  const [reservationAlert, setReservationAlert] = useState<{ message: string } | null>(null);
 
   const getNavName = useMemo(() => {
     const map: Record<string, string> = {
@@ -126,6 +129,56 @@ export default function DashboardLayout({
     const interval = setInterval(checkAlerts, 15000);
     return () => clearInterval(interval);
   }, [branchId, listStockAlerts, seenAlertIds, t]);
+
+  // Real-time reservation warning polling (2-hour limit)
+  useEffect(() => {
+    if (!branchId || !tenantId || !token) return;
+
+    const checkReservations = async () => {
+      try {
+        const client = getAuthenticatedClient(StorefrontService, tenantId, token);
+        const res = await client.listReservations({
+          branchId,
+          status: 'PENDING',
+          pagination: { page: 1, pageSize: 50 }
+        });
+        
+        if (res && res.reservations && res.reservations.length > 0) {
+          const now = Date.now();
+          // Find any reservation happening in the next 2 hours (7200 seconds)
+          const upcoming = res.reservations.find(r => {
+            if (!r.reservationTime) return false;
+            const resTimeMs = Number(r.reservationTime.seconds) * 1000;
+            const diffSeconds = (resTimeMs - now) / 1000;
+            // Within next 2 hours, and not passed more than 15 minutes
+            return diffSeconds > -900 && diffSeconds <= 7200 && r.status !== 'COMPLETED' && r.status !== 'CANCELLED';
+          });
+
+          if (upcoming && upcoming.reservationTime) {
+            const timeStr = new Date(Number(upcoming.reservationTime.seconds) * 1000).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            const dateStr = new Date(Number(upcoming.reservationTime.seconds) * 1000).toLocaleDateString();
+            const tableName = upcoming.tableId ? `${t('nav.pos')} ${upcoming.tableId.substring(0, 4)}` : t('reservationTableFallback');
+            setReservationAlert({
+              message: t('reservationAlert', { customerName: upcoming.customerName, tableName, time: timeStr, date: dateStr, guestCount: upcoming.guestCount })
+            });
+          } else {
+            setReservationAlert(null);
+          }
+        } else {
+          setReservationAlert(null);
+        }
+      } catch (err) {
+        console.error('Error polling reservations:', err);
+      }
+    };
+
+    checkReservations();
+    const interval = setInterval(checkReservations, 30000);
+    return () => clearInterval(interval);
+  }, [branchId, tenantId, token]);
 
 
   const searchResults = useMemo(() => {
@@ -215,7 +268,7 @@ export default function DashboardLayout({
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
                 className="bg-transparent border-none outline-none text-sm font-black uppercase italic tracking-tighter flex-1 placeholder:text-foreground/20 h-full py-0 leading-none"
-                aria-label="Tìm kiếm nhanh"
+                aria-label={t('quickSearchLabel')}
               />
               
               {/* Search Results Dropdown */}
@@ -277,23 +330,40 @@ export default function DashboardLayout({
         </div>
       </main>
 
-      {/* Real-time low stock Alert Toast */}
-      <AnimatePresence>
-        {toastAlert && (
-          <motion.div 
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className="fixed bottom-12 right-12 z-[1000] cursor-pointer"
-            onClick={() => router.push('/dashboard/alerts')}
-          >
-            <div className={`px-8 py-4 rounded-full shadow-2xl border flex items-center gap-4 bg-red-500 border-foreground/10 text-white`}>
-              <AlertCircle size={24} className="animate-bounce" />
-              <span className="font-black uppercase tracking-tighter italic">{toastAlert.message}</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Alert Toasts Container */}
+      <div className="fixed bottom-12 right-12 z-[1000] flex flex-col gap-4 items-end">
+        <AnimatePresence>
+          {reservationAlert && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.9 }}
+              className="cursor-pointer"
+              onClick={() => router.push('/dashboard')}
+            >
+              <div className="px-8 py-4 rounded-2xl shadow-2xl border flex items-center gap-4 bg-amber-500 border-foreground/10 text-white animate-pulse">
+                <AlertCircle size={24} className="animate-bounce" />
+                <span className="font-black uppercase tracking-tighter italic text-xs md:text-sm">{reservationAlert.message}</span>
+              </div>
+            </motion.div>
+          )}
+
+          {toastAlert && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.9 }}
+              className="cursor-pointer"
+              onClick={() => router.push('/dashboard/alerts')}
+            >
+              <div className="px-8 py-4 rounded-2xl shadow-2xl border flex items-center gap-4 bg-red-500 border-foreground/10 text-white">
+                <AlertCircle size={24} className="animate-bounce" />
+                <span className="font-black uppercase tracking-tighter italic text-xs md:text-sm">{toastAlert.message}</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

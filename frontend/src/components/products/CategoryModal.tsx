@@ -7,6 +7,7 @@ import { CategoryService } from '@/gen/category_connect';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Portal from '@/components/ui/Portal';
+import { useTranslations } from 'next-intl';
 
 interface CategoryModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ interface CategoryModalProps {
 }
 
 export default function CategoryModal({ isOpen, onClose, onSuccess, editingCategory, categories }: CategoryModalProps) {
+  const t = useTranslations('Products');
   const { token, tenantId } = useAuth();
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
@@ -58,7 +60,7 @@ export default function CategoryModal({ isOpen, onClose, onSuccess, editingCateg
       onClose();
     } catch (err) {
       console.error('Failed to save category:', err);
-      alert('Có lỗi xảy ra khi lưu danh mục.');
+      alert(t('categoryModal.errSave'));
     } finally {
       setLoading(false);
     }
@@ -73,7 +75,7 @@ export default function CategoryModal({ isOpen, onClose, onSuccess, editingCateg
           <div className="p-8 border-b border-foreground/5 flex items-center justify-between bg-foreground/5">
             <div className="flex items-center gap-3">
               <Layers className="w-5 h-5 text-interaction stroke-[3]" />
-              <h2 className="text-xl font-black text-foreground uppercase italic tracking-tighter">{editingCategory ? 'Sửa danh mục' : 'Thêm danh mục mới'}</h2>
+              <h2 className="text-xl font-black text-foreground uppercase italic tracking-tighter">{editingCategory ? t('categoryModal.editTitle') : t('categoryModal.createTitle')}</h2>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-foreground/5 rounded-xl text-foreground/20 transition-colors">
               <X className="w-6 h-6" />
@@ -82,25 +84,25 @@ export default function CategoryModal({ isOpen, onClose, onSuccess, editingCateg
 
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Tên danh mục *</label>
+              <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('categoryModal.labelName')}</label>
               <input 
                 required
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="VÍ DỤ: ĐỒ UỐNG, THỨC ĂN..."
+                placeholder={t('categoryModal.placeholderName')}
                 className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm uppercase italic tracking-tighter shadow-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Danh mục cha</label>
+              <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('categoryModal.labelParent')}</label>
               <div className="relative">
                 <select 
                   value={parentId}
                   onChange={e => setParentId(e.target.value)}
                   className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all appearance-none font-bold text-sm uppercase italic tracking-tighter shadow-sm"
                 >
-                  <option value="">KHÔNG CÓ (DANH MỤC GỐC)</option>
+                  <option value="">{t('categoryModal.optionNoParent')}</option>
                   {categories
                     .filter(c => c.id !== editingCategory?.id)
                     .map(c => <option key={c.id} value={c.id}>{c.name.toUpperCase()}</option>)
@@ -116,7 +118,7 @@ export default function CategoryModal({ isOpen, onClose, onSuccess, editingCateg
                 onClick={onClose}
                 className="flex-1 px-6 py-4 bg-background hover:bg-foreground/5 text-foreground/40 font-black uppercase italic tracking-tighter text-sm rounded-2xl transition-all border border-foreground/10"
               >
-                Hủy bỏ
+                {t('categoryModal.btnCancel')}
               </button>
               <button 
                 type="submit"
@@ -124,7 +126,7 @@ export default function CategoryModal({ isOpen, onClose, onSuccess, editingCateg
                 className="btn-dynamic flex-1 py-4 text-sm"
               >
                 {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                <span>{editingCategory ? 'Cập nhật' : 'Lưu lại'}</span>
+                <span>{editingCategory ? t('categoryModal.btnUpdate') : t('categoryModal.btnCreate')}</span>
               </button>
             </div>
           </form>

@@ -18,6 +18,7 @@ import { PaymentMethod } from '@/gen/payment_pb';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import Portal from '@/components/ui/Portal';
+import { useTranslations } from 'next-intl';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
   const [receivedAmount, setReceivedAmount] = useState<number>(total);
   const [prevTotal, setPrevTotal] = useState<number>(total);
+  const t = useTranslations('PaymentModal');
 
   // Adjust state when total changes
   if (total !== prevTotal) {
@@ -53,9 +55,9 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
   };
 
   const methods = [
-    { id: PaymentMethod.CASH, name: 'TIỀN MẶT', icon: Banknote, color: 'bg-primary' },
-    { id: PaymentMethod.TRANSFER, name: 'QUÉT MÃ QR', icon: QrCode, color: 'bg-interaction' },
-    { id: PaymentMethod.CARD, name: 'QUẸT THẺ', icon: CreditCard, color: 'bg-foreground' },
+    { id: PaymentMethod.CASH, name: t('cash'), icon: Banknote, color: 'bg-primary' },
+    { id: PaymentMethod.TRANSFER, name: t('qrScan'), icon: QrCode, color: 'bg-interaction' },
+    { id: PaymentMethod.CARD, name: t('swipeCard'), icon: CreditCard, color: 'bg-foreground' },
   ];
 
   const quickAmounts = [
@@ -95,8 +97,8 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
               <div className="flex-1 p-12 border-r border-foreground/10 space-y-10">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <h2 className="text-4xl font-black uppercase italic tracking-tighter text-foreground leading-tight">Thanh Toán</h2>
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-40 italic">Chọn phương thức bạn muốn sử dụng</p>
+                    <h2 className="text-4xl font-black uppercase italic tracking-tighter text-foreground leading-tight">{t('title')}</h2>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-40 italic">{t('subtitle')}</p>
                   </div>
                   <button 
                     onClick={onClose}
@@ -142,7 +144,7 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
                     <div className="w-12 h-12 bg-accent border-2 border-foreground rounded-xl flex items-center justify-center text-foreground">
                       <Wallet size={24} />
                     </div>
-                    <span className="text-sm font-black uppercase tracking-widest opacity-40">Tổng thanh toán</span>
+                    <span className="text-sm font-black uppercase tracking-widest opacity-40">{t('totalPayment')}</span>
                   </div>
                   <span className="text-4xl font-black italic tracking-tighter text-foreground">{formatVND(total)}</span>
                 </div>
@@ -161,7 +163,7 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
                         className="space-y-8"
                       >
                         <div className="space-y-4">
-                          <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Tiền khách đưa</label>
+                          <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">{t('receivedAmount')}</label>
                           <div className="relative">
                             <Banknote className="absolute left-6 top-1/2 -translate-y-1/2 w-8 h-8 text-foreground opacity-20" />
                             <input 
@@ -187,7 +189,7 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
 
                         <div className="p-8 bg-foreground text-background rounded-3xl border border-foreground/5 shadow-xl flex items-center justify-between">
                           <div className="space-y-1">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Tiền thừa trả khách</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">{t('changeDue')}</p>
                             <p className="text-4xl font-black italic tracking-tighter text-accent">{formatVND(change)}</p>
                           </div>
                           <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center text-foreground">
@@ -220,8 +222,8 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
                           </div>
                         </div>
                         <div className="text-center space-y-2">
-                          <p className="text-2xl font-black uppercase italic tracking-tighter text-foreground">QUÉT ĐỂ THANH TOÁN</p>
-                          <p className="text-sm font-bold opacity-40 uppercase tracking-widest">Hỗ trợ tất cả ứng dụng ngân hàng & ví điện tử</p>
+                          <p className="text-2xl font-black uppercase italic tracking-tighter text-foreground">{t('scanToPay')}</p>
+                          <p className="text-sm font-bold opacity-40 uppercase tracking-widest">{t('scanSupport')}</p>
                         </div>
                       </motion.div>
                     )}
@@ -241,8 +243,8 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
                           <Sparkles className="absolute -top-4 -right-4 w-16 h-16 text-accent animate-float" />
                         </div>
                         <div className="text-center space-y-4">
-                          <h3 className="text-3xl font-black uppercase italic tracking-tighter text-foreground leading-tight">VUI LÒNG QUẸT THẺ</h3>
-                          <p className="text-sm font-bold opacity-40 uppercase tracking-widest leading-relaxed">Kết nối với thiết bị đầu cuối POS...</p>
+                          <h3 className="text-3xl font-black uppercase italic tracking-tighter text-foreground leading-tight">{t('pleaseSwipe')}</h3>
+                          <p className="text-sm font-bold opacity-40 uppercase tracking-widest leading-relaxed">{t('connectingPos')}</p>
                         </div>
                       </motion.div>
                     )}
@@ -262,11 +264,11 @@ export default function PaymentModal({ isOpen, onClose, total, onConfirm, isSubm
                   {isSubmitting ? (
                     <>
                       <div className="w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin" />
-                      <span>ĐANG XỬ LÝ...</span>
+                      <span>{t('processing')}</span>
                     </>
                   ) : (
                     <>
-                      <span>HOÀN TẤT THANH TOÁN</span>
+                      <span>{t('confirmPayment')}</span>
                       <ArrowRight size={32} className="stroke-[4]" />
                     </>
                   )}

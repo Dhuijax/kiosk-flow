@@ -2,8 +2,10 @@
 
 import React from 'react';
 import { Bell, Mail, Smartphone, Zap, type LucideIcon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function NotificationSettings() {
+  const t = useTranslations('Dashboard.settings.notificationsTab');
   return (
     <div className="ai-card p-12 space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
       <div className="flex items-center gap-4 border-b border-foreground/10 pb-6">
@@ -12,28 +14,28 @@ export default function NotificationSettings() {
         </div>
         <div>
           <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground">
-            Thông báo hệ thống
+            {t('title')}
           </h3>
-          <p className="text-xs font-bold text-foreground/40 uppercase tracking-widest">Quản lý cách bạn nhận được cập nhật</p>
+          <p className="text-xs font-bold text-foreground/40 uppercase tracking-widest">{t('subtitle')}</p>
         </div>
       </div>
 
       <div className="space-y-6">
         <NotificationToggle 
-          title="Thông báo đơn hàng mới" 
-          desc="Nhận âm thanh và pop-up khi có khách đặt hàng" 
+          title={t('newOrderTitle')} 
+          desc={t('newOrderDesc')} 
           icon={Zap} 
           defaultChecked={true}
         />
         <NotificationToggle 
-          title="Cảnh báo tồn kho" 
-          desc="Thông báo khi nguyên liệu sắp hết" 
+          title={t('lowStockTitle')} 
+          desc={t('lowStockDesc')} 
           icon={Smartphone} 
           defaultChecked={true}
         />
         <NotificationToggle 
-          title="Báo cáo doanh thu email" 
-          desc="Gửi báo cáo tổng hợp hàng ngày qua email" 
+          title={t('reportEmailTitle')} 
+          desc={t('reportEmailDesc')} 
           icon={Mail} 
           defaultChecked={false}
         />

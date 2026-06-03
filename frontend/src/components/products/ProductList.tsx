@@ -15,6 +15,7 @@ import { Product } from '@/gen/product_pb';
 import { ProductService } from '@/gen/product_connect';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useTranslations } from 'next-intl';
 
 interface ProductListProps {
   selectedCategoryId: string | null;
@@ -23,6 +24,7 @@ interface ProductListProps {
 }
 
 export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'list' }: ProductListProps) {
+  const t = useTranslations('Products');
   const { token, tenantId } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +67,7 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
 
   const handleDeleteProduct = async (id: string, name: string) => {
     if (!token || !tenantId) return;
-    if (!confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${name}"?`)) return;
+    if (!confirm(t('confirmDelete', { name }))) return;
     
     try {
       const client = getAuthenticatedClient(ProductService, tenantId, token);
@@ -73,7 +75,7 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
       fetchProducts();
     } catch (err) {
       console.error('Failed to delete product:', err);
-      alert('Có lỗi xảy ra khi xóa sản phẩm');
+      alert(t('errDelete'));
     }
   };
 
@@ -99,7 +101,7 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
           <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none" />
           <input 
             type="text" 
-            placeholder="TÌM KIẾM MÓN ĂN, MÃ SKU..." 
+            placeholder={t('searchPlaceholder')} 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="bg-transparent border-none outline-none flex-1 h-full py-0 font-black text-sm uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
@@ -109,7 +111,7 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
           <button 
             onClick={() => fetchProducts()}
             className="w-14 h-14 bg-surface border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white shadow-sm transition-all"
-            title="Làm mới"
+            title={t('refresh')}
           >
             <RefreshCw className={`w-6 h-6 stroke-[3] ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -121,12 +123,12 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
         {loading && products.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center py-32 gap-6">
             <div className="w-16 h-16 border-8 border-interaction border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-xl font-black uppercase italic tracking-tighter opacity-20">Đang truy xuất dữ liệu...</p>
+            <p className="text-xl font-black uppercase italic tracking-tighter opacity-20">{t('loadingData')}</p>
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center py-32 gap-6 opacity-20">
             <Package className="w-20 h-20" />
-            <p className="text-xl font-black uppercase italic tracking-tighter">Không tìm thấy sản phẩm nào</p>
+            <p className="text-xl font-black uppercase italic tracking-tighter">{t('noProducts')}</p>
           </div>
         ) : viewMode === 'grid' ? (
           <div className="flex-1 overflow-y-auto p-8">
@@ -158,7 +160,7 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
                   </div>
                   <div className="space-y-1">
                     <p className="text-lg font-black text-foreground uppercase italic tracking-tighter leading-tight group-hover:text-interaction transition-colors">{product.name}</p>
-                    <p className="text-[10px] text-foreground/40 font-black uppercase tracking-widest">{product.sku || 'NO SKU'}</p>
+                    <p className="text-[10px] text-foreground/40 font-black uppercase tracking-widest">{product.sku || t('noSku')}</p>
                   </div>
                   <div className="mt-auto flex items-end justify-between border-t border-foreground/5 pt-4">
                     <div>
@@ -166,9 +168,9 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
                       <p className="text-[10px] text-foreground/40 font-black uppercase tracking-widest italic mt-1">{product.unit || 'PHẦN'}</p>
                     </div>
                     {product.isActive ? (
-                      <span className="w-3 h-3 rounded-full bg-interaction shadow-[0_0_10px_rgba(59,130,246,0.5)]" title="Đang bán" />
+                      <span className="w-3 h-3 rounded-full bg-interaction shadow-[0_0_10px_rgba(59,130,246,0.5)]" title={t('statusActive')} />
                     ) : (
-                      <span className="w-3 h-3 rounded-full bg-foreground/10" title="Tạm ẩn" />
+                      <span className="w-3 h-3 rounded-full bg-foreground/10" title={t('statusHidden')} />
                     )}
                   </div>
                 </div>
@@ -180,11 +182,11 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-foreground/5 text-foreground/40 text-[10px] font-black uppercase tracking-[0.2em]">
-                  <th className="px-8 py-6">Món ăn</th>
-                  <th className="px-8 py-6">Mã SKU</th>
-                  <th className="px-8 py-6">Giá & Vốn</th>
-                  <th className="px-8 py-6 text-center">Trạng thái</th>
-                  <th className="px-8 py-6 text-right">Thao tác</th>
+                  <th className="px-8 py-6">{t('thDish')}</th>
+                  <th className="px-8 py-6">{t('thSku')}</th>
+                  <th className="px-8 py-6">{t('thPrice')}</th>
+                  <th className="px-8 py-6 text-center">{t('thStatus')}</th>
+                  <th className="px-8 py-6 text-right">{t('thActions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y-4 divide-foreground/5">
@@ -201,28 +203,28 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
                         </div>
                         <div>
                           <p className="text-xl font-black text-foreground uppercase italic tracking-tighter group-hover:text-interaction transition-all leading-tight">{product.name}</p>
-                          <p className="text-[10px] text-foreground/40 font-black uppercase tracking-widest mt-2">DVT: {product.unit || 'PHẦN'}</p>
+                          <p className="text-[10px] text-foreground/40 font-black uppercase tracking-widest mt-2">{t('unitPrefix', { unit: product.unit || 'PHẦN' })}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-8 py-6">
                       <span className="text-xs font-black italic tracking-tighter text-foreground/40 bg-foreground/5 px-4 py-2 rounded-xl border border-foreground/10 group-hover:border-foreground/40 transition-all">
-                        {product.sku || 'CHƯA CÓ'}
+                        {product.sku || t('noSku')}
                       </span>
                     </td>
                     <td className="px-8 py-6">
                       <p className="text-2xl font-black text-primary italic tracking-tighter">{formatCurrency(product.price?.units)}</p>
-                      <p className="text-[10px] text-foreground/40 font-black uppercase tracking-widest italic">Giá vốn: {formatCurrency(product.costPrice?.units)}</p>
+                      <p className="text-[10px] text-foreground/40 font-black uppercase tracking-widest italic">{t('costPrice', { price: formatCurrency(product.costPrice?.units) })}</p>
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex justify-center">
                         {product.isActive ? (
                           <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-interaction text-white border border-foreground/10 uppercase italic tracking-tighter shadow-sm">
-                            Đang bán
+                            {t('statusActive')}
                           </span>
                         ) : (
                           <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-foreground/10 text-foreground/40 border border-foreground/10 uppercase italic tracking-tighter">
-                            Tạm ẩn
+                            {t('statusHidden')}
                           </span>
                         )}
                       </div>
@@ -256,9 +258,9 @@ export default function ProductList({ selectedCategoryId, onEdit, viewMode = 'li
         {/* Footer / Pagination */}
         <div className="px-12 py-8 bg-foreground/5 border-t border-foreground/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Hiển thị</span>
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">{t('showShowing')}</span>
             <span className="px-4 py-2 bg-foreground text-background rounded-xl font-black text-xs italic tracking-tighter">{(page - 1) * pageSize + 1} - {Math.min(page * pageSize, totalItems)}</span>
-            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">trên tổng số {totalItems}</span>
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">{t('showTotal', { total: totalItems })}</span>
           </div>
           
           <div className="flex items-center gap-4">

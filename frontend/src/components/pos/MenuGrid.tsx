@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { useOrderCart } from '@/lib/order/OrderCartContext';
 import ProductCard from './ProductCard';
 import ToppingModal from './ToppingModal';
+import { useTranslations } from 'next-intl';
 
 interface MenuGridProps {
   selectedCategoryId: string | null;
@@ -25,6 +26,7 @@ export default function MenuGrid({ selectedCategoryId, searchQuery }: MenuGridPr
   const [prevCategoryId, setPrevCategoryId] = useState(selectedCategoryId);
   const [isToppingModalOpen, setIsToppingModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const t = useTranslations('MenuGrid');
 
   // Adjust loading state when category changes
   if (selectedCategoryId !== prevCategoryId) {
@@ -117,15 +119,15 @@ export default function MenuGrid({ selectedCategoryId, searchQuery }: MenuGridPr
           <Sparkles className="absolute -top-4 -right-4 w-12 h-12 text-accent animate-float" />
         </div>
         <div className="text-center space-y-2">
-          <p className="text-2xl font-black italic uppercase tracking-tighter">Không tìm thấy món ăn</p>
-          <p className="text-sm font-bold opacity-40">Thử tìm kiếm với từ khóa khác...</p>
+          <p className="text-2xl font-black italic uppercase tracking-tighter">{t('noProducts')}</p>
+          <p className="text-sm font-bold opacity-40">{t('tryOtherSearch')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div aria-label="Danh sách thực đơn sản phẩm" className="flex-1 overflow-auto custom-scrollbar">
+    <div aria-label={t('ariaLabel')} className="flex-1 overflow-auto custom-scrollbar">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-8 p-12">
         {filteredProducts.map(product => (
           <ProductCard 

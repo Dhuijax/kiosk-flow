@@ -7,6 +7,7 @@ pub mod payment;
 pub mod procurement;
 pub mod product;
 pub mod recipe;
+pub mod storefront;
 pub mod table;
 pub mod tenant;
 pub mod user;

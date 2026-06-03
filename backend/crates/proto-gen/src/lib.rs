@@ -70,4 +70,8 @@ pub mod table_cart {
     tonic::include_proto!("table_cart");
 }
 
+pub mod storefront {
+    tonic::include_proto!("storefront");
+}
+
 pub const FILE_DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("kioskflow_descriptor");

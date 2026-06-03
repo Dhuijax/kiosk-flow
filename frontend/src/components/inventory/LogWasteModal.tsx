@@ -15,6 +15,7 @@ import { PaginationRequest } from '@/gen/common_pb';
 import Portal from '@/components/ui/Portal';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { formatVND } from '@/lib/utils/format';
+import { useTranslations } from 'next-intl';
 
 interface LogWasteModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ interface RecipeIngredientCost {
 }
 
 export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteModalProps) {
+  const t = useTranslations('Inventory');
   const { branchId, token, tenantId } = useAuth();
   const { logWaste, loading: submitLoading } = useInventory();
   const { listIngredients } = useIngredient();
@@ -116,7 +118,7 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
 
           return {
             ingredientId: r.ingredientId,
-            name: r.ingredientName || matchedIng?.name || 'Nguyên liệu ẩn',
+            name: r.ingredientName || matchedIng?.name || t('wasteModal.hiddenMaterial'),
             quantity: r.quantity,
             unit: r.unit || matchedIng?.unit || 'đv',
             costPrice: ingredientCost,
@@ -159,17 +161,17 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
     setError('');
 
     if (entityType === 'INGREDIENT' && !selectedIngredientId) {
-      setError('Vui lòng chọn nguyên liệu báo hỏng');
+      setError(t('wasteModal.errSelectMaterial'));
       return;
     }
 
     if (entityType === 'PRODUCT' && !selectedProductId) {
-      setError('Vui lòng chọn sản phẩm thành phẩm báo hỏng');
+      setError(t('wasteModal.errSelectProduct'));
       return;
     }
 
     if (quantity <= 0) {
-      setError('Số lượng báo hỏng phải lớn hơn 0');
+      setError(t('wasteModal.errQuantity'));
       return;
     }
 
@@ -188,10 +190,10 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
         onSuccess();
         onClose();
       } else {
-        setError('Báo hỏng thất bại. Vui lòng kiểm tra lại số lượng tồn kho.');
+        setError(t('wasteModal.errFail'));
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra khi báo hỏng');
+      setError(err instanceof Error ? err.message : t('wasteModal.errCommon'));
     }
   };
 
@@ -221,10 +223,10 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-foreground uppercase italic tracking-tighter leading-tight">
-                    Báo cáo <span className="text-red-500">Hao Hụt & Báo Hỏng</span>
+                    {t('wasteModal.title')}
                   </h2>
                   <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest mt-1 italic">
-                    Ghi nhận thất thoát và tự động khấu trừ kho ngay lập tức
+                    {t('wasteModal.subtitle')}
                   </p>
                 </div>
               </div>
@@ -239,7 +241,7 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
             <form onSubmit={handleSubmit} className="p-10 space-y-8 max-h-[70vh] overflow-y-auto">
               {/* Type Switcher */}
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Đối tượng báo hỏng</label>
+                <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('wasteModal.entityType')}</label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
@@ -254,7 +256,7 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
                     }`}
                   >
                     <Box className="w-5 h-5" />
-                    <span>Nguyên liệu thô</span>
+                    <span>{t('wasteModal.rawMaterial')}</span>
                   </button>
                   <button
                     type="button"
@@ -269,7 +271,7 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
                     }`}
                   >
                     <Package className="w-5 h-5" />
-                    <span>Thành phẩm / Đồ uống</span>
+                    <span>{t('wasteModal.finishedProduct')}</span>
                   </button>
                 </div>
               </div>
@@ -278,12 +280,12 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
               {loadingData ? (
                 <div className="py-6 flex items-center justify-center gap-3 text-foreground/40 font-bold italic text-sm">
                   <RefreshCw className="w-5 h-5 animate-spin text-interaction" />
-                  <span>ĐANG TẢI DANH SÁCH...</span>
+                  <span>{t('wasteModal.loading')}</span>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">
-                    {entityType === 'INGREDIENT' ? 'Chọn nguyên liệu thô' : 'Chọn thành phẩm đồ uống'}
+                    {entityType === 'INGREDIENT' ? t('wasteModal.selectRaw') : t('wasteModal.selectFinished')}
                   </label>
                   {entityType === 'INGREDIENT' ? (
                     <select
@@ -292,10 +294,10 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
                       onChange={(e) => setSelectedIngredientId(e.target.value)}
                       className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white focus:border-interaction transition-all font-black text-sm uppercase italic tracking-tighter shadow-sm"
                     >
-                      <option value="">-- CHỌN NGUYÊN LIỆU PHÁT SINH HỎNG --</option>
+                      <option value="">{t('wasteModal.placeholderRaw')}</option>
                       {ingredients.map(ing => (
                         <option key={ing.id} value={ing.id}>
-                          {ing.name} ({ing.unit}) - Đơn giá vốn: {formatVND(Number(ing.costPrice?.units || 0))}
+                          {ing.name} ({ing.unit}) - {t('wasteModal.costPrice', { price: formatVND(Number(ing.costPrice?.units || 0)) })}
                         </option>
                       ))}
                     </select>
@@ -306,10 +308,10 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
                       onChange={(e) => setSelectedProductId(e.target.value)}
                       className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white focus:border-interaction transition-all font-black text-sm uppercase italic tracking-tighter shadow-sm"
                     >
-                      <option value="">-- CHỌN THÀNH PHẨM PHÁT SINH HỎNG --</option>
+                      <option value="">{t('wasteModal.placeholderFinished')}</option>
                       {products.map(prod => (
                         <option key={prod.id} value={prod.id}>
-                          {prod.name} ({prod.sku || 'N/A'}) - Giá bán: {formatVND(Number(prod.price?.units || 0))}
+                          {prod.name} ({prod.sku || 'N/A'}) - {t('wasteModal.salePrice', { price: formatVND(Number(prod.price?.units || 0)) })}
                         </option>
                       ))}
                     </select>
@@ -320,7 +322,7 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
               {/* Quantity & Reason Inputs */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Số lượng hao hụt</label>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('wasteModal.quantity')}</label>
                   <input
                     type="number"
                     step="any"
@@ -329,35 +331,35 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
                     value={quantity}
                     onChange={(e) => setQuantity(Number(e.target.value) || 0)}
                     className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white focus:border-interaction transition-all font-black text-sm italic tracking-tighter shadow-sm"
-                    placeholder="Nhập số lượng..."
+                    placeholder={t('wasteModal.quantityPlaceholder')}
                   />
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Lý do thất thoát</label>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('wasteModal.reason')}</label>
                   <select
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white focus:border-interaction transition-all font-black text-sm uppercase italic tracking-tighter shadow-sm"
                   >
-                    <option value="SPOILED">Hết hạn sử dụng / Spoiled</option>
-                    <option value="WRONG_RECIPE">Pha chế sai công thức / Wrong Recipe</option>
-                    <option value="DAMAGED">Đổ vỡ / Hỏng hóc vật lý / Damaged</option>
-                    <option value="EXPIRED">Nguyên liệu hỏng / Expired</option>
-                    <option value="OTHER">Lý do khác / Other Reasons</option>
+                    <option value="SPOILED">{t('wasteModal.reasonSpoiled')}</option>
+                    <option value="WRONG_RECIPE">{t('wasteModal.reasonWrongRecipe')}</option>
+                    <option value="DAMAGED">{t('wasteModal.reasonDamaged')}</option>
+                    <option value="EXPIRED">{t('wasteModal.reasonExpired')}</option>
+                    <option value="OTHER">{t('wasteModal.reasonOther')}</option>
                   </select>
                 </div>
               </div>
 
               {/* Description Note */}
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Ghi chú chi tiết (Tùy chọn)</label>
+                <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('wasteModal.notes')}</label>
                 <textarea
                   rows={3}
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white focus:border-interaction transition-all font-black text-xs uppercase italic tracking-tighter shadow-sm"
-                  placeholder="MÔ TẢ CHI TIẾT NGUYÊN NHÂN HỎNG (V.D: BARTENDER LÀM ĐỔ, HẾT HẠN KHO LẠNH...)..."
+                  placeholder={t('wasteModal.notesPlaceholder')}
                 />
               </div>
 
@@ -366,25 +368,25 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
                 <div className="p-6 bg-foreground/5 border border-foreground/5 rounded-2xl space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="text-[10px] font-black uppercase italic tracking-widest text-interaction">
-                      Chi tiết định mức cấu thành sản phẩm (BOM Cost)
+                      {t('wasteModal.bomDetails')}
                     </h4>
                     {loadingRecipe && <RefreshCw className="w-4 h-4 animate-spin text-interaction" />}
                   </div>
                   
                   {productRecipe.length === 0 && !loadingRecipe ? (
                     <p className="text-[10px] font-bold text-yellow-600 uppercase italic tracking-tighter">
-                      ⚠️ Sản phẩm này chưa được thiết lập công thức (BOM). Trừ kho trực tiếp sản phẩm!
+                      {t('wasteModal.noBom')}
                     </p>
                   ) : (
                     <div className="space-y-2 max-h-[150px] overflow-y-auto divide-y divide-foreground/5">
                       {productRecipe.map(item => (
                         <div key={item.ingredientId} className="flex justify-between py-2 text-xs font-black italic tracking-tighter">
                           <span className="text-foreground/60">{item.name} (x{item.quantity} {item.unit})</span>
-                          <span className="text-foreground/80">Giá vốn: {formatVND(item.totalCost)}</span>
+                          <span className="text-foreground/80">{t('wasteModal.costPriceLabel', { price: formatVND(item.totalCost) })}</span>
                         </div>
                       ))}
                       <div className="flex justify-between pt-2 text-xs font-black italic uppercase tracking-tighter text-interaction">
-                        <span>Giá vốn thành phẩm tổng tính (BOM):</span>
+                        <span>{t('wasteModal.totalBomCost')}</span>
                         <span>{formatVND(productRecipe.reduce((sum, item) => sum + item.totalCost, 0))}</span>
                       </div>
                     </div>
@@ -396,7 +398,7 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
               <div className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-red-500/5 border border-red-500/10 rounded-2xl gap-4">
                 <div>
                   <span className="text-[10px] font-black uppercase italic tracking-tighter text-red-500/70 block">
-                    Ước tính giá trị thiệt hại tài chính:
+                    {t('wasteModal.estLoss')}
                   </span>
                   <span className="text-3xl font-black italic tracking-tighter text-red-500">
                     {formatVND(estimatedCost)}
@@ -407,9 +409,9 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
                   <span className="text-[9px] font-black text-foreground/30 uppercase tracking-wider block italic">
                     {entityType === 'PRODUCT' 
                       ? (productRecipe.length > 0 
-                        ? 'Khấu trừ đệ quy nguyên liệu thô theo công thức BOM tỷ lệ' 
-                        : 'Không có BOM: Trừ kho trực tiếp thành phẩm')
-                      : 'Trừ trực tiếp số lượng tồn kho nguyên liệu thô'}
+                        ? t('wasteModal.deductBOM') 
+                        : t('wasteModal.deductDirect'))
+                      : t('wasteModal.deductMaterial')}
                   </span>
                 </div>
               </div>
@@ -428,14 +430,14 @@ export default function LogWasteModal({ isOpen, onClose, onSuccess }: LogWasteMo
                   onClick={onClose}
                   className="px-8 py-5 border border-foreground/10 rounded-2xl font-black uppercase italic tracking-widest text-xs hover:bg-foreground/5 transition-all text-foreground/60"
                 >
-                  Hủy bỏ
+                  {t('cancel')}
                 </button>
                 <button 
                   type="submit"
                   disabled={submitLoading || (entityType === 'INGREDIENT' && !selectedIngredientId) || (entityType === 'PRODUCT' && !selectedProductId)}
                   className="btn-dynamic flex-1 py-5 text-lg bg-red-500 hover:bg-red-600 hover:border-red-600"
                 >
-                  {submitLoading ? <RefreshCw className="w-6 h-6 animate-spin" /> : 'XÁC NHẬN BÁO HỎNG & KHẤU TRỪ KHO'}
+                  {submitLoading ? <RefreshCw className="w-6 h-6 animate-spin" /> : t('wasteModal.confirm')}
                 </button>
               </div>
             </form>

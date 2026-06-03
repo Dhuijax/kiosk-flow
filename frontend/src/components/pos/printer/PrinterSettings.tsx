@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bluetooth, Save, X, Printer, CheckCircle2, AlertCircle, RefreshCw, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { printerService, PrinterSettings as IPrinterSettings, PrinterConnectionType } from '@/lib/printer/PrinterService';
 import Portal from '@/components/ui/Portal';
 
@@ -12,6 +13,7 @@ interface PrinterSettingsProps {
 }
 
 export default function PrinterSettings({ isOpen, onClose }: PrinterSettingsProps) {
+  const t = useTranslations('PrinterSettings');
   const [type, setType] = useState<PrinterConnectionType>('bluetooth');
   const [deviceId, setDeviceId] = useState('');
   const [deviceName, setDeviceName] = useState('');
@@ -37,7 +39,7 @@ export default function PrinterSettings({ isOpen, onClose }: PrinterSettingsProp
 
   const handleScan = async () => {
     setIsScanning(true);
-    setStatus({ message: 'Đang quét thiết bị...', type: 'info' });
+    setStatus({ message: t('scanning'), type: 'info' });
     
     try {
       if (type === 'bluetooth') {
@@ -46,19 +48,19 @@ export default function PrinterSettings({ isOpen, onClose }: PrinterSettingsProp
           optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
         });
         setDeviceId(device.id);
-        setDeviceName(device.name || 'Thiết bị Bluetooth');
-        setStatus({ message: `Đã kết nối: ${device.name}`, type: 'success' });
+        setDeviceName(device.name || t('bluetoothFallback'));
+        setStatus({ message: t('connectedDevice', { name: device.name || t('bluetoothFallback') }), type: 'success' });
       } else if (type === 'serial') {
         const port = await navigator.serial.requestPort();
         await port.getInfo();
         setDeviceId('serial-port');
-        setDeviceName('Cổng Serial');
-        setStatus({ message: 'Đã chọn cổng Serial', type: 'success' });
+        setDeviceName(t('serialPort'));
+        setStatus({ message: t('serialPortSelected'), type: 'success' });
       }
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Unknown error';
       console.error(error);
-      setStatus({ message: 'Không thể tìm thấy thiết bị: ' + msg, type: 'error' });
+      setStatus({ message: t('deviceNotFound', { error: msg }), type: 'error' });
     } finally {
       setIsScanning(false);
     }
@@ -72,7 +74,7 @@ export default function PrinterSettings({ isOpen, onClose }: PrinterSettingsProp
       baudRate
     };
     printerService.saveSettings(settings);
-    setStatus({ message: 'Đã lưu cấu hình!', type: 'success' });
+    setStatus({ message: t('configSaved'), type: 'success' });
     setTimeout(onClose, 1000);
   };
 
@@ -95,10 +97,10 @@ export default function PrinterSettings({ isOpen, onClose }: PrinterSettingsProp
                   </div>
                   <div>
                     <h2 className="text-xl font-black text-foreground uppercase italic tracking-tighter leading-tight">
-                      Cấu hình máy in
+                      {t('title')}
                     </h2>
                     <p className="text-[8px] font-black text-foreground/40 uppercase tracking-[0.2em] mt-1">
-                      Thiết lập kết nối máy in nhiệt ESC/POS
+                      {t('subtitle')}
                     </p>
                   </div>
                 </div>
@@ -113,7 +115,7 @@ export default function PrinterSettings({ isOpen, onClose }: PrinterSettingsProp
               {/* Content */}
               <div className="p-10 space-y-8">
                 <div className="space-y-4">
-                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Phương thức kết nối</label>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('connectionMethod')}</label>
                   <div className="grid grid-cols-2 gap-4">
                     <button
                       onClick={() => setType('bluetooth')}
@@ -142,7 +144,7 @@ export default function PrinterSettings({ isOpen, onClose }: PrinterSettingsProp
 
                 {type === 'serial' && (
                   <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                    <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Baud Rate (Tốc độ truyền)</label>
+                    <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('baudRate')}</label>
                     <div className="relative">
                       <select 
                         value={baudRate}
@@ -165,7 +167,7 @@ export default function PrinterSettings({ isOpen, onClose }: PrinterSettingsProp
                     className="w-full h-16 rounded-2xl bg-foreground text-background hover:bg-interaction transition-all font-black uppercase italic tracking-tighter flex items-center justify-center gap-4 disabled:opacity-50 shadow-md group"
                   >
                     <RefreshCw className={`w-5 h-5 ${isScanning ? 'animate-spin' : 'group-hover:rotate-180 transition-transform'}`} />
-                    <span>{isScanning ? 'Đang tìm kiếm...' : 'Quét thiết bị'}</span>
+                    <span>{isScanning ? t('scanning') : t('scanBtn')}</span>
                   </button>
 
                   {deviceName && (
@@ -200,7 +202,7 @@ export default function PrinterSettings({ isOpen, onClose }: PrinterSettingsProp
                   onClick={onClose}
                   className="px-8 py-4 text-foreground/40 font-black uppercase italic tracking-tighter text-xs hover:text-foreground transition-colors"
                 >
-                  Hủy bỏ
+                  {t('cancel')}
                 </button>
                 <button
                   onClick={handleSave}
@@ -208,7 +210,7 @@ export default function PrinterSettings({ isOpen, onClose }: PrinterSettingsProp
                   className="btn-dynamic px-12 py-4 text-xs"
                 >
                   <Save className="w-5 h-5" />
-                  <span>Lưu cấu hình</span>
+                  <span>{t('save')}</span>
                 </button>
               </div>
             </motion.div>

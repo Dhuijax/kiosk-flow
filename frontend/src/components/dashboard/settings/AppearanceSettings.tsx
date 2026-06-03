@@ -4,8 +4,10 @@ import React, { useState } from 'react';
 import { Palette, Sparkles, Monitor, Smartphone, Loader2, CheckCircle2 } from 'lucide-react';
 import { AppearanceSettingsProps } from '@/hooks/useSettings';
 import { useTheme, ThemeName } from '@/lib/theme/ThemeContext';
+import { useTranslations } from 'next-intl';
 
 export default function AppearanceSettings({ settings, updateTenantSettings }: AppearanceSettingsProps) {
+  const t = useTranslations('Dashboard.settings.appearanceTab');
   const { currentTheme, setTheme } = useTheme();
   const [activeTheme, setActiveTheme] = useState<ThemeName>(settings?.themeColor as ThemeName || currentTheme);
   const [isSaving, setIsSaving] = useState(false);
@@ -47,9 +49,9 @@ export default function AppearanceSettings({ settings, updateTenantSettings }: A
           </div>
           <div>
             <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground">
-              Giao diện hệ thống
+              {t('title')}
             </h3>
-            <p className="text-xs font-bold text-foreground/40 uppercase tracking-widest">Tùy chỉnh phong cách hiển thị Dashboard</p>
+            <p className="text-xs font-bold text-foreground/40 uppercase tracking-widest">{t('subtitle')}</p>
           </div>
         </div>
 
@@ -63,10 +65,10 @@ export default function AppearanceSettings({ settings, updateTenantSettings }: A
           ) : saved ? (
             <>
               <CheckCircle2 className="w-4 h-4" />
-              <span>ĐÃ LƯU</span>
+              <span>{t('saved')}</span>
             </>
           ) : (
-            <span>LƯU GIAO DIỆN</span>
+            <span>{t('saveTheme')}</span>
           )}
         </button>
       </div>
@@ -75,7 +77,7 @@ export default function AppearanceSettings({ settings, updateTenantSettings }: A
         <div className="space-y-6">
           <h4 className="text-sm font-black uppercase tracking-widest text-foreground/40 italic flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-accent" />
-            Tông màu chủ đạo
+            {t('themeColor')}
           </h4>
           <div className="grid grid-cols-2 gap-4">
             {themes.map((t) => (
@@ -93,16 +95,16 @@ export default function AppearanceSettings({ settings, updateTenantSettings }: A
         <div className="space-y-6">
           <h4 className="text-sm font-black uppercase tracking-widest text-foreground/40 italic flex items-center gap-2">
             <Monitor className="w-4 h-4 text-primary" />
-            Chế độ hiển thị
+            {t('displayMode')}
           </h4>
           <div className="flex gap-4">
             <button className="flex-1 p-6 border border-interaction rounded-3xl bg-surface flex flex-col items-center gap-3 shadow-md hover:bg-interaction/5 transition-all">
               <Monitor className="w-8 h-8 text-foreground" />
-              <span className="font-black uppercase italic tracking-tighter text-xs">Máy tính</span>
+              <span className="font-black uppercase italic tracking-tighter text-xs">{t('desktop')}</span>
             </button>
             <button className="flex-1 p-6 border border-foreground/10 rounded-3xl bg-surface/50 flex flex-col items-center gap-3 opacity-50 hover:opacity-100 transition-all">
               <Smartphone className="w-8 h-8 text-foreground" />
-              <span className="font-black uppercase italic tracking-tighter text-xs">Di động</span>
+              <span className="font-black uppercase italic tracking-tighter text-xs">{t('mobile')}</span>
             </button>
           </div>
         </div>

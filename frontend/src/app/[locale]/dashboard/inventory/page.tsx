@@ -23,10 +23,12 @@ import { StockItem } from '@/gen/inventory_pb';
 import InventoryStats from '@/components/inventory/InventoryStats';
 import StockAdjustmentModal from '@/components/inventory/StockAdjustmentModal';
 import StockHistoryModal from '@/components/inventory/StockHistoryModal';
+import { useTranslations } from 'next-intl';
 
 export default function InventoryPage() {
   const { token, tenantId, branchId } = useAuth();
   const { listStock, loading: loadingStock } = useInventory();
+  const t = useTranslations('Dashboard.inventory');
   
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [products, setProducts] = useState<Record<string, Product>>({});
@@ -71,7 +73,6 @@ export default function InventoryPage() {
     return () => clearTimeout(timer);
   }, [fetchData]);
 
-
   const filteredData = useMemo(() => {
     return stockItems.filter(item => {
       const product = products[item.productId];
@@ -102,15 +103,15 @@ export default function InventoryPage() {
   const handleExportCSV = useCallback(() => {
     if (filteredData.length === 0) return;
 
-    const headers = ['Mặt hàng', 'SKU', 'Số lượng', 'Đơn vị', 'Định mức', 'Trạng thái'];
+    const headers = [t('headers.item'), 'SKU', t('headers.actual'), 'Unit', t('headers.min'), t('headers.status')];
     const rows = filteredData.map(item => {
       const product = products[item.productId];
-      const status = item.quantity <= 0 ? 'Hết hàng' : item.quantity <= item.minQuantity ? 'Sắp hết' : 'An toàn';
+      const status = item.quantity <= 0 ? t('status.outOfStock') : item.quantity <= item.minQuantity ? t('status.lowStock') : t('status.safe');
       return [
         `"${product?.name || 'Unknown'}"`,
         `"${product?.sku || 'N/A'}"`,
         item.quantity,
-        `"${product?.unit || 'MÓN'}"`,
+        `"${product?.unit || 'PCS'}"`,
         item.minQuantity,
         `"${status}"`
       ];
@@ -122,12 +123,12 @@ export default function InventoryPage() {
     const url = URL.createObjectURL(blob);
     
     link.setAttribute('href', url);
-    link.setAttribute('download', `bao_cao_kho_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `inventory_report_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [filteredData, products]);
+  }, [filteredData, products, t]);
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -136,12 +137,12 @@ export default function InventoryPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3 text-primary font-black uppercase text-xs tracking-widest">
             <Package className="w-5 h-5" />
-            <span>Kho hàng & Tài sản</span>
+            <span>{t('categorySubtitle')}</span>
           </div>
           <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground">
-            Quản lý <span className="text-interaction">Tồn kho</span>
+            {t('titlePart1')} <span className="text-interaction">{t('titlePart2')}</span>
           </h1>
-          <p className="text-foreground/40 font-bold italic">Theo dõi biến động và tối ưu hóa lượng hàng dự trữ.</p>
+          <p className="text-foreground/40 font-bold italic">{t('subtitle')}</p>
         </div>
         <div className="flex gap-4">
           <button 
@@ -153,14 +154,14 @@ export default function InventoryPage() {
           <Link 
             href="/dashboard/inventory/ingredients"
             className="w-14 h-14 bg-surface border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-sm"
-            title="Quản lý nguyên liệu"
+            title={t('manageIngredients')}
           >
             <Box className="w-6 h-6 stroke-[3]" />
           </Link>
           <Link 
             href="/dashboard/inventory/waste"
             className="w-14 h-14 bg-surface border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-sm"
-            title="Báo hỏng & Hao hụt"
+            title={t('wasteTitle')}
           >
             <AlertTriangle className="w-6 h-6 stroke-[3]" />
           </Link>
@@ -169,7 +170,7 @@ export default function InventoryPage() {
             className="btn-dynamic px-8 py-3 text-sm"
           >
             <Download className="w-5 h-5" />
-            <span>XUẤT BÁO CÁO</span>
+            <span>{t('exportReport')}</span>
           </button>
         </div>
       </div>
@@ -188,7 +189,7 @@ export default function InventoryPage() {
           <Search className="w-6 h-6 text-foreground/20 group-focus-within:text-interaction flex-none pointer-events-none" />
           <input 
             type="text" 
-            placeholder="TÌM THEO TÊN HOẶC MÃ SKU..." 
+            placeholder={t('searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="bg-transparent border-none outline-none flex-1 h-full py-0 font-black text-sm uppercase italic tracking-tighter placeholder:text-foreground/20 leading-none"
@@ -204,16 +205,15 @@ export default function InventoryPage() {
             }`}
           >
             <AlertTriangle className="w-5 h-5 stroke-[3]" />
-            <span>SẮP HẾT</span>
+            <span>{t('lowStockBtn')}</span>
           </button>
           <button 
             onClick={() => {
-              // Quick filter logic: reset all filters
               setSearchQuery('');
               setLowStockOnly(false);
             }}
             className="w-14 h-14 bg-surface border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-interaction hover:text-white transition-all shadow-sm"
-            title="Xóa bộ lọc"
+            title={t('resetFilter')}
           >
             <Filter className="w-6 h-6 stroke-[3]" />
           </button>
@@ -225,22 +225,22 @@ export default function InventoryPage() {
         <div className="p-8 border-b border-foreground/10 flex items-center justify-between">
           <h3 className="text-2xl font-black uppercase italic tracking-tighter flex items-center gap-3">
             <Package className="w-6 h-6 stroke-[3] text-interaction" />
-            Danh sách vật tư
+            {t('tableTitle')}
           </h3>
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-accent animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Dự báo tồn kho AI hoạt động</span>
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">{t('aiPrediction')}</span>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-foreground/5 text-foreground/40 text-[10px] font-black uppercase tracking-[0.2em]">
-                <th className="px-8 py-6">Mặt hàng</th>
-                <th className="px-8 py-6 text-center">Tồn thực tế</th>
-                <th className="px-8 py-6 text-center">Định mức</th>
-                <th className="px-8 py-6">Tình trạng</th>
-                <th className="px-8 py-6 text-right">Thao tác</th>
+                <th className="px-8 py-6">{t('headers.item')}</th>
+                <th className="px-8 py-6 text-center">{t('headers.actual')}</th>
+                <th className="px-8 py-6 text-center">{t('headers.min')}</th>
+                <th className="px-8 py-6">{t('headers.status')}</th>
+                <th className="px-8 py-6 text-right">{t('headers.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-foreground/5">
@@ -257,7 +257,7 @@ export default function InventoryPage() {
                   <td colSpan={5} className="px-8 py-32 text-center">
                     <div className="flex flex-col items-center gap-6 opacity-20">
                       <Package className="w-20 h-20" />
-                      <p className="text-xl font-black uppercase italic tracking-tighter">Kho hàng trống rỗng</p>
+                      <p className="text-xl font-black uppercase italic tracking-tighter">{t('emptyTitle')}</p>
                     </div>
                   </td>
                 </tr>
@@ -284,7 +284,7 @@ export default function InventoryPage() {
                         <span className={`text-2xl font-black italic tracking-tighter ${isOut ? 'text-red-500' : isLow ? 'text-accent' : 'text-interaction'}`}>
                           {item.quantity}
                         </span>
-                        <span className="text-[10px] text-foreground/40 font-black uppercase tracking-widest ml-2 italic">{product?.unit || 'MÓN'}</span>
+                        <span className="text-[10px] text-foreground/40 font-black uppercase tracking-widest ml-2 italic">{product?.unit || 'PCS'}</span>
                       </td>
                       <td className="px-8 py-6 text-center">
                         <span className="text-sm font-black text-foreground/30 italic tracking-tighter">{item.minQuantity}</span>
@@ -292,14 +292,14 @@ export default function InventoryPage() {
                       <td className="px-8 py-6">
                         <div className="flex items-center">
                           {isOut ? (
-                            <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-red-500 text-white border border-foreground/10 uppercase italic tracking-tighter shadow-sm">Hết hàng</span>
+                            <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-red-500 text-white border border-foreground/10 uppercase italic tracking-tighter shadow-sm">{t('status.outOfStock')}</span>
                           ) : isLow ? (
                             <span className="flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black bg-accent text-foreground border border-foreground/10 uppercase italic tracking-tighter shadow-sm">
                               <span className="w-2 h-2 rounded-full bg-foreground animate-pulse"></span>
-                              Sắp hết
+                              {t('status.lowStock')}
                             </span>
                           ) : (
-                            <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-interaction text-white border border-foreground/10 uppercase italic tracking-tighter shadow-sm">An toàn</span>
+                            <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-interaction text-white border border-foreground/10 uppercase italic tracking-tighter shadow-sm">{t('status.safe')}</span>
                           )}
                         </div>
                       </td>
@@ -313,7 +313,7 @@ export default function InventoryPage() {
                               branchId: item.branchId
                             })}
                             className="w-12 h-12 bg-surface border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-interaction hover:text-white shadow-sm transition-all"
-                            title="Điều chỉnh"
+                            title={t('actions.adjust')}
                           >
                             <Settings2 className="w-5 h-5 stroke-[3]" />
                           </button>
@@ -324,7 +324,7 @@ export default function InventoryPage() {
                               branchId: item.branchId
                             })}
                             className="w-12 h-12 bg-surface border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-accent shadow-sm transition-all"
-                            title="Lịch sử"
+                            title={t('actions.history')}
                           >
                             <History className="w-5 h-5 stroke-[3]" />
                           </button>

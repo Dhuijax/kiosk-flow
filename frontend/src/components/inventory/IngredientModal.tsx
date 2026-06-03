@@ -8,6 +8,7 @@ import { Ingredient, CreateIngredientRequest, UpdateIngredientRequest, DeleteIng
 import { Money } from '@/gen/common_pb';
 import { protoInt64 } from '@bufbuild/protobuf';
 import Portal from '@/components/ui/Portal';
+import { useTranslations } from 'next-intl';
 
 interface IngredientModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ interface IngredientModalProps {
 }
 
 export default function IngredientModal({ isOpen, onClose, onSuccess, ingredient }: IngredientModalProps) {
+  const t = useTranslations('Inventory');
   const { createIngredient, updateIngredient, deleteIngredient, loading } = useIngredient();
   const [error, setError] = useState('');
   
@@ -52,7 +54,7 @@ export default function IngredientModal({ isOpen, onClose, onSuccess, ingredient
 
     const priceValue = parseFloat(costPrice);
     if (isNaN(priceValue)) {
-      setError('Giá vốn không hợp lệ');
+      setError(t('ingredientModal.errInvalidPrice'));
       return;
     }
 
@@ -90,13 +92,13 @@ export default function IngredientModal({ isOpen, onClose, onSuccess, ingredient
         }
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra');
+      setError(err instanceof Error ? err.message : t('ingredientModal.errCommon'));
     }
   };
 
   const handleDelete = async () => {
     if (!ingredient) return;
-    if (!confirm(`Bạn có chắc muốn xóa nguyên liệu "${ingredient.name}"?`)) return;
+    if (!confirm(t('ingredientModal.deleteConfirm', { name: ingredient.name }))) return;
 
     try {
       const res = await deleteIngredient(new DeleteIngredientRequest({ id: ingredient.id }));
@@ -105,7 +107,7 @@ export default function IngredientModal({ isOpen, onClose, onSuccess, ingredient
         onClose();
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Không thể xóa nguyên liệu');
+      setError(err instanceof Error ? err.message : t('ingredientModal.errDelete'));
     }
   };
 
@@ -133,9 +135,9 @@ export default function IngredientModal({ isOpen, onClose, onSuccess, ingredient
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-foreground uppercase italic tracking-tighter leading-tight">
-                    {ingredient ? 'Cập nhật' : 'Thêm mới'} <span className="text-interaction">Nguyên liệu</span>
+                    {ingredient ? t('ingredientModal.titleUpdate') : t('ingredientModal.titleCreate')} <span className="text-interaction">{t('ingredientModal.titleIngredient')}</span>
                   </h2>
-                  <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest mt-1 italic">Thông tin vật tư đầu vào</p>
+                  <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest mt-1 italic">{t('ingredientModal.subtitle')}</p>
                 </div>
               </div>
               <button onClick={onClose} className="w-12 h-12 bg-background border border-foreground/10 rounded-2xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm group">
@@ -146,31 +148,31 @@ export default function IngredientModal({ isOpen, onClose, onSuccess, ingredient
             <form onSubmit={handleSubmit} className="p-10 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-3 col-span-full">
-                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Tên nguyên liệu</label>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('ingredientModal.labelName')}</label>
                   <input 
                     type="text" 
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="VD: TRÀ XANH THÁI NGUYÊN"
+                    placeholder={t('ingredientModal.placeholderName')}
                     className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white focus:border-interaction focus:shadow-md transition-all font-black text-lg italic tracking-tighter shadow-sm"
                   />
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Đơn vị tính</label>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('ingredientModal.labelUnit')}</label>
                   <input 
                     type="text" 
                     required
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
-                    placeholder="VD: KG, LÍT, TÚI..."
+                    placeholder={t('ingredientModal.placeholderUnit')}
                     className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white focus:border-interaction transition-all font-black text-sm uppercase italic tracking-tighter shadow-sm"
                   />
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">Giá vốn (VND)</label>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1">{t('ingredientModal.labelCostPrice')}</label>
                   <input 
                     type="number" 
                     required
@@ -189,7 +191,7 @@ export default function IngredientModal({ isOpen, onClose, onSuccess, ingredient
                   onChange={(e) => setIsActive(e.target.checked)}
                   className="w-6 h-6 rounded-lg border-foreground/10 text-interaction focus:ring-interaction cursor-pointer"
                 />
-                <label htmlFor="is_active" className="text-sm font-black uppercase italic tracking-tighter cursor-pointer">Hoạt động (Cho phép sử dụng trong công thức)</label>
+                <label htmlFor="is_active" className="text-sm font-black uppercase italic tracking-tighter cursor-pointer">{t('ingredientModal.labelActive')}</label>
               </div>
 
               {error && (
@@ -206,7 +208,7 @@ export default function IngredientModal({ isOpen, onClose, onSuccess, ingredient
                     onClick={handleDelete}
                     disabled={loading}
                     className="w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm group"
-                    title="Xóa nguyên liệu"
+                    title={t('ingredientModal.deleteTitle')}
                   >
                     <Trash2 className="w-6 h-6 group-hover:scale-110 transition-transform" />
                   </button>
@@ -216,7 +218,7 @@ export default function IngredientModal({ isOpen, onClose, onSuccess, ingredient
                   disabled={loading}
                   className="btn-dynamic flex-1 py-5 text-lg"
                 >
-                  {loading ? <RefreshCw className="w-6 h-6 animate-spin" /> : ingredient ? 'CẬP NHẬT THÔNG TIN' : 'THÊM NGUYÊN LIỆU'}
+                  {loading ? <RefreshCw className="w-6 h-6 animate-spin" /> : ingredient ? t('ingredientModal.btnUpdate') : t('ingredientModal.btnCreate')}
                 </button>
               </div>
             </form>

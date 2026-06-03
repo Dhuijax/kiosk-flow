@@ -2,8 +2,10 @@
 
 import React from 'react';
 import { Shield, Lock, Fingerprint, EyeOff } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function SecuritySettings() {
+  const t = useTranslations('Dashboard.settings.securityTab');
   return (
     <div className="ai-card p-12 space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
       <div className="flex items-center gap-4 border-b border-foreground/10 pb-6">
@@ -12,9 +14,9 @@ export default function SecuritySettings() {
         </div>
         <div>
           <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground">
-            Bảo mật & Quyền riêng tư
+            {t('title')}
           </h3>
-          <p className="text-xs font-bold text-foreground/40 uppercase tracking-widest">Bảo vệ tài khoản và dữ liệu của bạn</p>
+          <p className="text-xs font-bold text-foreground/40 uppercase tracking-widest">{t('subtitle')}</p>
         </div>
       </div>
 
@@ -23,7 +25,7 @@ export default function SecuritySettings() {
           <div className="space-y-3">
             <label className="text-[10px] font-black text-foreground/40 uppercase ml-1 tracking-widest italic flex items-center gap-2">
               <Lock className="w-3 h-3" />
-              Mật khẩu hiện tại
+              {t('currentPassword')}
             </label>
             <div className="relative">
               <input 
@@ -37,7 +39,7 @@ export default function SecuritySettings() {
           <div className="space-y-3">
             <label className="text-[10px] font-black text-foreground/40 uppercase ml-1 tracking-widest italic flex items-center gap-2">
               <Fingerprint className="w-3 h-3" />
-              Mật khẩu mới
+              {t('newPassword')}
             </label>
             <div className="relative">
               <input 
@@ -50,17 +52,17 @@ export default function SecuritySettings() {
         </div>
 
         <button className="px-8 py-4 bg-foreground text-background font-black uppercase italic tracking-tighter rounded-2xl shadow-md hover:bg-interaction hover:text-white transition-all active:scale-95">
-          Cập nhật mật khẩu
+          {t('updatePassword')}
         </button>
       </div>
 
       <div className="p-8 bg-red-500/5 border border-red-500/20 rounded-3xl flex items-center justify-between">
         <div className="space-y-1">
-          <p className="font-black uppercase italic tracking-tighter text-red-600">Đăng xuất khỏi tất cả thiết bị</p>
-          <p className="text-xs font-bold text-red-600/40 uppercase tracking-widest">Nếu bạn nghi ngờ tài khoản bị xâm nhập</p>
+          <p className="font-black uppercase italic tracking-tighter text-red-600">{t('logoutAllDevices')}</p>
+          <p className="text-xs font-bold text-red-600/40 uppercase tracking-widest">{t('logoutAllDevicesDesc')}</p>
         </div>
         <button className="px-6 py-3 bg-red-500 text-white font-black uppercase italic tracking-tighter rounded-xl text-xs">
-          ĐĂNG XUẤT NGAY
+          {t('logoutNow')}
         </button>
       </div>
     </div>

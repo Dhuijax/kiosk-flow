@@ -7,6 +7,7 @@ import { BranchService } from '@/gen/branch_connect';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Portal from '@/components/ui/Portal';
+import { useTranslations } from 'next-intl';
 
 interface BranchModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ interface FormData {
 }
 
 export default function BranchModal({ isOpen, onClose, onSuccess, editingBranch }: BranchModalProps) {
+  const t = useTranslations('Branches');
   const { token, tenantId } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -91,7 +93,7 @@ export default function BranchModal({ isOpen, onClose, onSuccess, editingBranch 
       onClose();
     } catch (err) {
       console.error('Failed to save branch:', err);
-      alert('Có lỗi xảy ra khi lưu chi nhánh.');
+      alert(t('saveError'));
     } finally {
       setLoading(false);
     }
@@ -111,10 +113,10 @@ export default function BranchModal({ isOpen, onClose, onSuccess, editingBranch 
               </div>
               <div>
                 <h2 className="text-2xl font-black text-foreground uppercase italic tracking-tighter leading-tight">
-                  {editingBranch ? 'Chỉnh sửa chi nhánh' : 'Thêm chi nhánh mới'}
+                  {editingBranch ? t('editBranch') : t('createBranch')}
                 </h2>
                 <p className="text-[10px] font-black text-foreground/40 uppercase tracking-[0.2em] mt-1">
-                  Quản lý thông tin địa điểm kinh doanh
+                  {t('editDesc')}
                 </p>
               </div>
             </div>
@@ -130,32 +132,32 @@ export default function BranchModal({ isOpen, onClose, onSuccess, editingBranch 
           <form onSubmit={handleSubmit} className="p-10 space-y-8">
             <div className="space-y-3">
               <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1 flex items-center gap-2">
-                <Info className="w-4 h-4 text-interaction" /> Tên chi nhánh *
+                <Info className="w-4 h-4 text-interaction" /> {t('name')}
               </label>
               <input 
                 required
                 value={formData.name}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
-                placeholder="VÍ DỤ: CHI NHÁNH QUẬN 1, KIOSK 02..."
+                placeholder={t('placeholderName')}
                 className="w-full px-8 py-5 bg-surface border border-foreground/10 rounded-[2rem] outline-none focus:bg-white transition-all font-black text-xl uppercase italic tracking-tighter shadow-sm"
               />
             </div>
 
             <div className="space-y-3">
               <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-interaction" /> Địa chỉ
+                <MapPin className="w-4 h-4 text-interaction" /> {t('address')}
               </label>
               <input 
                 value={formData.address}
                 onChange={e => setFormData({ ...formData, address: e.target.value })}
-                placeholder="SỐ NHÀ, TÊN ĐƯỜNG, QUẬN/HUYỆN..."
+                placeholder={t('placeholderAddress')}
                 className="w-full px-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm uppercase italic tracking-tighter shadow-sm"
               />
             </div>
 
             <div className="space-y-3">
               <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest italic ml-1 flex items-center gap-2">
-                <Phone className="w-4 h-4 text-interaction" /> Số điện thoại
+                <Phone className="w-4 h-4 text-interaction" /> {t('phone')}
               </label>
               <input 
                 value={formData.phone}
@@ -168,8 +170,8 @@ export default function BranchModal({ isOpen, onClose, onSuccess, editingBranch 
             <div className="grid grid-cols-2 gap-6 pt-4">
               <label className="flex items-center justify-between group cursor-pointer bg-foreground/5 p-6 rounded-3xl border border-foreground/5 hover:border-interaction/20 transition-all shadow-sm">
                 <div className="flex flex-col">
-                  <span className="text-xs font-black uppercase italic tracking-tighter text-foreground/60 group-hover:text-interaction transition-colors">Chi nhánh chính</span>
-                  <span className="text-[8px] font-black text-foreground/20 uppercase tracking-widest mt-1">Sử dụng cho báo cáo tổng hợp</span>
+                  <span className="text-xs font-black uppercase italic tracking-tighter text-foreground/60 group-hover:text-interaction transition-colors">{t('headquarters')}</span>
+                  <span className="text-[8px] font-black text-foreground/20 uppercase tracking-widest mt-1">{t('mainBranchReport')}</span>
                 </div>
                 <div className="relative inline-flex items-center cursor-pointer">
                   <input 
@@ -184,8 +186,8 @@ export default function BranchModal({ isOpen, onClose, onSuccess, editingBranch 
 
               <label className="flex items-center justify-between group cursor-pointer bg-foreground/5 p-6 rounded-3xl border border-foreground/5 hover:border-interaction/20 transition-all shadow-sm">
                 <div className="flex flex-col">
-                  <span className="text-xs font-black uppercase italic tracking-tighter text-foreground/60 group-hover:text-interaction transition-colors">Trạng thái hoạt động</span>
-                  <span className="text-[8px] font-black text-foreground/20 uppercase tracking-widest mt-1">Cho phép đăng nhập & bán hàng</span>
+                  <span className="text-xs font-black uppercase italic tracking-tighter text-foreground/60 group-hover:text-interaction transition-colors">{t('status')}</span>
+                  <span className="text-[8px] font-black text-foreground/20 uppercase tracking-widest mt-1">{t('activeStatus')}</span>
                 </div>
                 <div className="relative inline-flex items-center cursor-pointer">
                   <input 
@@ -207,7 +209,7 @@ export default function BranchModal({ isOpen, onClose, onSuccess, editingBranch 
               onClick={onClose}
               className="px-8 py-4 text-foreground/40 font-black uppercase italic tracking-tighter text-sm hover:text-foreground transition-colors"
             >
-              Hủy bỏ
+              {t('delete')}
             </button>
             <button 
               type="submit"
@@ -216,7 +218,7 @@ export default function BranchModal({ isOpen, onClose, onSuccess, editingBranch 
               className="btn-dynamic px-12 py-4 text-sm"
             >
               {loading ? <RefreshCw className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
-              <span>{editingBranch ? 'Cập nhật' : 'Lưu chi nhánh'}</span>
+              <span>{editingBranch ? t('edit') : t('createBranch')}</span>
             </button>
           </div>
         </div>

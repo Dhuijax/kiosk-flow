@@ -16,8 +16,10 @@ import { PurchaseOrder } from '@/gen/procurement_pb';
 import PurchaseOrderModal from '@/components/procurement/PurchaseOrderModal';
 import { formatVND, formatDateTime } from '@/lib/utils/format';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useTranslations } from 'next-intl';
 
 export default function ProcurementPage() {
+  const t = useTranslations('Inventory');
   const { branchId } = useAuth();
   const { listPurchaseOrders, loading } = useProcurement();
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
@@ -54,13 +56,13 @@ export default function ProcurementPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3 text-interaction font-black uppercase text-xs tracking-widest">
             <Sparkles className="w-5 h-5" />
-            <span>Giao dịch nhập kho vật tư</span>
+            <span>{t('procurementTitle')}</span>
           </div>
           <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground">
-            Lịch sử <span className="text-primary">Nhập hàng</span>
+            {t('procurementHistory').split(' ')[0]} <span className="text-primary">{t('procurementHistory').split(' ').slice(1).join(' ')}</span>
           </h1>
           <p className="text-foreground/40 font-bold flex items-center gap-2 italic">
-            Ghi nhận và quản lý các phiếu nhập kho nguyên liệu, tăng số lượng tồn ngay lập tức.
+            {t('procurementDesc')}
           </p>
         </div>
 
@@ -70,7 +72,7 @@ export default function ProcurementPage() {
             className="btn-dynamic py-4 px-8 text-sm h-14"
           >
             <PlusCircle className="w-5 h-5" />
-            <span>TẠO PHIẾU NHẬP KHO</span>
+            <span>{t('createReceipt')}</span>
           </button>
         </div>
       </div>
@@ -81,31 +83,31 @@ export default function ProcurementPage() {
           href="/dashboard/inventory" 
           className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
         >
-          Tồn kho tổng quan
+          {t('inventoryOverview')}
         </Link>
         <Link 
           href="/dashboard/inventory/ingredients" 
           className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
         >
-          Danh sách nguyên liệu
+          {t('ingredientsList')}
         </Link>
         <Link 
           href="/dashboard/inventory/suppliers" 
           className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
         >
-          Nhà cung cấp
+          {t('suppliers')}
         </Link>
         <Link 
           href="/dashboard/inventory/procurement" 
           className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest bg-interaction/10 text-interaction border border-interaction/20 transition-all"
         >
-          Phiếu nhập hàng
+          {t('purchaseOrders')}
         </Link>
         <Link 
           href="/dashboard/inventory/waste" 
           className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
         >
-          Báo hỏng & hao hụt
+          {t('wasteReport')}
         </Link>
       </div>
 
@@ -119,11 +121,11 @@ export default function ProcurementPage() {
           <div className="w-20 h-20 bg-interaction/5 rounded-3xl flex items-center justify-center border border-interaction/10 mb-6">
             <ShoppingBag className="w-10 h-10 text-interaction" />
           </div>
-          <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground mb-2">Chưa có phiếu nhập nào</h3>
-          <p className="text-foreground/40 max-w-md font-bold text-sm italic mb-8">Hệ thống chưa ghi nhận giao dịch nhập hàng nào cho chi nhánh này.</p>
+          <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground mb-2">{t('noReceipts')}</h3>
+          <p className="text-foreground/40 max-w-md font-bold text-sm italic mb-8">{t('noReceiptsDesc')}</p>
           <button onClick={() => setIsModalOpen(true)} className="btn-dynamic py-4 px-8 text-sm">
             <PlusCircle className="w-5 h-5" />
-            <span>TẠO PHIẾU NHẬP ĐẦU TIÊN</span>
+            <span>{t('createFirstReceipt')}</span>
           </button>
         </div>
       ) : (
@@ -132,11 +134,11 @@ export default function ProcurementPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-foreground/5 text-foreground/40 text-[10px] font-black uppercase tracking-[0.2em]">
-                  <th className="px-8 py-6">Mã phiếu</th>
-                  <th className="px-8 py-6">Nhà cung cấp</th>
-                  <th className="px-8 py-6">Thời gian</th>
-                  <th className="px-8 py-6 text-right">Tổng tiền nhập</th>
-                  <th className="px-8 py-6 text-center">Chi tiết</th>
+                  <th className="px-8 py-6">{t('receiptId')}</th>
+                  <th className="px-8 py-6">{t('supplierName')}</th>
+                  <th className="px-8 py-6">{t('time')}</th>
+                  <th className="px-8 py-6 text-right">{t('totalAmount')}</th>
+                  <th className="px-8 py-6 text-center">{t('details')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-foreground/5 font-black uppercase tracking-tighter text-sm italic">
@@ -155,7 +157,7 @@ export default function ProcurementPage() {
                         </td>
                         <td className="px-8 py-6 flex items-center gap-3">
                           <Users className="w-5 h-5 text-interaction" />
-                          <span>{po.supplierName || 'Nhà cung cấp ẩn'}</span>
+                          <span>{po.supplierName || t('anonymousSupplier')}</span>
                         </td>
                         <td className="px-8 py-6 font-bold text-xs opacity-40 uppercase tracking-widest normal-case">
                           {po.createdAt ? formatDateTime(new Date(po.createdAt)) : '...'}
@@ -174,7 +176,7 @@ export default function ProcurementPage() {
                         <tr className="bg-foreground/5/30">
                           <td colSpan={5} className="px-10 py-8 normal-case font-bold">
                             <div className="space-y-4">
-                              <h4 className="text-xs font-black uppercase italic tracking-widest text-interaction">Danh sách nguyên liệu nhập kho:</h4>
+                              <h4 className="text-xs font-black uppercase italic tracking-widest text-interaction">{t('importedIngredientsList')}</h4>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {po.items.map((item, idx) => {
                                   const itemPrice = Number(item.unitPrice?.units || 0);
@@ -182,11 +184,11 @@ export default function ProcurementPage() {
                                     <div key={idx} className="p-4 bg-background border border-foreground/10 rounded-2xl flex justify-between items-center shadow-sm">
                                       <div>
                                         <p className="text-sm font-black uppercase italic tracking-tighter text-foreground">{item.ingredientName}</p>
-                                        <p className="text-[10px] text-foreground/40 uppercase tracking-widest italic mt-1">Đơn giá: {formatVND(itemPrice)}</p>
+                                        <p className="text-[10px] text-foreground/40 uppercase tracking-widest italic mt-1">{t('unitPriceLabel', { price: formatVND(itemPrice) })}</p>
                                       </div>
                                       <div className="text-right">
                                         <p className="text-lg font-black text-primary italic tracking-tighter">x{item.quantity}</p>
-                                        <p className="text-[10px] text-foreground/40 uppercase tracking-widest italic mt-1">T.Tiền: {formatVND(itemPrice * item.quantity)}</p>
+                                        <p className="text-[10px] text-foreground/40 uppercase tracking-widest italic mt-1">{t('subtotalLabel', { price: formatVND(itemPrice * item.quantity) })}</p>
                                       </div>
                                     </div>
                                   );

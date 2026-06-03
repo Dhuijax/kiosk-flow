@@ -16,8 +16,10 @@ import Link from 'next/link';
 import { useSupplier } from '@/hooks/useSupplier';
 import { Supplier } from '@/gen/procurement_pb';
 import SupplierModal from '@/components/procurement/SupplierModal';
+import { useTranslations } from 'next-intl';
 
 export default function SuppliersPage() {
+  const t = useTranslations('Inventory');
   const { listSuppliers, loading } = useSupplier();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,13 +61,13 @@ export default function SuppliersPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3 text-interaction font-black uppercase text-xs tracking-widest">
             <Sparkles className="w-5 h-5" />
-            <span>Nguồn cung ứng nguyên liệu</span>
+            <span>{t('suppliersTitle')}</span>
           </div>
           <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground">
-            Danh sách <span className="text-primary">Nhà cung cấp</span>
+            {t('suppliersList').split(' ')[0]} <span className="text-primary">{t('suppliersList').split(' ').slice(1).join(' ')}</span>
           </h1>
           <p className="text-foreground/40 font-bold flex items-center gap-2 italic">
-            Quản lý đối tác và thông tin liên hệ cung cấp vật tư nhập khẩu & nội địa.
+            {t('suppliersDesc')}
           </p>
         </div>
 
@@ -74,18 +76,18 @@ export default function SuppliersPage() {
             <Search className="w-5 h-5 text-foreground/20 group-focus-within:text-interaction flex-none" />
             <input 
               type="text" 
-              placeholder="TÌM KIẾM ĐỐI TÁC..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent border-none outline-none text-sm font-black uppercase italic tracking-tighter flex-1 placeholder:text-foreground/20"
-            />
+            placeholder={t('searchPartner')} 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="bg-transparent border-none outline-none text-sm font-black uppercase italic tracking-tighter flex-1 placeholder:text-foreground/20"
+          />
           </div>
           <button 
             onClick={handleAddClick}
             className="btn-dynamic py-4 px-8 text-sm h-14"
           >
             <PlusCircle className="w-5 h-5" />
-            <span>THÊM ĐỐI TÁC MỚI</span>
+            <span>{t('addSupplier')}</span>
           </button>
         </div>
       </div>
@@ -96,31 +98,31 @@ export default function SuppliersPage() {
           href="/dashboard/inventory" 
           className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
         >
-          Tồn kho tổng quan
+          {t('inventoryOverview')}
         </Link>
         <Link 
           href="/dashboard/inventory/ingredients" 
           className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
         >
-          Danh sách nguyên liệu
+          {t('ingredientsList')}
         </Link>
         <Link 
           href="/dashboard/inventory/suppliers" 
           className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest bg-interaction/10 text-interaction border border-interaction/20 transition-all"
         >
-          Nhà cung cấp
+          {t('suppliers')}
         </Link>
         <Link 
           href="/dashboard/inventory/procurement" 
           className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
         >
-          Phiếu nhập hàng
+          {t('purchaseOrders')}
         </Link>
         <Link 
           href="/dashboard/inventory/waste" 
           className="px-6 py-3 rounded-xl text-xs font-black uppercase italic tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
         >
-          Báo hỏng & hao hụt
+          {t('wasteReport')}
         </Link>
       </div>
 
@@ -134,11 +136,11 @@ export default function SuppliersPage() {
           <div className="w-20 h-20 bg-interaction/5 rounded-3xl flex items-center justify-center border border-interaction/10 mb-6">
             <Users className="w-10 h-10 text-interaction" />
           </div>
-          <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground mb-2">Chưa có nhà cung cấp nào</h3>
-          <p className="text-foreground/40 max-w-md font-bold text-sm italic mb-8">Hệ thống chưa ghi nhận đối tác phân phối nguyên liệu nào. Hãy bắt đầu thêm mới.</p>
+          <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground mb-2">{t('noSuppliers')}</h3>
+          <p className="text-foreground/40 max-w-md font-bold text-sm italic mb-8">{t('noSuppliersDesc')}</p>
           <button onClick={handleAddClick} className="btn-dynamic py-4 px-8 text-sm">
             <PlusCircle className="w-5 h-5" />
-            <span>TẠO NHÀ CUNG CẤP ĐẦU TIÊN</span>
+            <span>{t('createFirstSupplier')}</span>
           </button>
         </div>
       ) : (
@@ -156,7 +158,7 @@ export default function SuppliersPage() {
                   </div>
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-foreground/5 text-foreground/40 border border-foreground/5 text-[9px] font-black uppercase tracking-widest italic">
                     <Calendar className="w-3.5 h-3.5" />
-                    <span>Active</span>
+                    <span>{t('active')}</span>
                   </div>
                 </div>
 

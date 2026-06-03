@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { getAuthenticatedClient } from '@/lib/grpc/client';
 import { CustomerService } from '@/gen/customer_connect';
 import { Customer } from '@/gen/customer_pb';
+import { useTranslations } from 'next-intl';
 
 interface AddCustomerModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface AddCustomerModalProps {
 }
 
 export default function AddCustomerModal({ isOpen, onClose, onSuccess, editingCustomer }: AddCustomerModalProps) {
+  const t = useTranslations('Customers');
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   
@@ -65,7 +67,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editingCu
       }, 1500);
     } catch (err) {
       console.error('Failed to register customer:', err);
-      const message = err instanceof Error ? err.message : 'Có lỗi xảy ra khi đăng ký khách hàng.';
+      const message = err instanceof Error ? err.message : t('errRegister');
       setError(message);
     } finally {
       setLoading(false);
@@ -95,8 +97,8 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editingCu
                 <div className="w-24 h-24 bg-interaction rounded-full flex items-center justify-center text-white shadow-lg animate-bounce">
                   <CheckCircle size={48} />
                 </div>
-                <h2 className="text-4xl font-black uppercase italic tracking-tighter text-foreground">Thành công!</h2>
-                <p className="text-foreground/40 font-bold uppercase text-xs tracking-widest">Thành viên mới đã được ghi nhận vào hệ thống.</p>
+                <h2 className="text-4xl font-black uppercase italic tracking-tighter text-foreground">{t('addSuccess')}</h2>
+                <p className="text-foreground/40 font-bold uppercase text-xs tracking-widest">{t('addSuccessDesc')}</p>
               </div>
             ) : (
               <>
@@ -108,10 +110,10 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editingCu
                     </div>
                     <div>
                       <h2 className="text-3xl font-black uppercase italic tracking-tighter text-foreground">
-                        {editingCustomer ? 'Cập nhật thành viên' : 'Thêm thành viên'}
+                        {editingCustomer ? t('updateMember') : t('addMemberTitle')}
                       </h2>
                       <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
-                        {editingCustomer ? 'Thay đổi thông tin khách hàng thân thiết' : 'Mở rộng mạng lưới khách hàng thân thiết'}
+                        {editingCustomer ? t('updateDesc') : t('createDesc')}
                       </p>
                     </div>
                   </div>
@@ -129,7 +131,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editingCu
                   <div className="grid grid-cols-1 gap-8">
                     {/* Full Name */}
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Họ và tên khách hàng</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">{t('fullName')}</label>
                       <div className="relative group">
                         <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 group-focus-within:text-interaction transition-colors" />
                         <input 
@@ -138,14 +140,14 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editingCu
                           value={formData.fullName}
                           onChange={(e) => setFormData({...formData, fullName: e.target.value})}
                           className="w-full pl-14 pr-6 py-4 bg-background border border-foreground/10 rounded-2xl outline-none focus:bg-white transition-all font-bold text-sm shadow-sm"
-                          placeholder="NGUYỄN THỊ B"
+                          placeholder={t('placeholderName')}
                         />
                       </div>
                     </div>
 
                     {/* Phone */}
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Số điện thoại</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">{t('phoneNumber')}</label>
                       <div className="relative group">
                         <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 group-focus-within:text-interaction transition-colors" />
                         <input 
@@ -161,7 +163,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editingCu
 
                     {/* Email */}
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Email (Tùy chọn)</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">{t('emailOpt')}</label>
                       <div className="relative group">
                         <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 group-focus-within:text-interaction transition-colors" />
                         <input 
@@ -183,7 +185,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editingCu
                     onClick={onClose}
                     className="px-8 py-4 font-black uppercase italic tracking-tighter text-foreground/40 hover:text-foreground transition-colors"
                   >
-                    Hủy bỏ
+                    {t('btnCancel')}
                   </button>
                     <button 
                     onClick={handleSubmit}
@@ -194,7 +196,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, editingCu
                       <Loader2 className="w-6 h-6 animate-spin" />
                     ) : (
                       <>
-                        <span>{editingCustomer ? 'CẬP NHẬT THÔNG TIN' : 'ĐĂNG KÝ THÀNH VIÊN'}</span>
+                        <span>{editingCustomer ? t('btnUpdate') : t('btnRegister')}</span>
                         <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
                       </>
                     )}

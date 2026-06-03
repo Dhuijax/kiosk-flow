@@ -18,7 +18,9 @@
     "confirm": "Confirm",
     "back": "Back",
     "loading": "Loading...",
-    "error": "An error occurred"
+    "error": "An error occurred",
+    "features": "Features",
+    "operations": "Operations"
   },
   "Landing": {
     "welcome": "Welcome to KioskFlow",
@@ -28,7 +30,41 @@
     "posDescription": "Professional point of sale for cashiers and waiters.",
     "kitchenDescription": "Real-time kitchen order display and preparation tracker.",
     "dashboardDescription": "Business management, inventory, payroll, and analytics.",
-    "tableDescription": "QR code table ordering experience for dine-in guests."
+    "tableDescription": "QR code table ordering experience for dine-in guests.",
+    "heroTitleLine1": "Selling",
+    "heroTitleLine2": "Effortlessly",
+    "heroDescription": "KioskFlow AI is not just a touchscreen. The system understands emotions, optimizes ingredients (BOM), and automatically deducts stock in an instant.",
+    "selectEmotion": "Quickly select your emotion status:",
+    "tryPOS": "Experience POS",
+    "brandsCount": "Brands converted\nto AI Kiosk",
+    "micPrompt": "Tap Mic or select your emotion",
+    "listeningPrompt": "Listening to your voice...",
+    "emotions": {
+      "tired": {
+        "label": "Tired, need energy",
+        "prompt": "I feel so tired, recommend something to recharge quickly?",
+        "title": "Energy Awakening Combo ⚡",
+        "desc": "Perfect combination of rich Caffeine from premium Arabica beans and instant energy-boosting carbs."
+      },
+      "hot": {
+        "label": "Hot, need refreshment",
+        "prompt": "The weather is so hot, is there a cool refreshing drink to cleanse?",
+        "title": "Refreshing Cooling Combo ❄️",
+        "desc": "Cooldown instantly with cold-brew tea combined with fresh juicy fruits and a light mousse cake."
+      },
+      "sweet": {
+        "label": "Sweet tooth, need treats",
+        "prompt": "Craving sweet treats this afternoon, any recommended drink & cake?",
+        "title": "Sweet Cravings Combo 🧁",
+        "desc": "Rich and smooth matcha milk tea alongside sweet chocolate muffin, soothing all stress."
+      },
+      "stress": {
+        "label": "Stressed, need peace",
+        "prompt": "Work is so stressful, can you suggest a warm and gentle drink?",
+        "title": "Peaceful Relaxation Combo 🍃",
+        "desc": "Warm chamomile honey tea to soothe nerves and relieve stress with healthy oatmeal cookies."
+      }
+    }
   },
   "Auth": {
     "username": "Username",

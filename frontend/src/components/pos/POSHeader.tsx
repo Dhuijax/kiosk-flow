@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link, useRouter } from '@/i18n/routing';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { 
   LogOut, 
@@ -41,6 +41,7 @@ export default function POSHeader() {
       </div>
 
       <div className="flex items-center gap-3 md:gap-8">
+        <LanguageSwitcher />
         <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-accent/5 border border-foreground/10 rounded-2xl">
           <Clock className="w-5 h-5 text-primary stroke-[3]" />
           <span className="text-lg font-black text-foreground italic tracking-tighter">

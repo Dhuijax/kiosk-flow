@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Link } from '@/i18n/routing';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useTranslations } from 'next-intl';
 import { 
   Mic, 
   ArrowRight, 
@@ -26,12 +27,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 const EMOTIONS = [
   {
     id: 'tired',
-    label: 'Mệt mỏi, cần năng lượng',
     icon: Brain,
-    prompt: 'Tôi thấy mệt mỏi quá, gợi ý món gì hồi sức tỉnh táo nhanh đi?',
     recommendation: {
-      title: 'Combo Đánh Thức Năng Lượng ⚡',
-      desc: 'Sự kết hợp hoàn hảo giữa Caffeine đậm đà từ hạt Arabica hảo hạng và tinh bột cung cấp năng lượng tức thì.',
       items: [
         { name: 'Latte Hạnh Nhân', price: '45.000đ', icon: Coffee },
         { name: 'Bánh Sừng Bò Hạnh Nhân', price: '32.000đ', icon: Utensils }
@@ -41,12 +38,8 @@ const EMOTIONS = [
   },
   {
     id: 'hot',
-    label: 'Nóng bức, cần thanh nhiệt',
     icon: Sun,
-    prompt: 'Thời tiết nắng nóng quá, có đồ uống gì mát lạnh thanh lọc cơ thể không?',
     recommendation: {
-      title: 'Combo Thanh Nhiệt Sảng Khoái ❄️',
-      desc: 'Giúp giải nhiệt lập tức với trà ủ lạnh kết hợp trái cây tươi mọng nước, đi kèm bánh mousse nhẹ nhàng thanh mát.',
       items: [
         { name: 'Trà Đào Cam Sả Đá', price: '39.000đ', icon: Coffee },
         { name: 'Bánh Mousse Chanh Leo', price: '29.000đ', icon: Cookie }
@@ -56,12 +49,8 @@ const EMOTIONS = [
   },
   {
     id: 'sweet',
-    label: 'Thèm ngọt, cần chiều chuộng',
     icon: Cookie,
-    prompt: 'Chiều nay thấy thèm đồ ngọt quá, đề xuất bánh nước kết hợp đi?',
     recommendation: {
-      title: 'Combo Chiều Chuộng Vị Giác 🧁',
-      desc: 'Trà sữa matcha thơm béo sánh mịn cùng bánh muffin socola ngọt ngào, xoa dịu mọi căng thẳng cuối ngày.',
       items: [
         { name: 'Trà Sữa Matcha Trân Châu', price: '42.000đ', icon: Coffee },
         { name: 'Bánh Muffin Socola Đậm', price: '35.000đ', icon: Utensils }
@@ -71,12 +60,8 @@ const EMOTIONS = [
   },
   {
     id: 'stress',
-    label: 'Căng thẳng, cần bình yên',
     icon: Heart,
-    prompt: 'Công việc căng thẳng quá, gợi ý đồ uống gì dịu nhẹ ấm áp được không?',
     recommendation: {
-      title: 'Combo Bình Yên Thư Giãn 🍃',
-      desc: 'Trà hoa cúc mật ong ấm nóng giúp an thần, giải tỏa stress kết hợp cùng bánh cookie yến mạch ít ngọt lành mạnh.',
       items: [
         { name: 'Trà Hoa Cúc Mật Ong', price: '35.000đ', icon: Coffee },
         { name: 'Cookie Yến Mạch Ngũ Cốc', price: '25.000đ', icon: Cookie }
@@ -131,10 +116,17 @@ const PLAYGROUND_INGREDIENTS = [
 ];
 
 export default function LandingPage() {
+  const t = useTranslations('Landing');
+  const tCommon = useTranslations('Common');
   const [isListening, setIsListening] = useState(false);
   const [intent, setIntent] = useState<string | null>(null);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
-  const [recommendation, setRecommendation] = useState<typeof EMOTIONS[0]['recommendation'] | null>(null);
+  const [recommendation, setRecommendation] = useState<{
+    title: string;
+    desc: string;
+    items: Array<{ name: string; price: string; icon: React.ComponentType<{ className?: string }> }>;
+    total: string;
+  } | null>(null);
   const [isOrdered, setIsOrdered] = useState(false);
 
   // ROI Calculator State
@@ -174,14 +166,18 @@ export default function LandingPage() {
   const handleEmotionClick = (emotion: typeof EMOTIONS[0]) => {
     if (isListening) return;
     setIsListening(true);
-    setIntent(emotion.prompt);
+    setIntent(t(`emotions.${emotion.id}.prompt`));
     setSelectedEmotion(emotion.id);
     setRecommendation(null);
     setIsOrdered(false);
 
     setTimeout(() => {
       setIsListening(false);
-      setRecommendation(emotion.recommendation);
+      setRecommendation({
+        ...emotion.recommendation,
+        title: t(`emotions.${emotion.id}.title`),
+        desc: t(`emotions.${emotion.id}.desc`)
+      });
     }, 1800);
   };
 
@@ -211,10 +207,10 @@ export default function LandingPage() {
         </div>
         
         <div className="hidden md:flex items-center gap-8 font-black uppercase text-sm tracking-widest italic">
-          <Link href="#features" className="hover:text-interaction transition-colors">Tính năng</Link>
-          <Link href="#operations" className="hover:text-interaction transition-colors">Vận hành</Link>
+          <Link href="#features" className="hover:text-interaction transition-colors">{tCommon('features')}</Link>
+          <Link href="#operations" className="hover:text-interaction transition-colors">{tCommon('operations')}</Link>
           <LanguageSwitcher />
-          <Link href="/auth/login" className="px-6 py-3 bg-foreground text-background rounded-xl hover:bg-interaction transition-all">Đăng nhập</Link>
+          <Link href="/auth/login" className="px-6 py-3 bg-foreground text-background rounded-xl hover:bg-interaction transition-all">{tCommon('login')}</Link>
         </div>
       </nav>
 
@@ -228,17 +224,17 @@ export default function LandingPage() {
             </div>
             
             <h1 className="text-6xl md:text-9xl font-black leading-tight tracking-tighter uppercase italic">
-              Bán hàng <br />
-              <span className="text-primary">Bằng hơi thở</span>
+              {t('heroTitleLine1')} <br />
+              <span className="text-primary">{t('heroTitleLine2')}</span>
             </h1>
             
             <p className="text-xl md:text-2xl font-bold max-w-xl leading-relaxed opacity-80">
-              KioskFlow AI không chỉ là màn hình chạm. Hệ thống thấu hiểu cảm xúc, tối ưu hóa nguyên liệu (BOM) và tự động khấu trừ kho trong tích tắc.
+              {t('heroDescription')}
             </p>
 
             {/* Quick Emotion Pills Selector */}
             <div className="space-y-4">
-              <p className="font-black uppercase tracking-widest text-xs opacity-50">Chọn nhanh trạng thái cảm xúc của bạn:</p>
+              <p className="font-black uppercase tracking-widest text-xs opacity-50">{t('selectEmotion')}</p>
               <div className="flex flex-wrap gap-3">
                 {EMOTIONS.map((emotion) => {
                   const Icon = emotion.icon;
@@ -254,7 +250,7 @@ export default function LandingPage() {
                       }`}
                     >
                       <Icon className="w-4 h-4" />
-                      <span>{emotion.label}</span>
+                      <span>{t(`emotions.${emotion.id}.label`)}</span>
                     </button>
                   );
                 })}
@@ -266,15 +262,15 @@ export default function LandingPage() {
                 href="/pos/order" 
                 className="btn-dynamic text-xl px-12 py-6"
               >
-                Trải nghiệm POS <ArrowRight className="w-6 h-6" />
+                {t('tryPOS')} <ArrowRight className="w-6 h-6" />
               </Link>
               
               <div className="flex items-center gap-4 p-2 bg-foreground/5 border border-foreground/10 rounded-2xl">
                 <div className="w-12 h-12 bg-white border border-foreground/10 rounded-xl flex items-center justify-center font-black">
                   +50
                 </div>
-                <div className="text-xs font-black uppercase tracking-tighter opacity-60">
-                  Thương hiệu đã <br /> chuyển đổi AI
+                <div className="text-xs font-black uppercase tracking-tighter opacity-60 whitespace-pre-line">
+                  {t('brandsCount')}
                 </div>
               </div>
             </div>
@@ -313,7 +309,7 @@ export default function LandingPage() {
               
               <div className="text-center space-y-2">
                 <p className="font-black uppercase tracking-widest text-sm opacity-40">
-                  {isListening ? 'Đang lắng nghe cảm xúc...' : 'Chạm Mic hoặc chọn trạng thái cảm xúc'}
+                  {isListening ? t('listeningPrompt') : t('micPrompt')}
                 </p>
                 <div className="flex justify-center gap-1.5 h-8 items-center">
                   {[1, 2, 3, 4, 5, 6, 7].map(i => (

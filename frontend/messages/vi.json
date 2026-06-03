@@ -18,7 +18,9 @@
     "confirm": "Xác nhận",
     "back": "Quay lại",
     "loading": "Đang tải...",
-    "error": "Đã xảy ra lỗi"
+    "error": "Đã xảy ra lỗi",
+    "features": "Tính năng",
+    "operations": "Vận hành"
   },
   "Landing": {
     "welcome": "Chào mừng đến với KioskFlow",
@@ -28,7 +30,41 @@
     "posDescription": "Điểm bán hàng chuyên nghiệp dành cho nhân viên thu ngân và phục vụ.",
     "kitchenDescription": "Hệ thống hiển thị và quản lý chế biến món ăn thời gian thực cho nhà bếp.",
     "dashboardDescription": "Quản lý kinh doanh, kho bãi, nhân sự và báo cáo phân tích nâng cao.",
-    "tableDescription": "Trải nghiệm tự đặt món qua mã QR tại bàn cho thực khách."
+    "tableDescription": "Trải nghiệm tự đặt món qua mã QR tại bàn cho thực khách.",
+    "heroTitleLine1": "Bán hàng",
+    "heroTitleLine2": "Bằng hơi thở",
+    "heroDescription": "KioskFlow AI không chỉ là màn hình chạm. Hệ thống thấu hiểu cảm xúc, tối ưu hóa nguyên liệu (BOM) và tự động khấu trừ kho trong tích tắc.",
+    "selectEmotion": "Chọn nhanh trạng thái cảm xúc của bạn:",
+    "tryPOS": "Trải nghiệm POS",
+    "brandsCount": "Thương hiệu đã\nchuyển đổi AI",
+    "micPrompt": "Chạm Mic hoặc chọn trạng thái cảm xúc",
+    "listeningPrompt": "Đang lắng nghe cảm xúc...",
+    "emotions": {
+      "tired": {
+        "label": "Mệt mỏi, cần năng lượng",
+        "prompt": "Tôi thấy mệt mỏi quá, gợi ý món gì hồi sức tỉnh táo nhanh đi?",
+        "title": "Combo Đánh Thức Năng Lượng ⚡",
+        "desc": "Sự kết hợp hoàn hảo giữa Caffeine đậm đà từ hạt Arabica hảo hạng và tinh bột cung cấp năng lượng tức thì."
+      },
+      "hot": {
+        "label": "Nóng bức, cần thanh nhiệt",
+        "prompt": "Thời tiết nắng nóng quá, có đồ uống gì mát lạnh thanh lọc cơ thể không?",
+        "title": "Combo Thanh Nhiệt Sảng Khoái ❄️",
+        "desc": "Giúp giải nhiệt lập tức với trà ủ lạnh kết hợp trái cây tươi mọng nước, đi kèm bánh mousse nhẹ nhàng thanh mát."
+      },
+      "sweet": {
+        "label": "Thèm ngọt, cần chiều chuộng",
+        "prompt": "Chiều nay thấy thèm đồ ngọt quá, đề xuất bánh nước kết hợp đi?",
+        "title": "Combo Chiều Chuộng Vị Giác 🧁",
+        "desc": "Trà sữa matcha thơm béo sánh mịn cùng bánh muffin socola ngọt ngào, xoa dịu mọi căng thẳng cuối ngày."
+      },
+      "stress": {
+        "label": "Căng thẳng, cần bình yên",
+        "prompt": "Công việc căng thẳng quá, gợi ý đồ uống gì dịu nhẹ ấm áp được không?",
+        "title": "Combo Bình Yên Thư Giãn 🍃",
+        "desc": "Trà hoa cúc mật ong ấm nóng giúp an thần, giải tỏa stress kết hợp cùng bánh cookie yến mạch ít ngọt lành mạnh."
+      }
+    }
   },
   "Auth": {
     "username": "Tên đăng nhập",

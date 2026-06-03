@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { Link, usePathname, useRouter } from '@/i18n/routing';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { 
   LayoutDashboard, 
@@ -225,6 +225,7 @@ export default function DashboardLayout({
           </div>
 
           <div className="flex items-center gap-8">
+            <LanguageSwitcher />
             <button className="w-12 h-12 bg-surface border border-foreground/10 rounded-xl flex items-center justify-center hover:bg-accent transition-all shadow-sm relative">
               <Bell className="w-6 h-6" />
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary border border-foreground/50 rounded-full"></span>

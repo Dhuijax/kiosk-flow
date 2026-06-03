@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Link } from '@/i18n/routing';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { 
   Mic, 
   ArrowRight, 
@@ -118,6 +118,7 @@ const PLAYGROUND_INGREDIENTS = [
 export default function LandingPage() {
   const t = useTranslations('Landing');
   const tCommon = useTranslations('Common');
+  const locale = useLocale();
   const [isListening, setIsListening] = useState(false);
   const [intent, setIntent] = useState<string | null>(null);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
@@ -156,7 +157,7 @@ export default function LandingPage() {
     }));
     
     const table = playgroundTables.find(t => t.id === tableId);
-    setPlaygroundMessage(`🎉 Đã thanh toán đơn hàng ${table?.total} tại ${table?.name}! Hệ thống KioskFlow vừa tự động trừ kho nguyên liệu chuẩn (BOM S33) thành công!`);
+    setPlaygroundMessage(t('sandbox.paidMessage', { total: table?.total || '0đ', id: tableId.replace('T', '') }));
     
     setTimeout(() => {
       setPlaygroundMessage(null);
@@ -375,7 +376,7 @@ export default function LandingPage() {
                           {/* Order Action Button */}
                           <div className="pt-2 border-t border-foreground/10 flex items-center justify-between gap-4">
                             <div>
-                              <p className="text-[10px] font-black uppercase opacity-40 text-left">Tổng combo</p>
+                              <p className="text-[10px] font-black uppercase opacity-40 text-left">{t('totalCombo')}</p>
                               <p className="text-2xl font-black text-foreground">{recommendation.total}</p>
                             </div>
                             
@@ -385,7 +386,7 @@ export default function LandingPage() {
                                 className="flex-1 py-4 bg-interaction hover:bg-interaction/90 text-white rounded-2xl font-black uppercase italic tracking-tighter transition-all flex items-center justify-center gap-2"
                               >
                                 <ShoppingBag className="w-5 h-5" />
-                                Đặt thử ngay
+                                {t('orderTestNow')}
                               </button>
                             ) : (
                               <motion.div 
@@ -394,7 +395,7 @@ export default function LandingPage() {
                                 className="flex-1 py-4 bg-green-600 text-white rounded-2xl font-black uppercase italic tracking-tighter flex items-center justify-center gap-2"
                               >
                                 <CheckCircle className="w-5 h-5" />
-                                Đã thêm vào giỏ!
+                                {t('addedToCart')}
                               </motion.div>
                             )}
                           </div>
@@ -405,7 +406,7 @@ export default function LandingPage() {
                               animate={{ opacity: 1 }}
                               className="text-[11px] font-bold text-green-600 bg-green-50 border border-green-200/50 p-3 rounded-xl"
                             >
-                              🎉 Nguyên liệu cho các món trong combo này đã được hệ thống **khấu trừ thông minh tự động (S33 BOM)** trong cơ sở dữ liệu kho POS!
+                              {t('deductedMessage')}
                             </motion.p>
                           )}
                         </div>
@@ -424,13 +425,13 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
             <div className="inline-block px-4 py-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-black uppercase tracking-widest rounded-full mb-2">
-              Tối ưu hóa Lợi nhuận
+              {t('roi.tag')}
             </div>
             <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic leading-tight">
-              Công cụ tính <span className="text-interaction">Hiệu quả đầu tư (ROI)</span>
+              {t('roi.title')}
             </h2>
             <p className="font-bold opacity-75">
-              Khám phá số tiền tiết kiệm được từ việc hạn chế thất thoát nguyên liệu nhờ sự phối hợp chặt chẽ giữa **Công thức định lượng (BOM S33)** và **Cảnh báo kho tự động (S34)** của KioskFlow.
+              {t('roi.desc')}
             </p>
           </div>
 
@@ -439,15 +440,15 @@ export default function LandingPage() {
             <div className="lg:col-span-7 space-y-8 bg-white/60 backdrop-blur-md border border-foreground/10 p-8 rounded-3xl shadow-sm">
               <h3 className="text-2xl font-black uppercase italic tracking-tight text-primary flex items-center gap-2 mb-4">
                 <TrendingUp className="w-6 h-6 text-interaction" />
-                Thông số vận hành hiện tại
+                {t('roi.metrics')}
               </h3>
 
               {/* Monthly Revenue Slider */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <label className="text-sm font-black uppercase tracking-wider opacity-70">Doanh thu hàng tháng</label>
+                  <label className="text-sm font-black uppercase tracking-wider opacity-70">{t('roi.revenue')}</label>
                   <span className="font-black text-xl text-foreground bg-primary/10 px-4 py-1.5 rounded-xl">
-                    {revenue.toLocaleString('vi-VN')}đ
+                    {revenue.toLocaleString(locale === 'vi' ? 'vi-VN' : 'en-US')}đ
                   </span>
                 </div>
                 <input 
@@ -460,16 +461,16 @@ export default function LandingPage() {
                   className="w-full h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer accent-interaction"
                 />
                 <div className="flex justify-between text-xs font-bold opacity-40">
-                  <span>50 Triệu</span>
-                  <span>250 Triệu</span>
-                  <span>500 Triệu</span>
+                  <span>50 {t('roi.millions')}</span>
+                  <span>250 {t('roi.millions')}</span>
+                  <span>500 {t('roi.millions')}</span>
                 </div>
               </div>
 
               {/* Material Loss Slider */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <label className="text-sm font-black uppercase tracking-wider opacity-70">Tỷ lệ thất thoát nguyên liệu cũ</label>
+                  <label className="text-sm font-black uppercase tracking-wider opacity-70">{t('roi.waste')}</label>
                   <span className="font-black text-xl text-red-600 bg-red-50 px-4 py-1.5 rounded-xl border border-red-100">
                     {wastePercent}%
                   </span>
@@ -484,16 +485,16 @@ export default function LandingPage() {
                   className="w-full h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer accent-red-600"
                 />
                 <div className="flex justify-between text-xs font-bold opacity-40">
-                  <span>5% (Khá tốt)</span>
-                  <span>15% (Trung bình)</span>
-                  <span>25% (Rất cao)</span>
+                  <span>5% ({t('roi.wasteGood')})</span>
+                  <span>15% ({t('roi.wasteAvg')})</span>
+                  <span>25% ({t('roi.wasteHigh')})</span>
                 </div>
               </div>
 
               <div className="text-xs font-bold text-foreground/60 bg-foreground/5 p-4 rounded-xl flex gap-2 items-start">
                 <Info className="w-4 h-4 text-interaction shrink-0 mt-0.5" />
                 <p>
-                  Tỷ lệ thất thoát nguyên liệu ở các quán vận hành truyền thống thường dao động ở mức **8% - 15%** do không chuẩn hóa định lượng món ăn và không kiểm soát được hạn sử dụng hàng nhập.
+                  {t('roi.info')}
                 </p>
               </div>
             </div>
@@ -504,36 +505,36 @@ export default function LandingPage() {
               <div className="absolute top-0 right-0 w-32 h-32 bg-interaction/20 rounded-full blur-3xl pointer-events-none" />
 
               <h3 className="text-2xl font-black uppercase italic tracking-tight text-accent">
-                Dự phóng Tiết kiệm
+                {t('roi.projection')}
               </h3>
 
               <div className="space-y-6">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Thất thoát hiện tại (Ước tính)</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{t('roi.currentLoss')}</p>
                   <p className="text-2xl font-black text-red-400 line-through">
-                    {(revenue * (wastePercent / 100)).toLocaleString('vi-VN')}đ <span className="text-xs">/tháng</span>
+                    {(revenue * (wastePercent / 100)).toLocaleString(locale === 'vi' ? 'vi-VN' : 'en-US')}đ <span className="text-xs">{t('roi.perMonth')}</span>
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Thất thoát với KioskFlow (1.5%)</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{t('roi.lossKioskFlow')}</p>
                   <p className="text-2xl font-black text-green-400">
-                    {(revenue * 0.015).toLocaleString('vi-VN')}đ <span className="text-xs">/tháng</span>
+                    {(revenue * 0.015).toLocaleString(locale === 'vi' ? 'vi-VN' : 'en-US')}đ <span className="text-xs">{t('roi.perMonth')}</span>
                   </p>
                 </div>
 
                 <div className="pt-6 border-t border-background/10 space-y-2">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-accent">Lợi nhuận giữ lại mỗi tháng</p>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-accent">{t('roi.retainedProfit')}</p>
                   <p className="text-4xl font-black text-white tracking-tighter">
-                    {Math.round(revenue * (wastePercent / 100 - 0.015)).toLocaleString('vi-VN')}đ
+                    {Math.round(revenue * (wastePercent / 100 - 0.015)).toLocaleString(locale === 'vi' ? 'vi-VN' : 'en-US')}đ
                   </p>
                 </div>
 
                 <div className="p-4 bg-background/5 border border-background/10 rounded-2xl flex items-center justify-between">
                   <div>
-                    <p className="text-[9px] font-black uppercase tracking-widest opacity-50">Lũy kế tiết kiệm hàng năm</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest opacity-50">{t('roi.annualSavings')}</p>
                     <p className="text-xl font-black text-accent">
-                      {Math.round(revenue * (wastePercent / 100 - 0.015) * 12).toLocaleString('vi-VN')}đ
+                      {Math.round(revenue * (wastePercent / 100 - 0.015) * 12).toLocaleString(locale === 'vi' ? 'vi-VN' : 'en-US')}đ
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-accent text-foreground rounded-xl flex items-center justify-center font-black text-lg">
@@ -551,13 +552,13 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
             <div className="inline-block px-4 py-1.5 bg-interaction/10 border border-interaction/20 text-interaction text-xs font-black uppercase tracking-widest rounded-full mb-2">
-              Trải nghiệm thực tế
+              {t('sandbox.tag')}
             </div>
             <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic leading-tight">
-              Bảng điều khiển <span className="text-primary">Sandbox Playground</span>
+              {t('sandbox.title')}
             </h2>
             <p className="font-bold opacity-75">
-              Trải nghiệm trực quan một phiên bản rút gọn của hệ quản trị KioskFlow ngay tại đây mà không cần đăng ký tài khoản.
+              {t('sandbox.desc')}
             </p>
           </div>
 
@@ -566,9 +567,9 @@ export default function LandingPage() {
             <div className="bg-foreground/5 border-b border-foreground/10 p-4 flex flex-wrap gap-2 items-center justify-between">
               <div className="flex gap-2">
                 {[
-                  { id: 'sales', label: 'Báo cáo Doanh thu', icon: TrendingUp },
-                  { id: 'tables', label: 'Sơ đồ Bàn POS', icon: Grid },
-                  { id: 'ingredients', label: 'Công thức & Kho BOM', icon: Layers }
+                  { id: 'sales', label: t('sandbox.tabSales'), icon: TrendingUp },
+                  { id: 'tables', label: t('sandbox.tabTables'), icon: Grid },
+                  { id: 'ingredients', label: t('sandbox.tabIngredients'), icon: Layers }
                 ].map(tab => {
                   const Icon = tab.icon;
                   const isActive = activePlaygroundTab === tab.id;
@@ -607,11 +608,11 @@ export default function LandingPage() {
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <h4 className="text-lg font-black uppercase tracking-tight text-primary">Phân tích doanh số tuần qua</h4>
-                        <p className="text-xs font-bold opacity-60">Dữ liệu thời gian thực được tổng hợp từ Kiosk POS</p>
+                        <h4 className="text-lg font-black uppercase tracking-tight text-primary">{t('sandbox.salesTitle')}</h4>
+                        <p className="text-xs font-bold opacity-60">{t('sandbox.salesDesc')}</p>
                       </div>
                       <span className="bg-green-100 text-green-700 text-xs font-black px-3 py-1.5 rounded-xl flex items-center gap-1">
-                        +18.4% Tuần trước
+                        {t('sandbox.salesGrowth')}
                       </span>
                     </div>
 
@@ -623,13 +624,13 @@ export default function LandingPage() {
                       </div>
 
                       {[
-                        { day: 'Thứ 2', val: 65, amount: '12.4M' },
-                        { day: 'Thứ 3', val: 40, amount: '8.2M' },
-                        { day: 'Thứ 4', val: 85, amount: '18.5M', peak: true },
-                        { day: 'Thứ 5', val: 55, amount: '11.0M' },
-                        { day: 'Thứ 6', val: 95, amount: '22.1M', peak: true },
-                        { day: 'Thứ 7', val: 120, amount: '35.4M', peak: true },
-                        { day: 'Chủ Nhật', val: 110, amount: '31.2M', peak: true }
+                        { day: 'Mon', val: 65, amount: '12.4M' },
+                        { day: 'Tue', val: 40, amount: '8.2M' },
+                        { day: 'Wed', val: 85, amount: '18.5M', peak: true },
+                        { day: 'Thu', val: 55, amount: '11.0M' },
+                        { day: 'Fri', val: 95, amount: '22.1M', peak: true },
+                        { day: 'Sat', val: 120, amount: '35.4M', peak: true },
+                        { day: 'Sun', val: 110, amount: '31.2M', peak: true }
                       ].map((item, idx) => (
                         <div key={idx} className="flex-1 flex flex-col items-center gap-3 z-10 group relative">
                           {/* Tooltip */}
@@ -645,7 +646,7 @@ export default function LandingPage() {
                               className={`w-full rounded-t-lg ${item.peak ? 'bg-interaction' : 'bg-primary'}`}
                             />
                           </div>
-                          <span className="text-[10px] font-black uppercase tracking-wider opacity-60">{item.day}</span>
+                          <span className="text-[10px] font-black uppercase tracking-wider opacity-60">{t(`sandbox.days.${item.day}`)}</span>
                         </div>
                       ))}
                     </div>
@@ -663,8 +664,8 @@ export default function LandingPage() {
                     {/* Tables Grid Map */}
                     <div className="lg:col-span-7 space-y-4">
                       <div className="flex justify-between items-center">
-                        <h4 className="text-sm font-black uppercase tracking-wider opacity-60">Sơ đồ bàn thời gian thực (6 bàn)</h4>
-                        <span className="text-xs font-black text-interaction bg-interaction/5 px-2.5 py-1 rounded-lg">Bấm chọn bàn để xem bill</span>
+                        <h4 className="text-sm font-black uppercase tracking-wider opacity-60">{t('sandbox.tablesTitle')}</h4>
+                        <span className="text-xs font-black text-interaction bg-interaction/5 px-2.5 py-1 rounded-lg">{t('sandbox.tablesDesc')}</span>
                       </div>
                       
                       <div className="grid grid-cols-3 gap-4">
@@ -684,7 +685,7 @@ export default function LandingPage() {
                                   : 'border-foreground/10 hover:bg-foreground/5'
                               }`}
                             >
-                              <span className="font-black text-xs uppercase">{table.name}</span>
+                              <span className="font-black text-xs uppercase">{tCommon('table')} {table.id.replace('T', '')}</span>
                               <div className="flex items-center gap-1.5">
                                 <span className={`w-2.5 h-2.5 rounded-full ${
                                   table.status === 'serving' 
@@ -694,7 +695,7 @@ export default function LandingPage() {
                                     : 'bg-foreground/20'
                                 }`} />
                                 <span className="text-[10px] font-black uppercase opacity-60">
-                                  {table.status === 'serving' ? 'Đang ăn' : table.status === 'waiting' ? 'Đang đợi' : 'Trống'}
+                                  {table.status === 'serving' ? tCommon('serving') : table.status === 'waiting' ? tCommon('waiting') : tCommon('empty')}
                                 </span>
                               </div>
                             </button>
@@ -712,7 +713,7 @@ export default function LandingPage() {
                           <>
                             <div className="space-y-4">
                               <div className="flex justify-between items-center border-b border-foreground/10 pb-3">
-                                <span className="font-black uppercase text-sm">{table.name}</span>
+                                <span className="font-black uppercase text-sm">{tCommon('table')} {table.id.replace('T', '')}</span>
                                 <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${
                                   table.status === 'serving' 
                                     ? 'bg-primary/10 text-primary' 
@@ -720,24 +721,26 @@ export default function LandingPage() {
                                     ? 'bg-accent/25 text-foreground' 
                                     : 'bg-foreground/10 text-foreground/50'
                                 }`}>
-                                  {table.status === 'serving' ? 'Đang phục vụ' : table.status === 'waiting' ? 'Đợi món' : 'Trống'}
+                                  {table.status === 'serving' ? tCommon('serving') : table.status === 'waiting' ? tCommon('waiting') : tCommon('empty')}
                                 </span>
                               </div>
 
                               {table.status !== 'empty' ? (
                                 <div className="space-y-2 text-left">
                                   <div className="flex justify-between text-xs font-bold opacity-60">
-                                    <span>Món đã gọi:</span>
-                                    <span>Thời gian chờ: {table.time}</span>
+                                    <span>{t('sandbox.orderedItems')}</span>
+                                    <span>{t('sandbox.waitingTime')} {table.time.replace('phút', tCommon('minutes'))}</span>
                                   </div>
-                                  <p className="font-black text-sm uppercase text-primary">{table.order}</p>
+                                  <p className="font-black text-sm uppercase text-primary">
+                                    {t(`sandbox.orders.table${table.id.replace('T', '')}`)}
+                                  </p>
                                   <div className="flex justify-between items-center pt-2 border-t border-foreground/5">
-                                    <span className="text-xs font-bold opacity-60">Tổng thanh toán:</span>
+                                    <span className="text-xs font-bold opacity-60">{t('sandbox.totalPayment')}</span>
                                     <span className="font-black text-lg text-foreground">{table.total}</span>
                                   </div>
                                 </div>
                               ) : (
-                                <p className="text-xs font-bold opacity-45 py-8 text-center">Bàn đang trống. Sẵn sàng nhận khách mới.</p>
+                                <p className="text-xs font-bold opacity-45 py-8 text-center">{t('sandbox.tableEmpty')}</p>
                               )}
                             </div>
 
@@ -746,7 +749,7 @@ export default function LandingPage() {
                                 onClick={() => handleCheckoutPlaygroundTable(table.id)}
                                 className="w-full mt-4 py-3 bg-interaction hover:bg-interaction/90 text-white rounded-xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
                               >
-                                Thanh toán thử (Trừ kho BOM)
+                                {t('sandbox.btnTestPay')}
                               </button>
                             )}
                           </>
@@ -767,8 +770,8 @@ export default function LandingPage() {
                     {/* Left: Ingredients Selector */}
                     <div className="lg:col-span-6 space-y-4">
                       <div className="flex justify-between items-center">
-                        <h4 className="text-sm font-black uppercase tracking-wider opacity-60">Danh mục Nguyên liệu chính</h4>
-                        <span className="text-xs font-black text-interaction bg-interaction/5 px-2.5 py-1 rounded-lg">Chọn để xem công thức</span>
+                        <h4 className="text-sm font-black uppercase tracking-wider opacity-60">{t('sandbox.ingredientsTitle')}</h4>
+                        <span className="text-xs font-black text-interaction bg-interaction/5 px-2.5 py-1 rounded-lg">{t('sandbox.ingredientsDesc')}</span>
                       </div>
 
                       <div className="space-y-2">
@@ -786,14 +789,14 @@ export default function LandingPage() {
                             >
                               <div className="flex items-center gap-3">
                                 <div className="w-2 h-2 rounded-full bg-interaction"></div>
-                                <span className="font-black text-xs uppercase text-left">{ing.name}</span>
+                                <span className="font-black text-xs uppercase text-left">{t(`ingredients.${ing.id}.name`)}</span>
                               </div>
                               <div className="flex items-center gap-3 text-xs font-black">
-                                <span className="opacity-60">{ing.stock}</span>
+                                <span className="opacity-60">{t(`ingredients.${ing.id}.stock`)}</span>
                                 <span className={`px-2 py-0.5 rounded text-[9px] ${
                                   ing.status.includes('⚠️') ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'
                                 }`}>
-                                  {ing.status}
+                                  {t(`ingredients.${ing.id}.status`)}
                                 </span>
                               </div>
                             </button>
@@ -810,30 +813,37 @@ export default function LandingPage() {
                         return (
                           <div className="space-y-6">
                             <div className="border-b border-foreground/10 pb-3 text-left">
-                              <h4 className="font-black text-sm uppercase text-primary">Công thức liên đới sản phẩm</h4>
-                              <p className="text-[10px] font-bold opacity-60">Mỗi cốc bán ra sẽ tự động khấu trừ lượng tương ứng:</p>
+                              <h4 className="font-black text-sm uppercase text-primary">{t('sandbox.recipeTitle')}</h4>
+                              <p className="text-[10px] font-bold opacity-60">{t('sandbox.recipeDesc')}</p>
                             </div>
 
                             <div className="space-y-3">
-                              {ing.products.map((p, idx) => (
-                                <div key={idx} className="flex justify-between items-center p-3.5 bg-white border border-foreground/5 rounded-xl shadow-xs">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center font-bold text-xs text-primary">
-                                      ☕
+                              {ing.products.map((p, idx) => {
+                                let productKey = 'espresso';
+                                if (p.name.includes('Latte')) productKey = 'latte';
+                                if (p.name.includes('Matcha')) productKey = 'matcha';
+                                if (p.name.includes('Đào')) productKey = 'peach_tea';
+
+                                return (
+                                  <div key={idx} className="flex justify-between items-center p-3.5 bg-white border border-foreground/5 rounded-xl shadow-xs">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center font-bold text-xs text-primary">
+                                        ☕
+                                      </div>
+                                      <span className="font-black text-xs uppercase">{t(`products.${productKey}`)}</span>
                                     </div>
-                                    <span className="font-black text-xs uppercase">{p.name}</span>
+                                    <span className="font-black text-xs text-interaction bg-interaction/10 px-3 py-1.5 rounded-lg border border-interaction/10">
+                                      -{p.amount.replace('miếng', locale === 'vi' ? 'miếng' : 'slices')}
+                                    </span>
                                   </div>
-                                  <span className="font-black text-xs text-interaction bg-interaction/10 px-3 py-1.5 rounded-lg border border-interaction/10">
-                                    -{p.amount}
-                                  </span>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
 
                             <div className="text-[11px] font-bold text-primary/70 bg-primary/5 border border-primary/20 p-3 rounded-xl flex gap-1.5 items-start text-left">
                               <Info className="w-4 h-4 shrink-0 mt-0.5 text-primary" />
                               <p>
-                                Khi khách thanh toán thành công tại POS hoặc qua mã tự gọi món, lượng nguyên liệu hao hụt định lượng ở trên sẽ được trừ trực tiếp và chính xác vào thẻ kho trong cơ sở dữ liệu.
+                                {t('sandbox.recipeInfo')}
                               </p>
                             </div>
                           </div>
@@ -867,20 +877,20 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
           <div className="md:col-span-2 space-y-6">
             <h2 className="text-5xl md:text-7xl font-black leading-tight tracking-tighter uppercase italic">
-              Kiến trúc Vận hành <br />
-              <span className="text-accent">Thời gian thực</span>
+              {t('philosophy.title')} <br />
+              <span className="text-accent">{t('philosophy.accent')}</span>
             </h2>
             <div className="w-24 h-4 bg-accent"></div>
           </div>
           
           <div className="space-y-4">
-            <h4 className="text-2xl font-black text-accent uppercase italic">BOM Khấu Trừ Tự Động</h4>
-            <p className="font-medium opacity-70">Nguyên liệu được khấu trừ tự động ngay khi trạng thái hóa đơn POS chuyển thành COMPLETED.</p>
+            <h4 className="text-2xl font-black text-accent uppercase italic">{t('philosophy.bomTitle')}</h4>
+            <p className="font-medium opacity-70">{t('philosophy.bomDesc')}</p>
           </div>
           
           <div className="space-y-4">
-            <h4 className="text-2xl font-black text-accent uppercase italic">Cảnh Báo Tự Động</h4>
-            <p className="font-medium opacity-70">Hệ thống gửi cảnh báo hạn dùng và hết hàng thông minh ngay lên trang tổng quan Dashboard.</p>
+            <h4 className="text-2xl font-black text-accent uppercase italic">{t('philosophy.alertTitle')}</h4>
+            <p className="font-medium opacity-70">{t('philosophy.alertDesc')}</p>
           </div>
         </div>
       </section>

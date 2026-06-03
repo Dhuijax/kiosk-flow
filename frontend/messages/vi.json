@@ -9,7 +9,7 @@
     "pos": "Hệ thống POS",
     "kitchen": "Màn hình Bếp",
     "dashboard": "Bảng điều khiển",
-    "table": "Gọi món tại bàn",
+    "table": "Bàn",
     "settings": "Cài đặt",
     "logout": "Đăng xuất",
     "login": "Đăng nhập",
@@ -20,7 +20,11 @@
     "loading": "Đang tải...",
     "error": "Đã xảy ra lỗi",
     "features": "Tính năng",
-    "operations": "Vận hành"
+    "operations": "Vận hành",
+    "minutes": "phút",
+    "serving": "Đang phục vụ",
+    "waiting": "Đợi món",
+    "empty": "Trống"
   },
   "Landing": {
     "welcome": "Chào mừng đến với KioskFlow",
@@ -39,6 +43,10 @@
     "brandsCount": "Thương hiệu đã\nchuyển đổi AI",
     "micPrompt": "Chạm Mic hoặc chọn trạng thái cảm xúc",
     "listeningPrompt": "Đang lắng nghe cảm xúc...",
+    "totalCombo": "Tổng combo",
+    "orderTestNow": "Đặt thử ngay",
+    "addedToCart": "Đã thêm vào giỏ!",
+    "deductedMessage": "🎉 Nguyên liệu cho các món trong combo này đã được hệ thống khấu trừ thông minh tự động (S33 BOM) trong cơ sở dữ liệu kho POS!",
     "emotions": {
       "tired": {
         "label": "Mệt mỏi, cần năng lượng",
@@ -64,6 +72,101 @@
         "title": "Combo Bình Yên Thư Giãn 🍃",
         "desc": "Trà hoa cúc mật ong ấm nóng giúp an thần, giải tỏa stress kết hợp cùng bánh cookie yến mạch ít ngọt lành mạnh."
       }
+    },
+    "products": {
+      "espresso": "Espresso",
+      "latte": "Latte Hạnh Nhân",
+      "matcha": "Trà Sữa Matcha",
+      "peach_tea": "Trà Đào Cam Sả"
+    },
+    "ingredients": {
+      "arabica": {
+        "name": "Hạt cà phê Arabica",
+        "stock": "15.4 kg",
+        "status": "Đủ dùng"
+      },
+      "milk": {
+        "name": "Sữa tươi thanh trùng",
+        "stock": "2.1 lít",
+        "status": "Cảnh báo thấp ⚠️"
+      },
+      "matcha": {
+        "name": "Bột Matcha Uji",
+        "stock": "0.8 kg",
+        "status": "Đủ dùng"
+      },
+      "peach": {
+        "name": "Đào ngâm lát",
+        "stock": "5 lon",
+        "status": "Đủ dùng"
+      }
+    },
+    "roi": {
+      "tag": "Tối ưu hóa Lợi nhuận",
+      "title": "Công cụ tính Hiệu quả đầu tư (ROI)",
+      "desc": "Khám phá số tiền tiết kiệm được từ việc hạn chế thất thoát nguyên liệu nhờ sự phối hợp chặt chẽ giữa Công thức định lượng (BOM S33) và Cảnh báo kho tự động (S34) của KioskFlow.",
+      "metrics": "Thông số vận hành hiện tại",
+      "revenue": "Doanh thu hàng tháng",
+      "waste": "Tỷ lệ thất thoát nguyên liệu cũ",
+      "wasteGood": "Khá tốt",
+      "wasteAvg": "Trung bình",
+      "wasteHigh": "Rất cao",
+      "info": "Tỷ lệ thất thoát nguyên liệu ở các quán vận hành truyền thống thường dao động ở mức 8% - 15% do không chuẩn hóa định lượng món ăn và không kiểm soát được hạn sử dụng hàng nhập.",
+      "projection": "Dự phóng Tiết kiệm",
+      "currentLoss": "Thất thoát hiện tại (Ước tính)",
+      "lossKioskFlow": "Thất thoát với KioskFlow (1.5%)",
+      "retainedProfit": "Lợi nhuận giữ lại mỗi tháng",
+      "annualSavings": "Lũy kế tiết kiệm hàng năm",
+      "perMonth": "/tháng",
+      "millions": "Triệu"
+    },
+    "sandbox": {
+      "tag": "Trải nghiệm thực tế",
+      "title": "Bảng điều khiển Sandbox Playground",
+      "desc": "Trải nghiệm trực quan một phiên bản rút gọn của hệ quản trị KioskFlow ngay tại đây mà không cần đăng ký tài khoản.",
+      "tabSales": "Báo cáo Doanh thu",
+      "tabTables": "Sơ đồ Bàn POS",
+      "tabIngredients": "Công thức & Kho BOM",
+      "salesTitle": "Phân tích doanh số tuần qua",
+      "salesDesc": "Dữ liệu thời gian thực được tổng hợp từ Kiosk POS",
+      "salesGrowth": "+18.4% Tuần trước",
+      "days": {
+        "Mon": "Thứ 2",
+        "Tue": "Thứ 3",
+        "Wed": "Thứ 4",
+        "Thu": "Thứ 5",
+        "Fri": "Thứ 6",
+        "Sat": "Thứ 7",
+        "Sun": "Chủ Nhật"
+      },
+      "tablesTitle": "Sơ đồ bàn thời gian thực (6 bàn)",
+      "tablesDesc": "Bấm chọn bàn để xem bill",
+      "tableEmpty": "Bàn đang trống. Sẵn sàng nhận khách mới.",
+      "btnTestPay": "Thanh toán thử (Trừ kho BOM)",
+      "orderedItems": "Món đã gọi:",
+      "waitingTime": "Thời gian chờ:",
+      "totalPayment": "Tổng thanh toán:",
+      "billDetails": "Chi tiết hóa đơn",
+      "ingredientsTitle": "Danh mục Nguyên liệu chính",
+      "ingredientsDesc": "Chọn để xem công thức",
+      "recipeTitle": "Công thức liên đới sản phẩm",
+      "recipeDesc": "Mỗi cốc bán ra sẽ tự động khấu trừ lượng tương ứng:",
+      "recipeInfo": "Khi khách thanh toán thành công tại POS hoặc qua mã tự gọi món, lượng nguyên liệu hao hụt định lượng ở trên sẽ được trừ trực tiếp và chính xác vào thẻ kho trong cơ sở dữ liệu.",
+      "paidMessage": "🎉 Đã thanh toán đơn hàng {total} tại Bàn {id}! Hệ thống KioskFlow vừa tự động trừ kho nguyên liệu chuẩn (BOM S33) thành công!",
+      "orders": {
+        "table1": "2x Latte, 1x Croissant",
+        "table3": "1x Matcha, 1x Muffin",
+        "table4": "1x Trà Đào, 1x Mousse",
+        "table6": "2x Espresso"
+      }
+    },
+    "philosophy": {
+      "title": "Kiến trúc Vận hành",
+      "accent": "Thời gian thực",
+      "bomTitle": "BOM Khấu Trừ Tự Động",
+      "bomDesc": "Nguyên liệu được khấu trừ tự động ngay khi trạng thái hóa đơn POS chuyển thành COMPLETED.",
+      "alertTitle": "Cảnh Báo Tự Động",
+      "alertDesc": "Hệ thống gửi cảnh báo hạn dùng và hết hàng thông minh ngay lên trang tổng quan Dashboard."
     }
   },
   "Auth": {

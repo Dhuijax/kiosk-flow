@@ -9,7 +9,7 @@
     "pos": "POS System",
     "kitchen": "Kitchen Screen",
     "dashboard": "Dashboard",
-    "table": "Table Ordering",
+    "table": "Table",
     "settings": "Settings",
     "logout": "Log Out",
     "login": "Log In",
@@ -20,7 +20,11 @@
     "loading": "Loading...",
     "error": "An error occurred",
     "features": "Features",
-    "operations": "Operations"
+    "operations": "Operations",
+    "minutes": "mins",
+    "serving": "Serving",
+    "waiting": "Waiting",
+    "empty": "Empty"
   },
   "Landing": {
     "welcome": "Welcome to KioskFlow",
@@ -39,6 +43,10 @@
     "brandsCount": "Brands converted\nto AI Kiosk",
     "micPrompt": "Tap Mic or select your emotion",
     "listeningPrompt": "Listening to your voice...",
+    "totalCombo": "Total Combo",
+    "orderTestNow": "Order Test Now",
+    "addedToCart": "Added to cart!",
+    "deductedMessage": "🎉 Ingredients for this combo's items have been automatically and intelligently deducted (S33 BOM) from the POS inventory database!",
     "emotions": {
       "tired": {
         "label": "Tired, need energy",
@@ -64,6 +72,101 @@
         "title": "Peaceful Relaxation Combo 🍃",
         "desc": "Warm chamomile honey tea to soothe nerves and relieve stress with healthy oatmeal cookies."
       }
+    },
+    "products": {
+      "espresso": "Espresso",
+      "latte": "Almond Latte",
+      "matcha": "Matcha Milk Tea",
+      "peach_tea": "Peach Orange Lemongrass Tea"
+    },
+    "ingredients": {
+      "arabica": {
+        "name": "Arabica Coffee Beans",
+        "stock": "15.4 kg",
+        "status": "In Stock"
+      },
+      "milk": {
+        "name": "Fresh Pasteurized Milk",
+        "stock": "2.1 L",
+        "status": "Low Stock ⚠️"
+      },
+      "matcha": {
+        "name": "Uji Matcha Powder",
+        "stock": "0.8 kg",
+        "status": "In Stock"
+      },
+      "peach": {
+        "name": "Sliced Canned Peaches",
+        "stock": "5 cans",
+        "status": "In Stock"
+      }
+    },
+    "roi": {
+      "tag": "Profit Optimization",
+      "title": "ROI Calculator Tool",
+      "desc": "Discover savings from reducing raw material loss through KioskFlow's Standard Recipe (BOM S33) and Automatic Inventory Alerts (S34).",
+      "metrics": "Current Operating Metrics",
+      "revenue": "Monthly Revenue",
+      "waste": "Old Material Loss Rate",
+      "wasteGood": "Good",
+      "wasteAvg": "Average",
+      "wasteHigh": "High",
+      "info": "Material loss rates in traditionally run shops typically range from 8% to 15% due to non-standardized recipe portions and unmonitored expiration dates of incoming stock.",
+      "projection": "Savings Projection",
+      "currentLoss": "Current Loss (Estimated)",
+      "lossKioskFlow": "Loss with KioskFlow (1.5%)",
+      "retainedProfit": "Monthly Retained Profit",
+      "annualSavings": "Annual Cumulative Savings",
+      "perMonth": "/month",
+      "millions": "Million"
+    },
+    "sandbox": {
+      "tag": "Real Experience",
+      "title": "Sandbox Playground Dashboard",
+      "desc": "Visually experience a simplified version of the KioskFlow admin panel right here without creating an account.",
+      "tabSales": "Sales Report",
+      "tabTables": "POS Tables Map",
+      "tabIngredients": "Recipe & BOM Inventory",
+      "salesTitle": "Weekly Sales Analysis",
+      "salesDesc": "Real-time data aggregated from Kiosk POS",
+      "salesGrowth": "+18.4% Last week",
+      "days": {
+        "Mon": "Mon",
+        "Tue": "Tue",
+        "Wed": "Wed",
+        "Thu": "Thu",
+        "Fri": "Fri",
+        "Sat": "Sat",
+        "Sun": "Sun"
+      },
+      "tablesTitle": "Real-time Tables Map (6 tables)",
+      "tablesDesc": "Click table to view bill",
+      "tableEmpty": "Table is empty. Ready for guests.",
+      "btnTestPay": "Test Payment (Deduct BOM)",
+      "orderedItems": "Ordered items:",
+      "waitingTime": "Waiting time:",
+      "totalPayment": "Total Payment:",
+      "billDetails": "Bill details",
+      "ingredientsTitle": "Main Ingredients Category",
+      "ingredientsDesc": "Select to view recipe",
+      "recipeTitle": "Product Recipe Linkage",
+      "recipeDesc": "Each sold cup automatically deducts the corresponding amount:",
+      "recipeInfo": "When a guest successfully pays at the POS or self-orders, the recipe ingredient amount above will be deducted directly and accurately in the stock card database.",
+      "paidMessage": "🎉 Paid order of {total} at Table {id}! KioskFlow has successfully auto-deducted inventory (BOM S33)!",
+      "orders": {
+        "table1": "2x Latte, 1x Croissant",
+        "table3": "1x Matcha, 1x Muffin",
+        "table4": "1x Peach Tea, 1x Mousse",
+        "table6": "2x Espresso"
+      }
+    },
+    "philosophy": {
+      "title": "Operations Architecture",
+      "accent": "Real-time",
+      "bomTitle": "Auto-deducting BOM",
+      "bomDesc": "Ingredients are automatically deducted as soon as the POS invoice status changes to COMPLETED.",
+      "alertTitle": "Automatic Alerts",
+      "alertDesc": "The system sends smart expiration and low stock alerts directly to the Dashboard."
     }
   },
   "Auth": {
